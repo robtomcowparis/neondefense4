@@ -5,6 +5,7 @@
 
 import { TowerType, TOWER_DATA, TOWER_HP_PER_LEVEL, TOWER_HP_BRANCH_BONUS,
          BUILD_TIMES, UPGRADE_TIME_BY_LEVEL, BRANCH_TIME, REPAIR_TIME_BASE, REPAIR_TIME_MAX,
+         SHIELD_HP_MULT, SHIELD_COST_MULT, SHIELD_BUILD_TIME, SHIELD_COLOR,
          TILE_SIZE, MAP_WIDTH, MAP_HEIGHT, EnemyType,
          BUILD_BAR_COLOR, UPGRADE_BAR_COLOR, BRANCH_BAR_COLOR, REPAIR_BAR_COLOR,
          CYAN, MAGENTA, WHITE, GOLD_COLOR, NEON_GREEN, YELLOW, RED, NEON_ORANGE,
@@ -125,6 +126,12 @@ export class Tower {
         this._pendingBranchKey = null;
         this._pendingPaidCost = 0;
         this._pendingFortifyMult = 1.0;
+
+        // Shield system
+        this.shieldHp = 0;
+        this.shieldMaxHp = 0;
+        this.shieldActive = false;
+        this.shieldInvestedGold = 0;
     }
 
     _computeBaseMaxHp() {
@@ -145,9 +152,49 @@ export class Tower {
     }
 
     takeDamage(damage) {
+        // Shield absorbs damage first
+        if (this.shieldActive && this.shieldHp > 0) {
+            if (damage <= this.shieldHp) {
+                this.shieldHp -= damage;
+                this.damageFlashTimer = 0.08; // shorter flash for shield hits
+                return;
+            }
+            // Shield breaks, remainder goes to HP
+            damage -= this.shieldHp;
+            this.shieldHp = 0;
+            this.shieldActive = false;
+        }
         this.hp -= damage;
         this.damageFlashTimer = 0.15;
         if (this.hp < 0) this.hp = 0;
+    }
+
+    // ─── Shield System ──────────────────────────────────────
+    canBuyShield() {
+        return this.branch !== null && !this.shieldActive && !this.isConstructing;
+    }
+
+    shieldCost(costMult = 1.0) {
+        return Math.round(this.investedGold * SHIELD_COST_MULT * costMult);
+    }
+
+    shieldMaxHpCalc(fortifyMult = 1.0) {
+        return Math.round(this.getMaxHp(fortifyMult) * SHIELD_HP_MULT);
+    }
+
+    startShield(paidCost = 0, fortifyMult = 1.0) {
+        this.constructionState = 'shielding';
+        this.constructionDuration = SHIELD_BUILD_TIME;
+        this.constructionTimer = 0;
+        this._pendingPaidCost = paidCost;
+        this._pendingFortifyMult = fortifyMult;
+    }
+
+    _applyShield(fortifyMult = 1.0) {
+        this.shieldMaxHp = this.shieldMaxHpCalc(fortifyMult);
+        this.shieldHp = this.shieldMaxHp;
+        this.shieldActive = true;
+        this.shieldInvestedGold += this._pendingPaidCost;
     }
 
     repairCost(fortifyMult = 1.0) {
@@ -218,7 +265,7 @@ export class Tower {
     }
 
     sellValue() {
-        return Math.round(this.investedGold * 0.6);
+        return Math.round((this.investedGold + this.shieldInvestedGold) * 0.6);
     }
 
     get isConstructing() { return this.constructionState !== null; }
@@ -265,6 +312,8 @@ export class Tower {
             this.applyBranch(this._pendingBranchKey, this._pendingPaidCost, this._pendingFortifyMult);
         } else if (state === 'repairing') {
             this.repair(this._pendingFortifyMult);
+        } else if (state === 'shielding') {
+            this._applyShield(this._pendingFortifyMult);
         }
         this.constructionState = null;
         this._pendingBranchKey = null;
@@ -590,6 +639,43 @@ export class Tower {
             ctx.strokeRect(bx, by, barW, barH);
         }
 
+        // Shield ring visual + shield HP bar
+        if (this.shieldActive && this.shieldHp > 0) {
+            const shieldPulse = 0.6 + 0.3 * Math.sin(performance.now() * 0.004);
+            const shieldRadius = (visible ? baseSize : 12) + 8;
+            // Outer glow
+            ctx.beginPath();
+            ctx.arc(ix, iy, shieldRadius + 3, 0, Math.PI * 2);
+            ctx.strokeStyle = rgba(SHIELD_COLOR, 0.1 * shieldPulse);
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            // Shield ring
+            ctx.beginPath();
+            ctx.arc(ix, iy, shieldRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = rgba(SHIELD_COLOR, 0.45 * shieldPulse);
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            // Shield fill (very faint)
+            ctx.beginPath();
+            ctx.arc(ix, iy, shieldRadius, 0, Math.PI * 2);
+            ctx.fillStyle = rgba(SHIELD_COLOR, 0.05 * shieldPulse);
+            ctx.fill();
+
+            // Shield HP bar (below the HP bar or below tower)
+            const shieldBarW = 28, shieldBarH = 2;
+            const hpBarOffset = this.hp < maxHp ? 15 : 10;
+            const sby = iy + (visible ? baseSize : 12) + hpBarOffset;
+            const sbx = ix - shieldBarW / 2;
+            ctx.fillStyle = 'rgb(20,30,50)';
+            ctx.fillRect(sbx, sby, shieldBarW, shieldBarH);
+            const sRatio = Math.max(0, this.shieldHp / this.shieldMaxHp);
+            ctx.fillStyle = rgba(SHIELD_COLOR, 0.9);
+            ctx.fillRect(sbx, sby, Math.round(shieldBarW * sRatio), shieldBarH);
+            ctx.strokeStyle = rgba(SHIELD_COLOR, 0.4);
+            ctx.lineWidth = 1;
+            ctx.strokeRect(sbx, sby, shieldBarW, shieldBarH);
+        }
+
         // Construction progress bar
         if (this.isConstructing) {
             const prog = this.constructionProgress;
@@ -601,6 +687,7 @@ export class Tower {
                 upgrading: UPGRADE_BAR_COLOR,
                 branching: BRANCH_BAR_COLOR,
                 repairing: REPAIR_BAR_COLOR,
+                shielding: SHIELD_COLOR,
             }[this.constructionState] || CYAN;
 
             ctx.fillStyle = 'rgb(15,15,25)';
@@ -623,7 +710,7 @@ export class Tower {
                 ctx.strokeStyle = rgba(barColor, 0.16 * pulse); ctx.lineWidth = 2; ctx.stroke();
             }
             // Label
-            const labels = { building: 'BUILD', upgrading: 'UPG', branching: 'SPEC', repairing: 'FIX' };
+            const labels = { building: 'BUILD', upgrading: 'UPG', branching: 'SPEC', repairing: 'FIX', shielding: 'SHLD' };
             const label = labels[this.constructionState] || '...';
             const timeLeft = Math.max(0, this.constructionDuration - this.constructionTimer);
             drawText(ctx, `${label} ${Math.round(timeLeft)}s`, bx, by - 12, barColor, 9);

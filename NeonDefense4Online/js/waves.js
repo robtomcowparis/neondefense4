@@ -55,7 +55,7 @@ export class WaveManager {
         } else {
             const base = 1.0 + 20 * 0.16; // 4.2 at wave 20
             const excess = waveNum - 20;
-            return base * Math.pow(1.12, excess);
+            return base * Math.pow(1.09, excess);
         }
     }
 
@@ -65,7 +65,7 @@ export class WaveManager {
         } else {
             const base = 1.0 + 20 * 0.10;
             const excess = waveNum - 20;
-            return base + excess * 0.25;
+            return base + excess * 0.18;
         }
     }
 
@@ -147,7 +147,7 @@ export class WaveManager {
 
         // Boss scheduling
         if (waveNum % 5 === 0) {
-            const bossCount = Math.max(1, Math.floor(waveNum / 8));
+            const bossCount = Math.max(1, Math.floor(waveNum / 12));
             for (let i = 0; i < bossCount; i++) {
                 this.spawnQueue.push({
                     etype: EnemyType.BOSS,
@@ -158,13 +158,13 @@ export class WaveManager {
             }
         }
 
-        // Ultra boss
-        if (waveNum >= 25 && waveNum % 10 === 5) {
-            const ultraCount = Math.max(1, Math.floor((waveNum - 15) / 10));
+        // Ultra boss — staggered to NOT overlap with regular boss waves
+        if (waveNum >= 25 && waveNum % 10 === 8) {
+            const ultraCount = Math.max(1, Math.floor((waveNum - 18) / 15));
             for (let i = 0; i < ultraCount; i++) {
                 this.spawnQueue.push({
                     etype: EnemyType.ULTRA_BOSS,
-                    spacing: 2.0,
+                    spacing: 2.5,
                     scale,
                     eliteLevel: 1
                 });
@@ -223,10 +223,10 @@ export class WaveManager {
                 // Elite chance for non-boss enemies after wave 12
                 if (el === 0 && this.currentWave >= 12 &&
                     spawn.etype !== EnemyType.BOSS && spawn.etype !== EnemyType.ULTRA_BOSS) {
-                    const eliteChance = clamp((this.currentWave - 12) * 0.03, 0, 0.35);
+                    const eliteChance = clamp((this.currentWave - 12) * 0.02, 0, 0.25);
                     if (Math.random() < eliteChance) {
                         el = 1;
-                    } else if (this.currentWave >= 22 && Math.random() < 0.08) {
+                    } else if (this.currentWave >= 25 && Math.random() < 0.05) {
                         el = 2;
                     }
                 }

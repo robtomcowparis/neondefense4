@@ -164,6 +164,12 @@ export const REPAIR_TIME_BASE = 3;
 export const REPAIR_TIME_MAX = 6;
 export const RESEARCH_TIME_BY_LEVEL = { 1: 8, 2: 10, 3: 12, 4: 15, 5: 15, 6: 15 };
 
+// Shield system (available after branching)
+export const SHIELD_HP_MULT = 0.80;       // Shield HP = 80% of tower max HP
+export const SHIELD_COST_MULT = 0.50;     // Cost = 50% of total invested gold
+export const SHIELD_BUILD_TIME = 6;       // Seconds to deploy shield
+export const SHIELD_COLOR = [100, 180, 255];
+
 // Construction bar colors
 export const BUILD_BAR_COLOR    = CYAN;
 export const UPGRADE_BAR_COLOR  = NEON_GREEN;
@@ -202,7 +208,7 @@ export const ENEMY_DATA = {
     [EnemyType.SPRINTER]: { name: "Sprinter", health: 180, speed: 50,  reward: 18,  color: SPRINT_TEAL,      size: 8,  lives_cost: 1,
                             sprint_speed: 160, sprint_duration: 0.8, sprint_cooldown: 3.0 },
     [EnemyType.BOSS]:     { name: "BOSS",     health: 4000,speed: 24,  reward: 200, color: BOSS_PURPLE,      size: 18, lives_cost: 8, armor: 4 },
-    [EnemyType.ULTRA_BOSS]: { name: "OVERLORD",health: 8000,speed: 18, reward: 600, color: ULTRA_RED,       size: 22, lives_cost: 15, armor: 10,
+    [EnemyType.ULTRA_BOSS]: { name: "OVERLORD",health: 6500,speed: 18, reward: 600, color: ULTRA_RED,       size: 22, lives_cost: 15, armor: 6,
                             attack_damage: 0, attack_range: 0, attack_rate: 99, miss_chance: 1.0 },
     [EnemyType.SAPPER]:   { name: "Sapper",   health: 250, speed: 42,  reward: 28,  color: SAPPER_RED,       size: 10, lives_cost: 2,
                             attack_damage: 8, attack_range: 130, attack_rate: 2.2, miss_chance: 0.35 },
@@ -219,12 +225,12 @@ export const RESEARCH_TRACKS = {
 // ─── Economy Constants ───────────────────────────────────────
 export const STARTING_GOLD = 1000;
 export const STARTING_LIVES = 30;
-export const REWARD_DECAY_PER_WAVE = 0.015;
-export const MIN_REWARD_MULT = 0.30;
-export const WAVE_CLEAR_BASE_BONUS = 60;
-export const WAVE_CLEAR_BONUS_PER_WAVE = 15;
-export const COST_INFLATION_PER_WAVE = 0.025;
-export const MAX_COST_MULT = 3.0;
+export const REWARD_DECAY_PER_WAVE = 0.012;
+export const MIN_REWARD_MULT = 0.35;
+export const WAVE_CLEAR_BASE_BONUS = 70;
+export const WAVE_CLEAR_BONUS_PER_WAVE = 20;
+export const COST_INFLATION_PER_WAVE = 0.020;
+export const MAX_COST_MULT = 2.5;
 
 // ─── Game States ─────────────────────────────────────────────
 export const GameState = {

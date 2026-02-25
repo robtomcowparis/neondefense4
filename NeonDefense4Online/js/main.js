@@ -252,6 +252,14 @@ function handleTowerAction(action, key) {
     } else if (action === 'aim') {
         game.aimingTower = t;
         showMessage("Click on map to set Rail direction!", 5.0);
+    } else if (action === 'shield') {
+        const cost = t.shieldCost(cm);
+        if (game.gold >= cost) {
+            game.gold -= cost;
+            t.startShield(cost, fortifyMult);
+            showMessage("Deploying shield...");
+            soundMgr.play('upgrade');
+        } else showMessage("Not enough gold!");
     } else if (action === 'sell') {
         const val = t.sellValue();
         game.gold += val;
@@ -738,13 +746,23 @@ function update(dt) {
 
     // Update enemy projectiles
     const towerHpBefore = new Map();
-    for (const t of game.towers) towerHpBefore.set(t, t.hp);
+    const towerShieldBefore = new Map();
+    for (const t of game.towers) {
+        towerHpBefore.set(t, t.hp);
+        towerShieldBefore.set(t, t.shieldHp);
+    }
     for (const ep of game.enemyProjectiles) ep.update(dt);
     game.enemyProjectiles = game.enemyProjectiles.filter(ep => ep.alive);
-    // Detect tower hits
+    // Detect tower hits (HP or shield damage)
     for (const t of game.towers) {
-        if (towerHpBefore.has(t) && t.hp < towerHpBefore.get(t)) {
+        const hpHit = towerHpBefore.has(t) && t.hp < towerHpBefore.get(t);
+        const shieldHit = towerShieldBefore.has(t) && t.shieldHp < towerShieldBefore.get(t);
+        if (hpHit || shieldHit) {
             soundMgr.play('tower_hit');
+        }
+        // Shield broke this frame
+        if (towerShieldBefore.get(t) > 0 && t.shieldHp <= 0) {
+            showHUDMessage(`${t.name} shield destroyed!`, 'warn');
         }
     }
 

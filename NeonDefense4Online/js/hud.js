@@ -433,6 +433,7 @@ export class HUD {
         const canAffordRepair = t.hp < maxHp && g.gold >= t.repairCost(fortifyMult);
         const canAffordBranchA = t.canBranch() && t.data.branches.A && g.gold >= t.branchCost('A', costMult);
         const canAffordBranchB = t.canBranch() && t.data.branches.B && g.gold >= t.branchCost('B', costMult);
+        const canAffordShield = t.canBuyShield() && g.gold >= t.shieldCost(costMult);
 
         return [
             t.col, t.row,  // tower identity
@@ -441,7 +442,8 @@ export class HUD {
             t.canUpgrade(), t.canBranch(),
             t.hp < maxHp,
             t.fixedAngle !== null,
-            canAffordUpgrade, canAffordRepair, canAffordBranchA, canAffordBranchB,
+            t.shieldActive, t.shieldHp > 0,
+            canAffordUpgrade, canAffordRepair, canAffordBranchA, canAffordBranchB, canAffordShield,
         ].join('|');
     }
 
@@ -478,7 +480,7 @@ export class HUD {
 
         if (t.isConstructing) {
             const prog = t.constructionProgress;
-            const stateLabels = { building: 'BUILDING', upgrading: 'UPGRADING', branching: 'SPECIALIZING', repairing: 'REPAIRING' };
+            const stateLabels = { building: 'BUILDING', upgrading: 'UPGRADING', branching: 'SPECIALIZING', repairing: 'REPAIRING', shielding: 'SHIELDING' };
             const label = stateLabels[t.constructionState] || 'WORKING';
             const timeLeft = Math.max(0, t.constructionDuration - t.constructionTimer);
             actionsHtml = `
@@ -521,6 +523,14 @@ export class HUD {
                 actionsHtml += `<div class="tp-maxed">${label}</div>`;
             }
 
+            // Shield (available after branching, repurchasable)
+            if (t.canBuyShield()) {
+                const sc = t.shieldCost(costMult);
+                const canShield = g.gold >= sc;
+                const shieldLabel = t.shieldInvestedGold > 0 ? 'RE-SHIELD' : 'BUY SHIELD';
+                actionsHtml += `<button class="tp-btn tp-btn-shield ${canShield ? '' : 'disabled'}" data-action="shield">${shieldLabel} (${sc}g)</button>`;
+            }
+
             // Rail set direction
             if (t.type === TowerType.RAIL && t.constructionState !== 'building') {
                 const dirLabel = t.fixedAngle === null ? 'SET DIRECTION' : 'RE-AIM';
@@ -550,6 +560,13 @@ export class HUD {
                     <div class="tp-hp-fill" data-id="tp-hp-fill" style="width:${Math.round(hpRatio * 100)}%"></div>
                 </div>
             </div>
+            ${t.shieldActive && t.shieldHp > 0 ? `
+            <div class="tp-shield" data-id="tp-shield">
+                <span class="tp-shield-text" data-id="tp-shield-text">🛡 Shield: ${t.shieldHp}/${t.shieldMaxHp}</span>
+                <div class="tp-shield-bar">
+                    <div class="tp-shield-fill" data-id="tp-shield-fill" style="width:${Math.round((t.shieldHp / t.shieldMaxHp) * 100)}%"></div>
+                </div>
+            </div>` : ''}
             <div class="tp-tracker" data-id="tp-tracker">Dmg dealt: ${t.totalDamage} &nbsp; Kills: ${t.kills}</div>
             <div class="tp-actions">${actionsHtml}</div>
         `;
@@ -578,13 +595,22 @@ export class HUD {
         // Tracker
         const tracker = panel.querySelector('[data-id="tp-tracker"]');
         if (tracker) tracker.innerHTML = `Dmg dealt: ${t.totalDamage} &nbsp; Kills: ${t.kills}`;
+        // Shield HP
+        const shieldText = panel.querySelector('[data-id="tp-shield-text"]');
+        const shieldFill = panel.querySelector('[data-id="tp-shield-fill"]');
+        if (shieldText && t.shieldActive) {
+            shieldText.textContent = `🛡 Shield: ${t.shieldHp}/${t.shieldMaxHp}`;
+        }
+        if (shieldFill && t.shieldActive && t.shieldMaxHp > 0) {
+            shieldFill.style.width = Math.round((t.shieldHp / t.shieldMaxHp) * 100) + '%';
+        }
         // Construction progress bar (updates every frame during construction)
         const prgFill = panel.querySelector('.tp-prg-fill');
         const prgLabel = panel.querySelector('.tp-prg-label');
         if (prgFill && prgLabel && t.isConstructing) {
             const prog = t.constructionProgress;
             const timeLeft = Math.max(0, t.constructionDuration - t.constructionTimer);
-            const stateLabels = { building: 'BUILDING', upgrading: 'UPGRADING', branching: 'SPECIALIZING', repairing: 'REPAIRING' };
+            const stateLabels = { building: 'BUILDING', upgrading: 'UPGRADING', branching: 'SPECIALIZING', repairing: 'REPAIRING', shielding: 'SHIELDING' };
             const label = stateLabels[t.constructionState] || 'WORKING';
             prgFill.style.width = Math.round(prog * 100) + '%';
             prgLabel.textContent = `${label}... ${timeLeft.toFixed(1)}s — ${Math.round(prog * 100)}%`;

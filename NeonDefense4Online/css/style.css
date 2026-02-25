@@ -434,6 +434,23 @@ body {
 .tp-hp.hp-warn .tp-hp-fill { background: #ffdd44; }
 .tp-hp.hp-crit .tp-hp-fill { background: var(--red); }
 
+/* Shield HP */
+.tp-shield { margin: 4px 0; }
+.tp-shield-text { font-size: 11px; color: var(--ice); }
+.tp-shield-bar {
+    height: 6px;
+    background: #1a1a2e;
+    border: 1px solid rgba(100, 180, 255, 0.3);
+    border-radius: 2px;
+    margin-top: 2px;
+    overflow: hidden;
+}
+.tp-shield-fill {
+    height: 100%;
+    background: linear-gradient(90deg, rgba(100, 180, 255, 0.6), rgba(100, 180, 255, 0.9));
+    transition: width 0.2s;
+}
+
 /* Progress bar */
 .tp-progress {
     position: relative;
@@ -452,6 +469,7 @@ body {
 .tp-prg-upgrading { background: rgba(50, 255, 100, 0.2); }
 .tp-prg-branching { background: rgba(255, 215, 0, 0.2); }
 .tp-prg-repairing { background: rgba(100, 255, 150, 0.2); }
+.tp-prg-shielding { background: rgba(100, 180, 255, 0.2); }
 .tp-prg-label {
     position: absolute;
     top: 0; left: 8px;
@@ -497,6 +515,8 @@ body {
 .tp-btn-aim:hover { box-shadow: 0 0 8px rgba(255, 0, 255, 0.3); }
 .tp-btn-sell { color: #cc6060; background: rgba(200, 60, 60, 0.06); border-color: rgba(200, 60, 60, 0.3); }
 .tp-btn-sell:hover { box-shadow: 0 0 8px rgba(200, 60, 60, 0.3); }
+.tp-btn-shield { color: var(--ice); background: rgba(100, 180, 255, 0.06); border-color: rgba(100, 180, 255, 0.3); }
+.tp-btn-shield:hover:not(.disabled) { box-shadow: 0 0 8px rgba(100, 180, 255, 0.3); }
 .tp-maxed { font-size: 11px; color: var(--text-dim); padding: 4px 0; }
 
 /* ─── Messages ────────────────────────────────────────────── */
