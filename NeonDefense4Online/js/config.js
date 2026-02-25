@@ -102,15 +102,15 @@ export const TOWER_DATA = {
         hp: 220,
         levels: [
             { damage: 18, fire_rate: 0.7, range: 130, chains: 3, chain_range: 80, upgrade_cost: 0 },
-            { damage: 28, fire_rate: 0.6, range: 145, chains: 4, chain_range: 90, upgrade_cost: 130 },
-            { damage: 42, fire_rate: 0.45, range: 160, chains: 5, chain_range: 100, upgrade_cost: 240 },
+            { damage: 32, fire_rate: 0.55, range: 150, chains: 4, chain_range: 95, upgrade_cost: 130 },
+            { damage: 52, fire_rate: 0.40, range: 170, chains: 6, chain_range: 110, upgrade_cost: 240 },
         ],
         branches: {
             A: { name: "Arc Web", desc: "Many chains, wide spread",
-                 cost: 600, damage: 38, fire_rate: 0.35, range: 170, chains: 8, chain_range: 120 },
+                 cost: 600, damage: 48, fire_rate: 0.30, range: 185, chains: 10, chain_range: 140 },
             B: { name: "Burn", desc: "Chains apply DoT",
-                 cost: 650, damage: 50, fire_rate: 0.5, range: 160, chains: 4, chain_range: 95,
-                 dot_damage: 15, dot_duration: 3.0 },
+                 cost: 650, damage: 62, fire_rate: 0.42, range: 175, chains: 5, chain_range: 110,
+                 dot_damage: 24, dot_duration: 3.5 },
         },
     },
     [TowerType.CRYO]: {
@@ -134,14 +134,14 @@ export const TOWER_DATA = {
         hp: 400,
         levels: [
             { damage: 45, fire_rate: 2.8, range: 140, upgrade_cost: 0 },
-            { damage: 70, fire_rate: 2.3, range: 160, upgrade_cost: 180 },
-            { damage: 110, fire_rate: 1.8, range: 185, upgrade_cost: 340 },
+            { damage: 80, fire_rate: 2.1, range: 165, upgrade_cost: 180 },
+            { damage: 135, fire_rate: 1.6, range: 195, upgrade_cost: 340 },
         ],
         branches: {
             A: { name: "Shockwave", desc: "Huge radius",
-                 cost: 700, damage: 100, fire_rate: 1.8, range: 260 },
+                 cost: 700, damage: 140, fire_rate: 1.5, range: 300 },
             B: { name: "Focused Core", desc: "Small but devastating",
-                 cost: 750, damage: 280, fire_rate: 2.0, range: 130 },
+                 cost: 750, damage: 380, fire_rate: 1.7, range: 145 },
         },
     },
 };
@@ -165,7 +165,7 @@ export const REPAIR_TIME_MAX = 6;
 export const RESEARCH_TIME_BY_LEVEL = { 1: 8, 2: 10, 3: 12, 4: 15, 5: 15, 6: 15 };
 
 // Shield system (available after branching)
-export const SHIELD_HP_MULT = 0.80;       // Shield HP = 80% of tower max HP
+export const SHIELD_HP_MULT = 2.40;       // Shield HP = 240% of tower max HP
 export const SHIELD_COST_MULT = 0.50;     // Cost = 50% of total invested gold
 export const SHIELD_BUILD_TIME = 6;       // Seconds to deploy shield
 export const SHIELD_COLOR = [100, 180, 255];
