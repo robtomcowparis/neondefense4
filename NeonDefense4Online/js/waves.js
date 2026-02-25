@@ -3,8 +3,8 @@
 //  Wave manager, composition logic, scaling, spawn queue
 // ═══════════════════════════════════════════════════════════════
 
-import { EnemyType, MIN_REWARD_MULT, REWARD_DECAY_PER_WAVE,
-         WAVE_CLEAR_BASE_BONUS, WAVE_CLEAR_BONUS_PER_WAVE } from './config.js';
+import { EnemyType, MIN_REWARD_MULT, REWARD_DECAY_PER_WAVE, REWARD_DECAY_STOP_WAVE,
+         WAVE_CLEAR_BASE_BONUS, WAVE_CLEAR_BONUS_PER_WAVE, WAVE_CLEAR_LATE_BONUS_PER_WAVE } from './config.js';
 import { clamp, randomUniform } from './utils.js';
 import { Enemy } from './enemies.js';
 import { ALL_PATHS } from './path.js';
@@ -36,11 +36,16 @@ export class WaveManager {
     }
 
     getRewardMultiplier() {
-        return Math.max(MIN_REWARD_MULT, 1.0 - this.currentWave * REWARD_DECAY_PER_WAVE);
+        const effectiveWave = Math.min(this.currentWave, REWARD_DECAY_STOP_WAVE);
+        return Math.max(MIN_REWARD_MULT, 1.0 - effectiveWave * REWARD_DECAY_PER_WAVE);
     }
 
     getWaveClearBonus() {
-        return WAVE_CLEAR_BASE_BONUS + this.currentWave * WAVE_CLEAR_BONUS_PER_WAVE;
+        let bonus = WAVE_CLEAR_BASE_BONUS + this.currentWave * WAVE_CLEAR_BONUS_PER_WAVE;
+        if (this.currentWave > 25) {
+            bonus += (this.currentWave - 25) * WAVE_CLEAR_LATE_BONUS_PER_WAVE;
+        }
+        return bonus;
     }
 
     _getAvailableEnemies(waveNum) {

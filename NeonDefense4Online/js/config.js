@@ -226,9 +226,11 @@ export const RESEARCH_TRACKS = {
 export const STARTING_GOLD = 1000;
 export const STARTING_LIVES = 30;
 export const REWARD_DECAY_PER_WAVE = 0.012;
-export const MIN_REWARD_MULT = 0.35;
+export const REWARD_DECAY_STOP_WAVE = 25;    // Reward mult stops decaying after this wave
+export const MIN_REWARD_MULT = 0.50;
 export const WAVE_CLEAR_BASE_BONUS = 70;
 export const WAVE_CLEAR_BONUS_PER_WAVE = 20;
+export const WAVE_CLEAR_LATE_BONUS_PER_WAVE = 40; // Extra per wave after wave 25
 export const COST_INFLATION_PER_WAVE = 0.020;
 export const MAX_COST_MULT = 2.5;
 

@@ -189,8 +189,9 @@ body {
     border-radius: 3px;
     margin-bottom: 6px;
     overflow: hidden;
+    transition: opacity 0.15s;
 }
-.wave-cd-bar.hidden { display: none; }
+.wave-cd-bar.hidden { opacity: 0; pointer-events: none; }
 .wave-cd-fill {
     height: 100%;
     background: linear-gradient(90deg, rgba(0,180,200,0.3), rgba(0,255,255,0.15));
@@ -222,7 +223,7 @@ body {
     background: rgba(0, 255, 255, 0.15);
     box-shadow: 0 0 16px rgba(0, 255, 255, 0.4);
 }
-.btn-send-early.hidden { display: none; }
+.btn-send-early.hidden { visibility: hidden; pointer-events: none; }
 .early-bonus { color: var(--gold); margin-left: 6px; }
 
 @keyframes pulse-glow-cyan {
@@ -259,8 +260,9 @@ body {
     border-radius: 3px;
     margin-bottom: 8px;
     overflow: hidden;
+    transition: opacity 0.15s;
 }
-.research-progress.hidden { display: none; }
+.research-progress.hidden { opacity: 0; pointer-events: none; }
 .res-prg-fill {
     height: 100%;
     background: linear-gradient(90deg, rgba(80, 120, 255, 0.3), rgba(80, 120, 255, 0.15));
