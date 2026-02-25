@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEON DEFENSE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- ═══ Menu Overlay ═══ -->
+    <div id="menuOverlay" class="overlay">
+        <div class="scanlines"></div>
+        <div class="menu-content">
+            <h1 class="menu-title">NEON<br>DEFENSE</h1>
+            <div class="menu-subtitle">INFINITE SURVIVAL</div>
+            <div class="menu-divider"></div>
+            <button id="btnStart" class="menu-btn pulse-btn">▶ START GAME</button>
+            <div class="menu-keys">
+                <div>1–5 Select Tower &nbsp;|&nbsp; LMB Place &nbsp;|&nbsp; RMB Cancel</div>
+                <div>SPACE Send Early &nbsp;|&nbsp; F Fast Forward &nbsp;|&nbsp; ESC Pause</div>
+            </div>
+            <div class="menu-divider"></div>
+            <div class="menu-section-title">GLOBAL LEADERBOARD</div>
+            <div id="menuLeaderboard" class="leaderboard-table">
+                <div class="lb-loading">Loading scores...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Pause Overlay ═══ -->
+    <div id="pauseOverlay" class="overlay overlay-dim hidden">
+        <div class="pause-box">
+            <div class="pause-title">⏸ PAUSED</div>
+            <div class="pause-keys">
+                <button id="btnResume" class="menu-btn">RESUME (ESC)</button>
+                <button id="btnQuit" class="menu-btn menu-btn-quit">QUIT TO MENU (Q)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Game Over Overlay ═══ -->
+    <div id="gameOverOverlay" class="overlay overlay-dim hidden">
+        <div class="gameover-box">
+            <div class="gameover-title">SYSTEM FAILURE</div>
+            <div class="gameover-stats">
+                <div class="go-stat"><span class="go-label">Waves</span><span id="goWaves" class="go-val">0</span></div>
+                <div class="go-stat"><span class="go-label">Kills</span><span id="goKills" class="go-val">0</span></div>
+                <div class="go-stat"><span class="go-label">Towers Built</span><span id="goTowers" class="go-val">0</span></div>
+                <div class="go-stat"><span class="go-label">Towers Lost</span><span id="goLost" class="go-val">0</span></div>
+                <div class="go-stat"><span class="go-label">Time</span><span id="goTime" class="go-val">0:00</span></div>
+            </div>
+            <div class="gameover-submit">
+                <label class="go-name-label">Enter name for leaderboard:</label>
+                <div class="go-name-row">
+                    <input id="goNameInput" type="text" class="go-name-input" maxlength="20" placeholder="PLAYER" autocomplete="off">
+                    <button id="btnSubmitScore" class="menu-btn">SUBMIT</button>
+                </div>
+                <div id="goSubmitStatus" class="go-submit-status"></div>
+            </div>
+            <div class="menu-divider"></div>
+            <button id="btnPlayAgain" class="menu-btn pulse-btn">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <!-- ═══ Game Container ═══ -->
+    <div id="gameContainer" class="game-container hidden">
+        <canvas id="gameCanvas"></canvas>
+        <div id="sidebar" class="sidebar"></div>
+    </div>
+
+</body>
+<script type="module" src="js/main.js"></script>
+</html>
