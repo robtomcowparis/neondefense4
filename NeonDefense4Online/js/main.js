@@ -191,6 +191,8 @@ function startGame() {
             if (game.gold >= cost) {
                 game.selectedTowerType = tt;
                 game.selectedTower = null;
+                // On mobile, close drawer so user can see the map to place
+                if (window.innerWidth <= 1024 && _drawerOpen) toggleDrawer();
             } else {
                 showMessage("Not enough gold!");
             }
@@ -442,6 +444,197 @@ function handleRightClick(e) {
     }
     game.selectedTowerType = null;
     game.selectedTower = null;
+}
+
+// ─── Touch Input Handling ────────────────────────────────────
+let _touchStartTime = 0;
+let _touchStartPos = null;
+let _touchMoved = false;
+let _isMobile = false;
+
+function _touchToCanvas(touch) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+        x: (touch.clientX - rect.left) * scaleX,
+        y: (touch.clientY - rect.top) * scaleY,
+    };
+}
+
+function handleTouchStart(e) {
+    e.preventDefault();
+    _isMobile = true;
+    if (e.touches.length !== 1) return;
+    const pos = _touchToCanvas(e.touches[0]);
+    _touchStartTime = performance.now();
+    _touchStartPos = pos;
+    _touchMoved = false;
+
+    // Update hover position immediately for placement preview
+    if (pos.x >= 0 && pos.x < MAP_WIDTH && pos.y >= 0 && pos.y < MAP_HEIGHT) {
+        game.hoverCol = Math.floor(pos.x / TILE_SIZE);
+        game.hoverRow = Math.floor(pos.y / TILE_SIZE);
+        mouseX = pos.x;
+        mouseY = pos.y;
+    }
+}
+
+function handleTouchMove(e) {
+    e.preventDefault();
+    if (e.touches.length !== 1) return;
+    const pos = _touchToCanvas(e.touches[0]);
+
+    // If moved more than 10px, consider it a drag (not a tap)
+    if (_touchStartPos) {
+        const dx = pos.x - _touchStartPos.x;
+        const dy = pos.y - _touchStartPos.y;
+        if (Math.hypot(dx, dy) > 15) _touchMoved = true;
+    }
+
+    // Update hover preview during touch-drag (for tower placement)
+    if (pos.x >= 0 && pos.x < MAP_WIDTH && pos.y >= 0 && pos.y < MAP_HEIGHT) {
+        game.hoverCol = Math.floor(pos.x / TILE_SIZE);
+        game.hoverRow = Math.floor(pos.y / TILE_SIZE);
+        mouseX = pos.x;
+        mouseY = pos.y;
+    }
+}
+
+function handleTouchEnd(e) {
+    e.preventDefault();
+    if (_touchMoved) {
+        // If this was a drag and we're placing a tower, place it at current hover position
+        if (game.selectedTowerType && game.hoverCol >= 0) {
+            _doTouchTap({ x: mouseX, y: mouseY });
+        }
+        _touchStartPos = null;
+        // Clear hover after drag
+        game.hoverCol = -1;
+        game.hoverRow = -1;
+        return;
+    }
+    if (!_touchStartPos) return;
+
+    const pos = _touchStartPos;
+    const holdTime = performance.now() - _touchStartTime;
+
+    // Long press (>500ms) = right-click / cancel
+    if (holdTime > 500) {
+        if (game.aimingTower) {
+            game.aimingTower.fixedAngle = game.aimingTower.fixedAngle || 0;
+            game.aimingTower.angle = game.aimingTower.fixedAngle;
+            game.aimingTower = null;
+        }
+        game.selectedTowerType = null;
+        game.selectedTower = null;
+    } else {
+        // Normal tap = click
+        _doTouchTap(pos);
+    }
+    _touchStartPos = null;
+    // Clear hover after tap (no stale preview on mobile)
+    setTimeout(() => {
+        if (!_touchStartPos) {
+            game.hoverCol = -1;
+            game.hoverRow = -1;
+        }
+    }, 50);
+}
+
+function _doTouchTap(pos) {
+    soundMgr.init();
+    soundMgr.resume();
+
+    const mx = pos.x;
+    const my = pos.y;
+
+    if (game.state !== GameState.PLAYING) return;
+
+    // Rail aiming mode
+    if (game.aimingTower) {
+        if (mx >= 0 && mx < MAP_WIDTH && my >= 0 && my < MAP_HEIGHT) {
+            const t = game.aimingTower;
+            const dx = mx - t.x, dy = my - t.y;
+            if (Math.hypot(dx, dy) > 5) {
+                t.fixedAngle = Math.atan2(dy, dx) * 180 / Math.PI;
+                t.angle = t.fixedAngle;
+                game.aimingTower = null;
+                game.selectedTower = t;
+                showMessage("Rail direction set!");
+                return;
+            }
+        }
+        return;
+    }
+
+    // Map clicks
+    if (mx >= 0 && mx < MAP_WIDTH && my >= 0 && my < MAP_HEIGHT) {
+        const col = Math.floor(mx / TILE_SIZE);
+        const row = Math.floor(my / TILE_SIZE);
+
+        // Tower placement
+        if (game.selectedTowerType) {
+            if (game.gameMap.isBuildable(col, row)) {
+                const cost = Math.round(TOWER_DATA[game.selectedTowerType].cost * costMultiplier());
+                if (game.gold >= cost) {
+                    game.gold -= cost;
+                    const t = new Tower(game.selectedTowerType, col, row, cost);
+                    const fortifyM = globalMods().fortify_mult;
+                    t.hp = t.getMaxHp(fortifyM);
+                    game.towers.push(t);
+                    game.gameMap.placeTower(col, row);
+                    game.towersBuilt++;
+                    soundMgr.play('place_tower');
+                    if (game.selectedTowerType === TowerType.RAIL) {
+                        game.aimingTower = t;
+                        showMessage("Tap to set Rail firing direction!", 5.0);
+                    }
+                    game.selectedTowerType = null;
+                } else {
+                    showMessage("Not enough gold!");
+                }
+            } else {
+                showMessage("Can't build here!");
+            }
+            return;
+        }
+
+        // Select existing tower
+        for (const t of game.towers) {
+            if (t.col === col && t.row === row) {
+                game.selectedTower = t;
+                game.selectedTowerType = null;
+                // On mobile, open the drawer to show tower info
+                _openDrawer();
+                return;
+            }
+        }
+        game.selectedTower = null;
+        game.selectedTowerType = null;
+    }
+}
+
+// ─── Drawer Toggle ──────────────────────────────────────────
+let _drawerOpen = false;
+
+function toggleDrawer() {
+    _drawerOpen = !_drawerOpen;
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.getElementById('drawerToggle');
+    if (sidebar) sidebar.classList.toggle('drawer-open', _drawerOpen);
+    if (toggle) toggle.classList.toggle('open', _drawerOpen);
+}
+
+function _openDrawer() {
+    if (_drawerOpen) return;
+    // Only auto-open on mobile (narrow screens)
+    if (window.innerWidth > 1024) return;
+    _drawerOpen = true;
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.getElementById('drawerToggle');
+    if (sidebar) sidebar.classList.add('drawer-open');
+    if (toggle) toggle.classList.add('open');
 }
 
 // ─── Update Loop ─────────────────────────────────────────────
@@ -729,7 +922,7 @@ function drawGame() {
                 ctx.fillStyle = rgba(WHITE, alpha); ctx.fill();
             }
         }
-        drawText(ctx, "CLICK TO SET RAIL DIRECTION", MAP_WIDTH / 2, 20, MAGENTA, 16, true);
+        drawText(ctx, _isMobile ? "TAP TO SET RAIL DIRECTION" : "CLICK TO SET RAIL DIRECTION", MAP_WIDTH / 2, 20, MAGENTA, 16, true);
     }
 }
 
@@ -782,7 +975,14 @@ function gameLoop(timestamp) {
 
     update(dt);
     draw();
-    if (hud && game.state === GameState.PLAYING) hud.update();
+    if (hud && game.state === GameState.PLAYING) {
+        hud.update();
+        // Update mobile drawer resource summary
+        const drawerRes = document.getElementById('drawerRes');
+        if (drawerRes && game.waveMgr) {
+            drawerRes.textContent = `W${game.waveMgr.currentWave}  💰${game.gold}  ❤${game.lives}`;
+        }
+    }
     requestAnimationFrame(gameLoop);
 }
 
@@ -809,8 +1009,45 @@ function init() {
     canvas.addEventListener('click', handleClick);
     canvas.addEventListener('contextmenu', handleRightClick);
 
+    // Touch support
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+
     // Global keys
     window.addEventListener('keydown', handleKeyDown);
+
+    // Mobile drawer toggle
+    const drawerToggle = document.getElementById('drawerToggle');
+    if (drawerToggle) {
+        drawerToggle.addEventListener('click', toggleDrawer);
+        drawerToggle.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            toggleDrawer();
+        });
+    }
+
+    // Mobile floating controls
+    document.getElementById('btnMobileCancel')?.addEventListener('click', () => {
+        if (game.state !== GameState.PLAYING) return;
+        if (game.aimingTower) {
+            game.aimingTower.fixedAngle = game.aimingTower.fixedAngle || 0;
+            game.aimingTower.angle = game.aimingTower.fixedAngle;
+            game.aimingTower = null;
+        }
+        game.selectedTowerType = null;
+        game.selectedTower = null;
+    });
+    document.getElementById('btnMobileSpeed')?.addEventListener('click', () => {
+        if (game.state !== GameState.PLAYING) return;
+        game.speedMult = game.speedMult === 2 ? 1 : 2;
+        showMessage(game.speedMult === 2 ? 'Speed: ▶▶ 2×' : 'Speed: ▶ 1×', 1.0);
+        const btn = document.getElementById('btnMobileSpeed');
+        if (btn) btn.classList.toggle('active', game.speedMult === 2);
+    });
+    document.getElementById('btnMobilePause')?.addEventListener('click', () => {
+        if (game.state === GameState.PLAYING) setState(GameState.PAUSED);
+    });
 
     // Menu buttons
     document.getElementById('btnStart')?.addEventListener('click', () => {

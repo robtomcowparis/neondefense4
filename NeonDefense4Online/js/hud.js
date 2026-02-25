@@ -172,7 +172,9 @@ export class HUD {
             el.addEventListener('click', () => {
                 if (this.callbacks.onSelectTowerType) this.callbacks.onSelectTowerType(tt);
             });
-            el.addEventListener('mouseenter', (e) => this._showTowerTooltip(e, tt));
+            el.addEventListener('mouseenter', (e) => {
+                if (!('ontouchstart' in window) || window.innerWidth > 1024) this._showTowerTooltip(e, tt);
+            });
             el.addEventListener('mouseleave', () => this._hideTooltip());
             container.appendChild(el);
         }
@@ -397,18 +399,23 @@ export class HUD {
             this._panelFingerprint = newFp;
             const data = TOWER_DATA[g.selectedTowerType];
             const bt = BUILD_TIMES[g.selectedTowerType] || 8;
+            const isMobile = window.innerWidth <= 1024;
+            const hint = g.selectedTowerType === TowerType.RAIL
+                ? (isMobile ? 'Tap to place, then tap to aim.' : 'Place, then click to aim.')
+                : (isMobile ? 'Tap a tile to place.' : 'Click a tile to place.');
             panel.innerHTML = `
                 <div class="tp-header" style="--tw-color:rgb(${data.color.join(',')})">
                     <span class="tp-name">Build: ${data.name}</span>
                 </div>
                 <div class="tp-desc">${data.description}</div>
                 <div class="tp-stat">HP: ${data.hp} &nbsp;|&nbsp; Build: ${bt}s</div>
-                <div class="tp-hint">${g.selectedTowerType === TowerType.RAIL ? 'Place, then click to aim.' : 'Click a tile to place.'}</div>
+                <div class="tp-hint">${hint}</div>
             `;
         } else {
             if (this._panelFingerprint !== 'empty') {
                 this._panelFingerprint = 'empty';
-                panel.innerHTML = '<div class="tower-panel-empty">Select or place a tower</div>';
+                const emptyText = window.innerWidth <= 1024 ? 'Tap a tower above to build' : 'Select or place a tower';
+                panel.innerHTML = `<div class="tower-panel-empty">${emptyText}</div>`;
             }
         }
     }

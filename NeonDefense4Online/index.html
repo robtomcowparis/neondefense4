@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>NEON DEFENSE</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -68,7 +68,20 @@
 
     <!-- ═══ Game Container ═══ -->
     <div id="gameContainer" class="game-container hidden">
-        <canvas id="gameCanvas"></canvas>
+        <div id="canvasWrap" class="canvas-wrap">
+            <canvas id="gameCanvas"></canvas>
+            <!-- Mobile floating controls -->
+            <div id="mobileControls" class="mobile-controls">
+                <button id="btnMobileCancel" class="mobile-btn mobile-btn-cancel" title="Cancel / Deselect">✕</button>
+                <button id="btnMobileSpeed" class="mobile-btn mobile-btn-speed" title="Toggle Speed">▶▶</button>
+                <button id="btnMobilePause" class="mobile-btn mobile-btn-pause" title="Pause">⏸</button>
+            </div>
+        </div>
+        <div id="drawerToggle" class="drawer-toggle">
+            <span id="drawerArrow" class="drawer-arrow">▲</span>
+            <span class="drawer-label">TOWERS & INFO</span>
+            <span id="drawerRes" class="drawer-res"></span>
+        </div>
         <div id="sidebar" class="sidebar"></div>
     </div>
 
