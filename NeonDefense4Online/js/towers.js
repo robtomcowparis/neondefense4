@@ -737,27 +737,41 @@ export class Tower {
             ctx.strokeRect(bx, by, barW, barH);
         }
 
-        // Shield ring visual + shield HP bar
+        // Shield inner glow visual + shield HP bar
         if (this.shieldActive && this.shieldHp > 0) {
-            const shieldPulse = 0.6 + 0.3 * Math.sin(performance.now() * 0.004);
-            const shieldRadius = (visible ? baseSize : 12) + 8;
-            // Outer glow
+            const shieldPulse = 0.55 + 0.45 * Math.sin(performance.now() * 0.004);
+            const sRatio = Math.max(0, this.shieldHp / this.shieldMaxHp);
+            const innerR = visible ? baseSize : 12;
+
+            // Inner glow layers (bright core fill inside the tower)
             ctx.beginPath();
-            ctx.arc(ix, iy, shieldRadius + 3, 0, Math.PI * 2);
-            ctx.strokeStyle = rgba(SHIELD_COLOR, 0.1 * shieldPulse);
-            ctx.lineWidth = 4;
-            ctx.stroke();
-            // Shield ring
+            ctx.arc(ix, iy, innerR + 1, 0, Math.PI * 2);
+            ctx.fillStyle = rgba(SHIELD_COLOR, 0.08 * shieldPulse * sRatio);
+            ctx.fill();
+
             ctx.beginPath();
-            ctx.arc(ix, iy, shieldRadius, 0, Math.PI * 2);
-            ctx.strokeStyle = rgba(SHIELD_COLOR, 0.45 * shieldPulse);
+            ctx.arc(ix, iy, innerR * 0.7, 0, Math.PI * 2);
+            ctx.fillStyle = rgba(SHIELD_COLOR, 0.18 * shieldPulse * sRatio);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(ix, iy, innerR * 0.35, 0, Math.PI * 2);
+            ctx.fillStyle = rgba(SHIELD_COLOR, 0.30 * shieldPulse * sRatio);
+            ctx.fill();
+
+            // Bright inner ring on the tower border
+            ctx.beginPath();
+            ctx.arc(ix, iy, innerR + 1, 0, Math.PI * 2);
+            ctx.strokeStyle = rgba(SHIELD_COLOR, 0.55 * shieldPulse * sRatio);
             ctx.lineWidth = 2;
             ctx.stroke();
-            // Shield fill (very faint)
+
+            // Subtle outer halo (thin, close)
             ctx.beginPath();
-            ctx.arc(ix, iy, shieldRadius, 0, Math.PI * 2);
-            ctx.fillStyle = rgba(SHIELD_COLOR, 0.05 * shieldPulse);
-            ctx.fill();
+            ctx.arc(ix, iy, innerR + 4, 0, Math.PI * 2);
+            ctx.strokeStyle = rgba(SHIELD_COLOR, 0.12 * shieldPulse * sRatio);
+            ctx.lineWidth = 1;
+            ctx.stroke();
 
             // Shield HP bar (below the HP bar or below tower)
             const shieldBarW = 28, shieldBarH = 2;
@@ -766,7 +780,6 @@ export class Tower {
             const sbx = ix - shieldBarW / 2;
             ctx.fillStyle = 'rgb(20,30,50)';
             ctx.fillRect(sbx, sby, shieldBarW, shieldBarH);
-            const sRatio = Math.max(0, this.shieldHp / this.shieldMaxHp);
             ctx.fillStyle = rgba(SHIELD_COLOR, 0.9);
             ctx.fillRect(sbx, sby, Math.round(shieldBarW * sRatio), shieldBarH);
             ctx.strokeStyle = rgba(SHIELD_COLOR, 0.4);

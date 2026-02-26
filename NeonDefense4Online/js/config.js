@@ -162,7 +162,7 @@ export const UPGRADE_TIME_BY_LEVEL = { 1: 5, 2: 8 };
 export const BRANCH_TIME = 12;
 export const REPAIR_TIME_BASE = 3;
 export const REPAIR_TIME_MAX = 6;
-export const RESEARCH_TIME_BY_LEVEL = { 1: 8, 2: 10, 3: 12, 4: 15, 5: 15, 6: 15 };
+export const RESEARCH_TIME_BY_LEVEL = { 1: 12, 2: 18, 3: 25, 4: 35, 5: 35, 6: 35 };
 
 // Shield system (available after branching)
 export const SHIELD_HP_MULT = 2.40;       // Shield HP = 240% of tower max HP
@@ -225,32 +225,32 @@ export const RESEARCH_TREE = {
         icon: "⚡",
         color: MAGENTA,
         tiers: [
-            { id: "dmg_1", name: "Weapons I",  desc: "+8% tower damage",  cost: 350,  time: 8,
+            { id: "dmg_1", name: "Weapons I",  desc: "+8% tower damage",  cost: 600,  time: 12,
               effect: { damage_mult: 0.08 } },
-            { id: "dmg_2", name: "Weapons II", desc: "+8% tower damage",  cost: 580,  time: 10,
+            { id: "dmg_2", name: "Weapons II", desc: "+8% tower damage",  cost: 1100,  time: 18,
               effect: { damage_mult: 0.08 } },
         ],
         branches: {
             A: {
                 id: "dmg_A", name: "Precision", desc: "+10% damage → Armor Pierce / Crits",
-                cost: 950, time: 12,
+                cost: 2200, time: 25,
                 effect: { damage_mult: 0.10 },
                 children: {
                     1: { id: "dmg_A1", name: "Armor Piercing", desc: "Ignore 50% enemy armor",
-                         cost: 1400, time: 15, effect: { armor_pierce: 0.50 } },
+                         cost: 3800, time: 35, effect: { armor_pierce: 0.50 } },
                     2: { id: "dmg_A2", name: "Critical Systems", desc: "10% chance to deal double damage",
-                         cost: 1400, time: 15, effect: { critical_chance: 0.10 } },
+                         cost: 3800, time: 35, effect: { critical_chance: 0.10 } },
                 }
             },
             B: {
                 id: "dmg_B", name: "Overload", desc: "+10% damage → Control Synergy / Fire Rate",
-                cost: 950, time: 12,
+                cost: 2200, time: 25,
                 effect: { damage_mult: 0.10 },
                 children: {
                     1: { id: "dmg_B1", name: "Controlled Damage", desc: "+25% damage vs controlled enemies",
-                         cost: 1400, time: 15, effect: { controlled_damage_bonus: 0.25 } },
+                         cost: 3800, time: 35, effect: { controlled_damage_bonus: 0.25 } },
                     2: { id: "dmg_B2", name: "Overdrive", desc: "+15% fire rate",
-                         cost: 1400, time: 15, effect: { firerate_bonus: 0.15 } },
+                         cost: 3800, time: 35, effect: { firerate_bonus: 0.15 } },
                 }
             }
         }
@@ -260,32 +260,32 @@ export const RESEARCH_TREE = {
         icon: "◎",
         color: NEON_GREEN,
         tiers: [
-            { id: "rng_1", name: "Sensors I",  desc: "+6% tower range",  cost: 320,  time: 8,
+            { id: "rng_1", name: "Sensors I",  desc: "+6% tower range",  cost: 550,  time: 12,
               effect: { range_mult: 0.06 } },
-            { id: "rng_2", name: "Sensors II", desc: "+6% tower range",  cost: 510,  time: 10,
+            { id: "rng_2", name: "Sensors II", desc: "+6% tower range",  cost: 1000,  time: 18,
               effect: { range_mult: 0.06 } },
         ],
         branches: {
             A: {
                 id: "rng_A", name: "Long Optics", desc: "+8% range → Phase Counter / Long-range Dmg",
-                cost: 900, time: 12,
+                cost: 2100, time: 25,
                 effect: { range_mult: 0.08 },
                 children: {
                     1: { id: "rng_A1", name: "Phase Scanner", desc: "Phased enemies take normal damage",
-                         cost: 1300, time: 15, effect: { phase_scanner: 1 } },
+                         cost: 3500, time: 35, effect: { phase_scanner: 1 } },
                     2: { id: "rng_A2", name: "Overwatch", desc: "+20% damage beyond 75% range",
-                         cost: 1300, time: 15, effect: { overwatch_bonus: 0.20 } },
+                         cost: 3500, time: 35, effect: { overwatch_bonus: 0.20 } },
                 }
             },
             B: {
                 id: "rng_B", name: "Wide Spectrum", desc: "+8% range → AoE Boost / Close-range Dmg",
-                cost: 900, time: 12,
+                cost: 2100, time: 25,
                 effect: { range_mult: 0.08 },
                 children: {
                     1: { id: "rng_B1", name: "Field Amplifier", desc: "Cryo/Nova/Tesla AoE +25%",
-                         cost: 1300, time: 15, effect: { aoe_bonus: 0.25 } },
+                         cost: 3500, time: 35, effect: { aoe_bonus: 0.25 } },
                     2: { id: "rng_B2", name: "Proximity Boost", desc: "+25% damage to enemies within half range",
-                         cost: 1300, time: 15, effect: { proximity_bonus: 0.25 } },
+                         cost: 3500, time: 35, effect: { proximity_bonus: 0.25 } },
                 }
             }
         }
@@ -295,32 +295,32 @@ export const RESEARCH_TREE = {
         icon: "❄",
         color: ICE_BLUE,
         tiers: [
-            { id: "ctl_1", name: "Disruption I",  desc: "+10% slow/vuln/dot", cost: 380,  time: 8,
+            { id: "ctl_1", name: "Disruption I",  desc: "+10% slow/vuln/dot", cost: 650,  time: 12,
               effect: { control_mult: 0.10 } },
-            { id: "ctl_2", name: "Disruption II", desc: "+10% slow/vuln/dot", cost: 630,  time: 10,
+            { id: "ctl_2", name: "Disruption II", desc: "+10% slow/vuln/dot", cost: 1200,  time: 18,
               effect: { control_mult: 0.10 } },
         ],
         branches: {
             A: {
                 id: "ctl_A", name: "Permafrost", desc: "+12% control → Longer Slows / Execute Dmg",
-                cost: 1000, time: 12,
+                cost: 2400, time: 25,
                 effect: { control_mult: 0.12 },
                 children: {
                     1: { id: "ctl_A1", name: "Deep Freeze", desc: "Slow effects last 50% longer",
-                         cost: 1500, time: 15, effect: { slow_duration_mult: 0.50 } },
+                         cost: 4000, time: 35, effect: { slow_duration_mult: 0.50 } },
                     2: { id: "ctl_A2", name: "Shatter", desc: "Enemies below 30% HP take +40% damage",
-                         cost: 1500, time: 15, effect: { execute_threshold: 0.30, execute_bonus: 0.40 } },
+                         cost: 4000, time: 35, effect: { execute_threshold: 0.30, execute_bonus: 0.40 } },
                 }
             },
             B: {
                 id: "ctl_B", name: "Corruption", desc: "+12% control → DoT Spread / Sapper Defense",
-                cost: 1000, time: 12,
+                cost: 2400, time: 25,
                 effect: { control_mult: 0.12 },
                 children: {
                     1: { id: "ctl_B1", name: "Cascade", desc: "DoT +60%, tick +30%, spreads on kill",
-                         cost: 1500, time: 15, effect: { dot_damage_bonus: 0.60, dot_tick_bonus: 0.30, cascade_spread: 1 } },
+                         cost: 4000, time: 35, effect: { dot_damage_bonus: 0.60, dot_tick_bonus: 0.30, cascade_spread: 1 } },
                     2: { id: "ctl_B2", name: "Suppression Field", desc: "Controlled enemies deal 30% less to towers",
-                         cost: 1500, time: 15, effect: { suppression_field: 0.30 } },
+                         cost: 4000, time: 35, effect: { suppression_field: 0.30 } },
                 }
             }
         }
@@ -330,32 +330,32 @@ export const RESEARCH_TREE = {
         icon: "🛡",
         color: CYAN,
         tiers: [
-            { id: "frt_1", name: "Reinforce I",  desc: "+12% tower HP",  cost: 300,  time: 8,
+            { id: "frt_1", name: "Reinforce I",  desc: "+12% tower HP",  cost: 500,  time: 12,
               effect: { fortify_mult: 0.12 } },
-            { id: "frt_2", name: "Reinforce II", desc: "+12% tower HP",  cost: 480,  time: 10,
+            { id: "frt_2", name: "Reinforce II", desc: "+12% tower HP",  cost: 950,  time: 18,
               effect: { fortify_mult: 0.12 } },
         ],
         branches: {
             A: {
                 id: "frt_A", name: "Hardened", desc: "+15% tower HP → Sapper Resist / Auto-Heal",
-                cost: 850, time: 12,
+                cost: 2000, time: 25,
                 effect: { fortify_mult: 0.15 },
                 children: {
                     1: { id: "frt_A1", name: "Reactive Armor", desc: "Towers take 40% less sapper damage",
-                         cost: 1200, time: 15, effect: { sapper_reduction: 0.40 } },
+                         cost: 3200, time: 35, effect: { sapper_reduction: 0.40 } },
                     2: { id: "frt_A2", name: "Auto-Repair", desc: "Towers regen 1.5% max HP/sec",
-                         cost: 1200, time: 15, effect: { tower_regen: 0.015 } },
+                         cost: 3200, time: 35, effect: { tower_regen: 0.015 } },
                 }
             },
             B: {
                 id: "frt_B", name: "Efficiency", desc: "+15% tower HP → Rebuild Refund / Build & Fight",
-                cost: 850, time: 12,
+                cost: 2000, time: 25,
                 effect: { fortify_mult: 0.15 },
                 children: {
                     1: { id: "frt_B1", name: "Emergency Overhaul", desc: "Destroyed towers refund 75%, rebuild same type 50% faster",
-                         cost: 1200, time: 15, effect: { destroy_refund: 0.75, rebuild_speed: 0.50 } },
+                         cost: 3200, time: 35, effect: { destroy_refund: 0.75, rebuild_speed: 0.50 } },
                     2: { id: "frt_B2", name: "Active Construction", desc: "Towers operate at 50% while building/upgrading",
-                         cost: 1200, time: 15, effect: { active_construction: 0.50 } },
+                         cost: 3200, time: 35, effect: { active_construction: 0.50 } },
                 }
             }
         }
