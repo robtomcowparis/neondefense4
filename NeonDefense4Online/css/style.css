@@ -1132,12 +1132,12 @@ body {
         max-height: 100%;
     }
 
-    /* Toolbar always accessible on the right */
+    /* Toolbar always accessible on the right — narrower */
     .drawer-toggle {
         display: none;
     }
     .sidebar {
-        width: min(360px, 42vw);
+        width: min(220px, 30vw);
         height: 100%;
         max-height: none;
         overflow-y: auto;
@@ -1149,6 +1149,70 @@ body {
         max-height: none;
         overflow-y: auto;
     }
+
+    /* Compact sidebar internals for narrow landscape panel */
+    .sb-header { padding: 4px 8px 3px; }
+    .sb-title { font-size: 11px; letter-spacing: 1px; }
+    .sb-icon-btn { padding: 2px 4px; font-size: 14px; min-width: 28px; min-height: 28px; }
+    .speed-badge { font-size: 9px; padding: 1px 4px; }
+
+    .sb-resources { padding: 4px 8px; }
+    .res-row { gap: 4px; padding: 1px 0; }
+    .res-label { font-size: 9px; width: 36px; letter-spacing: 0.5px; }
+    .res-value { font-size: 15px; }
+    .res-status { font-size: 9px; }
+    .gold-delta { font-size: 11px; }
+
+    .sb-wave-control { padding: 3px 8px 4px; }
+    .wave-cd-bar { height: 14px; margin-bottom: 3px; }
+    .wave-cd-text { font-size: 9px; line-height: 14px; }
+    .btn-send-early { padding: 5px 6px; font-size: 10px; min-height: 32px; letter-spacing: 0.5px; }
+    .early-bonus { margin-left: 3px; }
+
+    .sb-section { padding: 4px 8px; }
+    .sb-section-title { font-size: 9px; letter-spacing: 1px; margin-bottom: 3px; padding-bottom: 2px; }
+    .sb-tower-panel { min-height: 100px; }
+
+    .research-progress { height: 16px; margin-bottom: 4px; }
+    .res-prg-text { font-size: 9px; line-height: 16px; }
+    .research-tracks { gap: 2px; }
+    .research-btn { padding: 3px 5px; font-size: 10px; min-height: 28px; }
+    .rk-level { font-size: 9px; margin-right: 4px; }
+    .rk-cost { font-size: 9px; min-width: 36px; }
+
+    .tower-buttons { gap: 2px; }
+    .tower-btn { padding: 4px 6px; min-height: 36px; }
+    .tw-header { gap: 4px; }
+    .tw-hotkey { display: none; }
+    .tw-name { font-size: 11px; }
+    .tw-cost { font-size: 11px; }
+    .tw-desc { font-size: 9px; padding-left: 0; margin-top: 1px; }
+
+    .tower-panel { min-height: 80px; }
+    .tower-panel-empty { font-size: 10px; padding: 10px 6px; }
+    .tp-header { margin-bottom: 2px; }
+    .tp-name { font-size: 11px; }
+    .tp-level { font-size: 9px; }
+    .tp-stats { font-size: 9px; margin-bottom: 1px; }
+    .tp-stats-extra { font-size: 9px; margin-bottom: 2px; }
+    .tp-tracker { font-size: 9px; margin: 2px 0; }
+    .tp-hp { margin: 3px 0; }
+    .tp-hp-text { font-size: 9px; }
+    .tp-hp-bar { height: 6px; }
+    .tp-shield { margin: 2px 0; }
+    .tp-shield-text { font-size: 9px; }
+    .tp-shield-bar { height: 4px; }
+    .tp-progress { height: 22px; margin: 3px 0; }
+    .tp-prg-label { font-size: 9px; line-height: 22px; }
+    .tp-actions { gap: 2px; margin-top: 3px; }
+    .tp-btn { padding: 4px 6px; font-size: 10px; min-height: 30px; }
+    .tp-branches { gap: 2px; }
+    .br-desc { font-size: 9px; }
+    .br-cost { font-size: 9px; }
+    .tp-maxed { font-size: 9px; }
+
+    .message-area { padding: 2px 8px 4px; }
+    .hud-message { font-size: 9px; padding: 2px 5px; }
 }
 
 /* Portrait orientation hint on phones */
