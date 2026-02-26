@@ -1098,6 +1098,59 @@ body {
     }
 }
 
+/* ─────────────────────────────────────────────────────────
+   PHONE LANDSCAPE (best UX): canvas left, toolbar right
+   Fixes: canvas previously forced full width -> overflow ->
+          only partial map visible + no access to toolbar.
+   ───────────────────────────────────────────────────────── */
+@media (max-width: 1024px) and (orientation: landscape) and (max-height: 600px) {
+    html, body {
+        overflow: hidden;
+    }
+
+    /* Side-by-side layout like desktop */
+    .game-container {
+        flex-direction: row;
+        width: 100vw;
+        height: 100dvh;
+    }
+
+    /* Canvas scales by height (prevents vertical overflow) */
+    .canvas-wrap {
+        flex: 1 1 auto;
+        height: 100%;
+        width: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    #gameCanvas {
+        height: 100%;
+        width: auto;
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+    /* Toolbar always accessible on the right */
+    .drawer-toggle {
+        display: none;
+    }
+    .sidebar {
+        width: min(360px, 42vw);
+        height: 100%;
+        max-height: none;
+        overflow-y: auto;
+        border-left: 2px solid var(--border-cyan);
+        flex-shrink: 0;
+    }
+    .sidebar.drawer-open {
+        height: 100%;
+        max-height: none;
+        overflow-y: auto;
+    }
+}
+
 /* Portrait orientation hint on phones */
 @media (max-width: 600px) and (orientation: portrait) {
     .canvas-wrap::after {
