@@ -127,11 +127,10 @@ export class Tower {
         this._pendingPaidCost = 0;
         this._pendingFortifyMult = 1.0;
 
-        // Shield system
+        // Shield system (consumable)
         this.shieldHp = 0;
         this.shieldMaxHp = 0;
         this.shieldActive = false;
-        this.shieldInvestedGold = 0;
     }
 
     _computeBaseMaxHp() {
@@ -154,7 +153,7 @@ export class Tower {
     takeDamage(damage) {
         // Shield absorbs damage first
         if (this.shieldActive && this.shieldHp > 0) {
-            if (damage <= this.shieldHp) {
+            if (damage < this.shieldHp) {
                 this.shieldHp -= damage;
                 this.damageFlashTimer = 0.08; // shorter flash for shield hits
                 return;
@@ -169,8 +168,9 @@ export class Tower {
         if (this.hp < 0) this.hp = 0;
     }
 
-    // ─── Shield System ──────────────────────────────────────
+    // ─── Shield System (consumable — buy, use, buy again) ─────
     canBuyShield() {
+        // Available after branching; can rebuy any time shield is not active
         return this.branch !== null && !this.shieldActive && !this.isConstructing;
     }
 
@@ -194,7 +194,6 @@ export class Tower {
         this.shieldMaxHp = this.shieldMaxHpCalc(fortifyMult);
         this.shieldHp = this.shieldMaxHp;
         this.shieldActive = true;
-        this.shieldInvestedGold += this._pendingPaidCost;
     }
 
     repairCost(fortifyMult = 1.0) {
@@ -265,7 +264,7 @@ export class Tower {
     }
 
     sellValue() {
-        return Math.round((this.investedGold + this.shieldInvestedGold) * 0.6);
+        return Math.round(this.investedGold * 0.6);
     }
 
     get isConstructing() { return this.constructionState !== null; }

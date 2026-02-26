@@ -32,7 +32,7 @@ export const game = {
     state: GameState.MENU,
     gold: STARTING_GOLD,
     lives: STARTING_LIVES,
-    speedMult: 1,
+    speedMult: 1.5,
     gameTime: 0,
     startTime: 0,
     enemiesKilled: 0,
@@ -150,7 +150,7 @@ function reset() {
     game.towersBuilt = 0;
     game.towersLost = 0;
     game.gameTime = 0;
-    game.speedMult = 1;
+    game.speedMult = 1.5;
     game.startTime = performance.now() / 1000;
     game.researchInProgress = null;
     game.researchTimer = 0;
@@ -327,8 +327,8 @@ function handleKeyDown(e) {
         if (e.key === 'Escape') {
             setState(GameState.PAUSED);
         } else if (e.key === 'f' || e.key === 'F') {
-            game.speedMult = game.speedMult === 2 ? 1 : 2;
-            showMessage(game.speedMult === 2 ? 'Speed: ▶▶ 2×' : 'Speed: ▶ 1×', 1.0);
+            game.speedMult = game.speedMult === 3 ? 1.5 : 3;
+            showMessage(game.speedMult === 3 ? 'Speed: ▶▶ 2×' : 'Speed: ▶ 1×', 1.0);
         } else if (e.key === ' ' && game.waveMgr.canSendEarly()) {
             e.preventDefault();
             const bonus = game.waveMgr.sendEarly();
@@ -1058,10 +1058,10 @@ function init() {
     });
     document.getElementById('btnMobileSpeed')?.addEventListener('click', () => {
         if (game.state !== GameState.PLAYING) return;
-        game.speedMult = game.speedMult === 2 ? 1 : 2;
-        showMessage(game.speedMult === 2 ? 'Speed: ▶▶ 2×' : 'Speed: ▶ 1×', 1.0);
+        game.speedMult = game.speedMult === 3 ? 1.5 : 3;
+        showMessage(game.speedMult === 3 ? 'Speed: ▶▶ 2×' : 'Speed: ▶ 1×', 1.0);
         const btn = document.getElementById('btnMobileSpeed');
-        if (btn) btn.classList.toggle('active', game.speedMult === 2);
+        if (btn) btn.classList.toggle('active', game.speedMult === 3);
     });
     document.getElementById('btnMobilePause')?.addEventListener('click', () => {
         if (game.state === GameState.PLAYING) setState(GameState.PAUSED);

@@ -253,7 +253,7 @@ export class HUD {
         // Speed indicator
         const speedEl = document.getElementById('speedIndicator');
         if (speedEl) {
-            speedEl.classList.toggle('hidden', g.speedMult <= 1);
+            speedEl.classList.toggle('hidden', g.speedMult <= 1.5);
         }
 
         // Wave status
@@ -523,12 +523,11 @@ export class HUD {
                 actionsHtml += `<div class="tp-maxed">${label}</div>`;
             }
 
-            // Shield (available after branching, repurchasable)
+            // Shield (available after branching, consumable — buy anytime)
             if (t.canBuyShield()) {
                 const sc = t.shieldCost(costMult);
                 const canShield = g.gold >= sc;
-                const shieldLabel = t.shieldInvestedGold > 0 ? 'RE-SHIELD' : 'BUY SHIELD';
-                actionsHtml += `<button class="tp-btn tp-btn-shield ${canShield ? '' : 'disabled'}" data-action="shield">${shieldLabel} (${sc}g)</button>`;
+                actionsHtml += `<button class="tp-btn tp-btn-shield ${canShield ? '' : 'disabled'}" data-action="shield">BUY SHIELD (${sc}g)</button>`;
             }
 
             // Rail set direction
