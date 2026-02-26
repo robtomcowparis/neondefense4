@@ -233,7 +233,7 @@ body {
 
 /* ─── Sections ────────────────────────────────────────────── */
 .sb-section {
-    padding: 8px 14px;
+    padding: 6px 14px;
     border-bottom: 1px solid var(--border-dim);
 }
 .sb-section-title {
@@ -241,8 +241,8 @@ body {
     font-size: 10px;
     color: var(--border-cyan);
     letter-spacing: 2px;
-    margin-bottom: 6px;
-    padding-bottom: 4px;
+    margin-bottom: 4px;
+    padding-bottom: 3px;
     border-bottom: 1px solid rgba(0, 180, 200, 0.2);
 }
 .sb-tower-panel {
@@ -254,11 +254,11 @@ body {
 /* ─── Research ────────────────────────────────────────────── */
 .research-progress {
     position: relative;
-    height: 22px;
+    height: 18px;
     background: var(--bg-card);
     border: 1px solid var(--blue);
     border-radius: 3px;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     overflow: hidden;
     transition: opacity 0.15s;
 }
@@ -271,49 +271,157 @@ body {
 .res-prg-text {
     position: absolute;
     top: 0; left: 8px;
-    line-height: 22px;
-    font-size: 11px;
+    line-height: 18px;
+    font-size: 10px;
     color: var(--blue);
 }
 
 .research-tracks {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
 }
-.research-btn {
+
+/* ─── Research Track (one per track: Damage, Range, etc.) ─── */
+.research-track {
+    background: rgba(8, 8, 24, 0.6);
+    border: 1px solid var(--border-dim);
+    border-radius: 4px;
+    padding: 4px 5px;
+}
+.rt-header {
     display: flex;
     align-items: center;
+    gap: 5px;
+    margin-bottom: 2px;
+}
+.rt-icon { font-size: 12px; }
+.rt-name {
+    flex: 1;
+    font-family: var(--font-display);
+    font-size: 11px;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.rt-progress {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+}
+
+/* Completed research chips */
+.rt-completed {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin-bottom: 2px;
+}
+.rt-chip {
+    font-size: 8px;
+    padding: 0px 4px;
+    border-radius: 2px;
+    background: rgba(0, 255, 255, 0.08);
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    color: var(--cyan);
+    font-family: var(--font-mono);
+    cursor: default;
+}
+.rt-chip-branch {
+    background: rgba(255, 215, 0, 0.08);
+    border-color: rgba(255, 215, 0, 0.25);
+    color: var(--gold);
+}
+.rt-chip-final {
+    background: rgba(50, 255, 100, 0.08);
+    border-color: rgba(50, 255, 100, 0.25);
+    color: var(--green);
+}
+
+/* Available actions */
+.rt-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.rt-complete {
+    font-size: 9px;
+    color: var(--green);
+    text-align: center;
+    padding: 1px;
+    font-family: var(--font-mono);
+}
+.rt-choice-label {
+    font-size: 8px;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 1px;
+    font-family: var(--font-display);
+}
+.rt-choice-row {
+    display: flex;
+    gap: 3px;
+}
+
+/* Research buy buttons */
+.rt-btn {
+    display: flex;
+    flex-direction: column;
     width: 100%;
-    padding: 5px 8px;
+    padding: 3px 6px;
     background: var(--bg-btn);
     border: 1px solid var(--border-dim);
     border-radius: 3px;
     cursor: pointer;
     color: var(--text);
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 10px;
     transition: all 0.15s;
+    text-align: left;
 }
-.research-btn:hover:not(.disabled) {
+.rt-btn:hover:not(.disabled) {
     border-color: var(--green);
     box-shadow: 0 0 8px rgba(50, 255, 100, 0.2);
 }
-.research-btn.disabled {
+.rt-btn.disabled {
     opacity: 0.5;
     cursor: default;
 }
-.research-btn.active-research {
+.rt-btn.active-research {
     border-color: var(--blue);
     background: rgba(80, 120, 255, 0.08);
 }
-.rk-name { flex: 1; text-align: left; }
-.rk-level { color: var(--text-dim); margin-right: 8px; font-size: 11px; }
-.rk-cost { font-size: 11px; min-width: 48px; text-align: right; }
-.rk-cost.affordable { color: var(--gold); }
-.rk-cost.unaffordable { color: var(--text-dim); }
-.rk-cost.maxed { color: var(--text-dim); }
-.rk-cost.researching { color: var(--blue); }
+.rt-btn-choice {
+    flex: 1;
+    min-width: 0;
+}
+.rt-btn-name {
+    font-weight: bold;
+    font-size: 10px;
+    color: var(--text);
+}
+.rt-btn-desc {
+    font-size: 8px;
+    color: var(--text-dim);
+    margin: 0;
+    line-height: 1.2;
+}
+.rt-btn-cost {
+    font-size: 9px;
+    text-align: right;
+    align-self: flex-end;
+}
+.rt-btn-cost.affordable { color: var(--gold); }
+.rt-btn-cost.unaffordable { color: var(--text-dim); }
+.rt-btn-cost.researching { color: var(--blue); }
+.rt-btn-unlocks {
+    font-size: 8px;
+    color: var(--gold);
+    opacity: 0.85;
+    font-style: italic;
+    margin-top: 1px;
+}
 
 /* ─── Tower Buttons ───────────────────────────────────────── */
 .tower-buttons {
@@ -983,10 +1091,13 @@ body {
     .tw-desc { padding-left: 0; font-size: 12px; }
 
     /* Research buttons */
-    .research-btn {
-        padding: 8px 10px;
-        min-height: 44px;
+    .rt-btn {
+        padding: 6px 8px;
+        min-height: 40px;
     }
+    .rt-btn-name { font-size: 12px; }
+    .rt-btn-desc { font-size: 10px; }
+    .rt-btn-cost { font-size: 11px; }
 
     /* Tower panel action buttons */
     .tp-btn {
@@ -1175,10 +1286,17 @@ body {
 
     .research-progress { height: 16px; margin-bottom: 4px; }
     .res-prg-text { font-size: 9px; line-height: 16px; }
-    .research-tracks { gap: 2px; }
-    .research-btn { padding: 3px 5px; font-size: 10px; min-height: 28px; }
-    .rk-level { font-size: 9px; margin-right: 4px; }
-    .rk-cost { font-size: 9px; min-width: 36px; }
+    .research-tracks { gap: 3px; }
+    .research-track { padding: 3px 5px; }
+    .rt-header { margin-bottom: 2px; }
+    .rt-name { font-size: 9px; }
+    .rt-progress { font-size: 8px; }
+    .rt-chip { font-size: 8px; padding: 0 3px; }
+    .rt-btn { padding: 3px 5px; font-size: 9px; min-height: 28px; }
+    .rt-btn-name { font-size: 9px; }
+    .rt-btn-desc { font-size: 8px; }
+    .rt-btn-cost { font-size: 8px; }
+    .rt-choice-label { font-size: 8px; }
 
     .tower-buttons { gap: 2px; }
     .tower-btn { padding: 4px 6px; min-height: 36px; }

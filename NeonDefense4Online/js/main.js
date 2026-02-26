@@ -9,11 +9,12 @@ import { TILE_SIZE, MAP_COLS, MAP_ROWS, MAP_WIDTH, MAP_HEIGHT,
          NEON_GREEN, NEON_ORANGE, GOLD_COLOR, RED, HOT_PINK, SAPPER_RED, ULTRA_RED,
          DAMAGE_RED, PANEL_BG, PANEL_BORDER, ICE_BLUE, ELECTRIC_BLUE,
          GameState, TowerType, EnemyType, TOWER_DATA, ENEMY_DATA,
-         TOWER_TYPES_ORDERED, RESEARCH_TRACKS,
+         TOWER_TYPES_ORDERED, RESEARCH_TRACKS, RESEARCH_TREE,
+         getTrackNodes, getAvailableNodes, isTrackComplete, getTrackProgress,
          STARTING_GOLD, STARTING_LIVES,
          COST_INFLATION_PER_WAVE, MAX_COST_MULT,
          BUILD_BAR_COLOR, UPGRADE_BAR_COLOR, BRANCH_BAR_COLOR, REPAIR_BAR_COLOR,
-         RESEARCH_BAR_COLOR, RESEARCH_TIME_BY_LEVEL, HEAL_GREEN,
+         RESEARCH_BAR_COLOR, HEAL_GREEN,
          BUILD_TIMES, PATH_COLORS } from './config.js';
 import { clamp, dist, rgba, rgb, drawText, drawGlowRect, drawGlowCircle, randomUniform } from './utils.js';
 import { generatePath, ALL_PATHS } from './path.js';
@@ -48,6 +49,7 @@ export const game = {
     waveMgr: null,
     research: {},
     researchInProgress: null,
+    researchTrackKey: null,
     researchTimer: 0,
     researchDuration: 0,
     selectedTowerType: null,
@@ -74,53 +76,140 @@ function costMultiplier() {
 }
 
 function globalMods() {
-    const dmg = 1.0 + (game.research.Damage || 0) * RESEARCH_TRACKS.Damage.per_level;
-    const rng = 1.0 + (game.research.Range || 0) * RESEARCH_TRACKS.Range.per_level;
-    const ctl = 1.0 + (game.research.Control || 0) * RESEARCH_TRACKS.Control.per_level;
-    const fort = 1.0 + (game.research.Fortify || 0) * RESEARCH_TRACKS.Fortify.per_level;
-    return { damage_mult: dmg, range_mult: rng, control_mult: ctl, firerate_mult: 1.0, fortify_mult: fort };
+    // Aggregate all unlocked research effects
+    const mods = {
+        damage_mult: 1.0,
+        range_mult: 1.0,
+        control_mult: 1.0,
+        firerate_mult: 1.0,
+        fortify_mult: 1.0,
+        // Branching specializations
+        armor_pierce: 0,
+        critical_chance: 0,
+        controlled_damage_bonus: 0,
+        phase_scanner: 0,
+        overwatch_bonus: 0,
+        aoe_bonus: 0,
+        proximity_bonus: 0,
+        slow_duration_mult: 0,
+        execute_threshold: 0,
+        execute_bonus: 0,
+        dot_damage_bonus: 0,
+        dot_tick_bonus: 0,
+        cascade_spread: 0,
+        suppression_field: 0,
+        sapper_reduction: 0,
+        tower_regen: 0,
+        sell_refund: 0.60,  // default sell rate
+        build_speed: 0,
+        destroy_refund: 0,
+        rebuild_speed: 0,
+        active_construction: 0,
+    };
+
+    // Walk all tracks and sum up effects from unlocked nodes
+    for (const trackKey of Object.keys(RESEARCH_TREE)) {
+        const allNodes = getTrackNodes(trackKey);
+        for (const node of allNodes) {
+            if (!game.research[node.id]) continue;
+            const eff = node.effect;
+            if (!eff) continue;
+            // Additive multipliers
+            if (eff.damage_mult) mods.damage_mult += eff.damage_mult;
+            if (eff.range_mult) mods.range_mult += eff.range_mult;
+            if (eff.control_mult) mods.control_mult += eff.control_mult;
+            if (eff.firerate_bonus) mods.firerate_mult -= eff.firerate_bonus; // lower = faster
+            if (eff.fortify_mult) mods.fortify_mult += eff.fortify_mult;
+            // Specialization flags/values
+            if (eff.armor_pierce) mods.armor_pierce = Math.max(mods.armor_pierce, eff.armor_pierce);
+            if (eff.critical_chance) mods.critical_chance = eff.critical_chance;
+            if (eff.controlled_damage_bonus) mods.controlled_damage_bonus = eff.controlled_damage_bonus;
+            if (eff.phase_scanner) mods.phase_scanner = eff.phase_scanner;
+            if (eff.overwatch_bonus) mods.overwatch_bonus = eff.overwatch_bonus;
+            if (eff.aoe_bonus) mods.aoe_bonus = eff.aoe_bonus;
+            if (eff.proximity_bonus) mods.proximity_bonus = eff.proximity_bonus;
+            if (eff.slow_duration_mult) mods.slow_duration_mult = eff.slow_duration_mult;
+            if (eff.execute_threshold) { mods.execute_threshold = eff.execute_threshold; mods.execute_bonus = eff.execute_bonus; }
+            if (eff.dot_damage_bonus) mods.dot_damage_bonus = eff.dot_damage_bonus;
+            if (eff.dot_tick_bonus) mods.dot_tick_bonus = eff.dot_tick_bonus;
+            if (eff.cascade_spread) mods.cascade_spread = eff.cascade_spread;
+            if (eff.suppression_field) mods.suppression_field = eff.suppression_field;
+            if (eff.sapper_reduction) mods.sapper_reduction = eff.sapper_reduction;
+            if (eff.tower_regen) mods.tower_regen = eff.tower_regen;
+            if (eff.sell_refund) mods.sell_refund = eff.sell_refund;
+            if (eff.build_speed) mods.build_speed = eff.build_speed;
+            if (eff.destroy_refund) mods.destroy_refund = eff.destroy_refund;
+            if (eff.rebuild_speed) mods.rebuild_speed = eff.rebuild_speed;
+            if (eff.active_construction) mods.active_construction = eff.active_construction;
+        }
+    }
+    return mods;
 }
 game.globalMods = globalMods;
 game.costMultiplier = costMultiplier;
 
-function getResearchCost(track) {
-    const info = RESEARCH_TRACKS[track];
-    const lvl = game.research[track] || 0;
-    if (lvl >= info.max_level) return null;
-    return Math.round(info.base_cost * Math.pow(info.cost_mult, lvl) * costMultiplier());
+// Look up a specific research node by ID across all tracks
+function findResearchNode(nodeId) {
+    for (const trackKey of Object.keys(RESEARCH_TREE)) {
+        const allNodes = getTrackNodes(trackKey);
+        for (const node of allNodes) {
+            if (node.id === nodeId) return { trackKey, node };
+        }
+    }
+    return null;
+}
+
+function getResearchCost(nodeId) {
+    const found = findResearchNode(nodeId);
+    if (!found) return null;
+    if (game.research[nodeId]) return null; // already owned
+    return Math.round(found.node.cost * costMultiplier());
 }
 game.getResearchCost = getResearchCost;
 
-function tryBuyResearch(track) {
+function tryBuyResearch(nodeId) {
     if (game.researchInProgress) return [false, "Research in progress!"];
-    const cost = getResearchCost(track);
-    if (cost === null) return [false, "MAX"];
+    const found = findResearchNode(nodeId);
+    if (!found) return [false, "Unknown research"];
+    if (game.research[nodeId]) return [false, "Already researched"];
+
+    // Verify this node is actually available (prerequisites met)
+    const available = getAvailableNodes(found.trackKey, game.research);
+    if (!available.find(n => n.id === nodeId)) return [false, "Prerequisites not met"];
+
+    const cost = Math.round(found.node.cost * costMultiplier());
     if (game.gold < cost) return [false, "Not enough gold!"];
     game.gold -= cost;
-    const targetLevel = (game.research[track] || 0) + 1;
-    game.researchInProgress = track;
+    game.researchInProgress = nodeId;
+    game.researchTrackKey = found.trackKey;
     game.researchTimer = 0;
-    game.researchDuration = RESEARCH_TIME_BY_LEVEL[targetLevel] || 15;
+    game.researchDuration = found.node.time || 12;
     soundMgr.play('research');
-    return [true, `${track} Lv.${targetLevel} researching...`];
+    return [true, `${found.node.name} researching...`];
 }
 
 function finishResearch() {
-    const track = game.researchInProgress;
-    if (!track) return;
-    game.research[track] = (game.research[track] || 0) + 1;
-    if (track === 'Fortify') {
-        const oldMult = 1.0 + (game.research[track] - 1) * RESEARCH_TRACKS.Fortify.per_level;
-        const newMult = 1.0 + game.research[track] * RESEARCH_TRACKS.Fortify.per_level;
+    const nodeId = game.researchInProgress;
+    if (!nodeId) return;
+    const found = findResearchNode(nodeId);
+    game.research[nodeId] = true;
+
+    // If this is a fortify node, heal all towers for the HP increase
+    if (found && found.node.effect && found.node.effect.fortify_mult) {
+        const oldMods = { ...globalMods() };
+        oldMods.fortify_mult -= found.node.effect.fortify_mult; // what it was before
         for (const t of game.towers) {
-            const oldMax = t.getMaxHp(oldMult);
-            const newMax = t.getMaxHp(newMult);
+            const oldMax = t.getMaxHp(oldMods.fortify_mult);
+            const newMax = t.getMaxHp(globalMods().fortify_mult);
             t.hp += (newMax - oldMax);
         }
     }
-    showMessage(`Research complete: ${track} Lv.${game.research[track]}`);
+
+    const name = found ? found.node.name : nodeId;
+    showMessage(`Research complete: ${name}`);
     soundMgr.play('upgrade');
     game.researchInProgress = null;
+    game.researchTrackKey = null;
     game.researchTimer = 0;
     game.researchDuration = 0;
 }
@@ -144,23 +233,25 @@ function reset() {
     game.waveMgr = new WaveManager();
     game.gold = STARTING_GOLD;
     game.lives = STARTING_LIVES;
-    game.research = {};
-    for (const k of Object.keys(RESEARCH_TRACKS)) game.research[k] = 0;
+    game.research = {};  // nodeId -> true
+    game.researchInProgress = null;
+    game.researchTrackKey = null;
+    game.researchTimer = 0;
+    game.researchDuration = 0;
     game.enemiesKilled = 0;
     game.towersBuilt = 0;
     game.towersLost = 0;
     game.gameTime = 0;
     game.speedMult = 1.5;
     game.startTime = performance.now() / 1000;
-    game.researchInProgress = null;
-    game.researchTimer = 0;
-    game.researchDuration = 0;
     game.selectedTowerType = null;
     game.selectedTower = null;
     game.aimingTower = null;
     game.message = '';
     game.messageTimer = 0;
     game._waveStartPlayed = false;
+    game._lastDestroyedType = null;
+    game._lastDestroyedTime = 0;
     _scoreSubmitted = false;
 }
 
@@ -205,8 +296,8 @@ function startGame() {
                 hud.showGoldDelta(bonus);
             }
         },
-        onResearch: (track) => {
-            const [ok, msg] = tryBuyResearch(track);
+        onResearch: (nodeId) => {
+            const [ok, msg] = tryBuyResearch(nodeId);
             showMessage(ok ? `Research: ${msg}` : msg);
         },
         onTowerAction: (action, key) => {
@@ -261,7 +352,7 @@ function handleTowerAction(action, key) {
             soundMgr.play('upgrade');
         } else showMessage("Not enough gold!");
     } else if (action === 'sell') {
-        const val = t.sellValue();
+        const val = t.sellValue(mods.sell_refund);
         game.gold += val;
         game.gameMap.removeTower(t.col, t.row);
         game.towers = game.towers.filter(tw => tw !== t);
@@ -410,8 +501,15 @@ function handleClick(e) {
                 if (game.gold >= cost) {
                     game.gold -= cost;
                     const t = new Tower(game.selectedTowerType, col, row, cost);
-                    const fortifyM = globalMods().fortify_mult;
-                    t.hp = t.getMaxHp(fortifyM);
+                    const placeMods = globalMods();
+                    t.hp = t.getMaxHp(placeMods.fortify_mult);
+                    // Emergency Overhaul: rebuild same type faster
+                    if (placeMods.rebuild_speed > 0 && game._lastDestroyedType === game.selectedTowerType
+                        && game.gameTime - game._lastDestroyedTime < 30) {
+                        t.constructionDuration *= (1.0 - placeMods.rebuild_speed);
+                    }
+                    // Active Construction: pass mod to tower
+                    t._activeConstruction = placeMods.active_construction || 0;
                     game.towers.push(t);
                     game.gameMap.placeTower(col, row);
                     game.towersBuilt++;
@@ -588,8 +686,14 @@ function _doTouchTap(pos) {
                 if (game.gold >= cost) {
                     game.gold -= cost;
                     const t = new Tower(game.selectedTowerType, col, row, cost);
-                    const fortifyM = globalMods().fortify_mult;
-                    t.hp = t.getMaxHp(fortifyM);
+                    const touchMods = globalMods();
+                    t.hp = t.getMaxHp(touchMods.fortify_mult);
+                    // Emergency Overhaul: rebuild same type faster
+                    if (touchMods.rebuild_speed > 0 && game._lastDestroyedType === game.selectedTowerType
+                        && game.gameTime - game._lastDestroyedTime < 30) {
+                        t.constructionDuration *= (1.0 - touchMods.rebuild_speed);
+                    }
+                    t._activeConstruction = touchMods.active_construction || 0;
                     game.towers.push(t);
                     game.gameMap.placeTower(col, row);
                     game.towersBuilt++;
@@ -695,7 +799,7 @@ function update(dt) {
 
     // Update enemies
     for (const e of game.enemies) {
-        if (e.alive) e.update(dt, game.enemies);
+        if (e.alive) e.update(dt, game.enemies, mods);
     }
 
     // Handle end-of-path leaks
@@ -736,7 +840,12 @@ function update(dt) {
         if (e.towerTarget && e.sapperFireTimer <= 0) {
             e.sapperFireTimer = e.attackRate + randomUniform(-0.2, 0.3);
             if (Math.random() >= e.missChance) {
-                const ep = new EnemyProjectile(e.x, e.y, e.towerTarget, e.attackDamage, 200);
+                let sapperDmg = e.attackDamage;
+                // Suppression Field: controlled enemies deal less damage to towers
+                if (mods.suppression_field > 0 && (e.slowTimer > 0 || e.vulnTimer > 0 || e.dotTimer > 0)) {
+                    sapperDmg *= (1.0 - mods.suppression_field);
+                }
+                const ep = new EnemyProjectile(e.x, e.y, e.towerTarget, sapperDmg, 200);
                 ep.color = SAPPER_RED;
                 game.enemyProjectiles.push(ep);
                 soundMgr.play('sapper_shoot');
@@ -774,7 +883,18 @@ function update(dt) {
         game.gameMap.removeTower(t.col, t.row);
         game.towersLost++;
         if (game.selectedTower === t) game.selectedTower = null;
-        showMessage(`${t.name} tower destroyed!`, 3.0);
+        // Emergency Overhaul: refund on destruction
+        if (mods.destroy_refund > 0) {
+            const refund = Math.round(t.investedGold * mods.destroy_refund);
+            game.gold += refund;
+            showMessage(`${t.name} destroyed! Refund: ${refund}g`, 3.0);
+            if (hud) hud.showGoldDelta(refund);
+            // Track for rebuild speed bonus
+            game._lastDestroyedType = t.type;
+            game._lastDestroyedTime = game.gameTime;
+        } else {
+            showMessage(`${t.name} tower destroyed!`, 3.0);
+        }
         soundMgr.play('tower_destroyed');
         showHUDMessage(`${t.name} tower destroyed!`, 'warn');
     }
@@ -812,6 +932,18 @@ function update(dt) {
         game.enemiesKilled++;
         game.particles.emitExplosion(e.x, e.y, e.color, 15, 150, 0.5, 3);
         soundMgr.play('enemy_die');
+
+        // Cascade DoT spread: when a DoT-affected enemy dies, spread to nearby
+        if (mods.cascade_spread > 0 && e.dotDamage > 0 && e.dotTimer > 0) {
+            const spreadRadius = 80;
+            for (const other of game.enemies) {
+                if (!other.alive || other === e) continue;
+                if (dist(e.x, e.y, other.x, other.y) <= spreadRadius) {
+                    other.applyDot(e.dotDamage * 0.6, e.dotTimer * 0.5, mods);
+                }
+            }
+            game.particles.emitRing(e.x, e.y, ELECTRIC_BLUE, 40, 10, 0.3, 2);
+        }
 
         if (e.type === EnemyType.SPLITTER) {
             const splitCount = ENEMY_DATA[EnemyType.SPLITTER].split_count || 3;

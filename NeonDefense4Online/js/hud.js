@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { TowerType, TOWER_DATA, TOWER_TYPES_ORDERED, RESEARCH_TRACKS,
+         RESEARCH_TREE, getAvailableNodes, isTrackComplete, getTrackProgress,
          BUILD_TIMES, ENEMY_DATA, EnemyType } from './config.js';
 
 // ─── Message Queue ───────────────────────────────────────────
@@ -131,20 +132,63 @@ export class HUD {
         const container = document.getElementById('researchTracks');
         if (!container) return;
         container.innerHTML = '';
-        for (const track of Object.keys(RESEARCH_TRACKS)) {
-            const info = RESEARCH_TRACKS[track];
-            const el = document.createElement('button');
-            el.className = 'research-btn';
-            el.dataset.track = track;
-            el.innerHTML = `
-                <span class="rk-name">${track}</span>
-                <span class="rk-level" id="rk-lvl-${track}">0/${info.max_level}</span>
-                <span class="rk-cost" id="rk-cost-${track}"></span>
+
+        for (const trackKey of Object.keys(RESEARCH_TREE)) {
+            const track = RESEARCH_TREE[trackKey];
+
+            // Track container
+            const trackEl = document.createElement('div');
+            trackEl.className = 'research-track';
+            trackEl.dataset.track = trackKey;
+
+            // Track header: icon + name + progress
+            const header = document.createElement('div');
+            header.className = 'rt-header';
+            header.innerHTML = `
+                <span class="rt-icon">${track.icon}</span>
+                <span class="rt-name">${track.name}</span>
+                <span class="rt-progress" id="rt-prog-${trackKey}">0/4</span>
             `;
-            el.addEventListener('click', () => {
-                if (this.callbacks.onResearch) this.callbacks.onResearch(track);
+            trackEl.appendChild(header);
+
+            // Completed nodes display
+            const completedEl = document.createElement('div');
+            completedEl.className = 'rt-completed';
+            completedEl.id = `rt-completed-${trackKey}`;
+            trackEl.appendChild(completedEl);
+
+            // Available actions container — uses event delegation
+            const actionsEl = document.createElement('div');
+            actionsEl.className = 'rt-actions';
+            actionsEl.id = `rt-actions-${trackKey}`;
+            actionsEl.addEventListener('click', (e) => {
+                const btn = e.target.closest('.rt-btn');
+                if (!btn || btn.classList.contains('disabled')) return;
+                const nodeId = btn.dataset.node;
+                if (nodeId && this.callbacks.onResearch) this.callbacks.onResearch(nodeId);
             });
-            container.appendChild(el);
+            // Tooltip delegation for research buttons
+            actionsEl.addEventListener('mouseenter', (e) => {
+                const btn = e.target.closest('.rt-btn');
+                if (btn && btn.dataset.node) this._showResearchTooltip(e, btn.dataset.node);
+            }, true);
+            actionsEl.addEventListener('mouseleave', (e) => {
+                const btn = e.target.closest('.rt-btn');
+                if (btn) this._hideTooltip();
+            }, true);
+            trackEl.appendChild(actionsEl);
+
+            // Tooltip delegation for completed chips
+            completedEl.addEventListener('mouseenter', (e) => {
+                const chip = e.target.closest('.rt-chip');
+                if (chip && chip.dataset.node) this._showResearchTooltip(e, chip.dataset.node);
+            }, true);
+            completedEl.addEventListener('mouseleave', (e) => {
+                const chip = e.target.closest('.rt-chip');
+                if (chip) this._hideTooltip();
+            }, true);
+
+            container.appendChild(trackEl);
         }
     }
 
@@ -183,14 +227,7 @@ export class HUD {
     _showTowerTooltip(e, tt) {
         const data = TOWER_DATA[tt];
         const lvl0 = data.levels[0];
-        let tip = document.getElementById('hud-tooltip');
-        if (!tip) {
-            tip = document.createElement('div');
-            tip.id = 'hud-tooltip';
-            tip.className = 'hud-tooltip';
-            document.body.appendChild(tip);
-        }
-        tip.innerHTML = `
+        this._showTooltipAt(e.currentTarget, `
             <div class="tt-title" style="color:rgb(${data.color.join(',')})">${data.name}</div>
             <div class="tt-desc">${data.description}</div>
             <div class="tt-stat">Damage: ${lvl0.damage}</div>
@@ -199,14 +236,40 @@ export class HUD {
             <div class="tt-stat">HP: ${data.hp}</div>
             <div class="tt-stat">Build Time: ${BUILD_TIMES[tt]}s</div>
             ${tt === TowerType.RAIL ? '<div class="tt-note">Click to aim after placing</div>' : ''}
-        `;
-        const rect = e.currentTarget.getBoundingClientRect();
+        `);
+    }
+
+    _showResearchTooltip(e, nodeId) {
+        const tips = this._getResearchTooltips();
+        const tipData = tips[nodeId];
+        if (!tipData) return;
+        this._showTooltipAt(e.currentTarget, `
+            <div class="tt-title" style="color:${tipData.color || 'var(--cyan)'}">${tipData.name}</div>
+            <div class="tt-desc">${tipData.summary}</div>
+            <div class="tt-note">${tipData.detail}</div>
+        `);
+    }
+
+    _showTooltipAt(anchor, html) {
+        let tip = document.getElementById('hud-tooltip');
+        if (!tip) {
+            tip = document.createElement('div');
+            tip.id = 'hud-tooltip';
+            tip.className = 'hud-tooltip';
+            document.body.appendChild(tip);
+        }
+        tip.innerHTML = html;
+        const rect = anchor.getBoundingClientRect();
         tip.style.display = 'block';
         tip.style.left = (rect.left - tip.offsetWidth - 8) + 'px';
         tip.style.top = rect.top + 'px';
-        // Keep on screen
         if (parseFloat(tip.style.left) < 0) {
             tip.style.left = (rect.right + 8) + 'px';
+        }
+        // Keep within viewport vertically
+        const tipRect = tip.getBoundingClientRect();
+        if (tipRect.bottom > window.innerHeight) {
+            tip.style.top = Math.max(0, window.innerHeight - tipRect.height - 8) + 'px';
         }
     }
 
@@ -326,44 +389,116 @@ export class HUD {
             const pct = g.researchDuration > 0 ? Math.min(100, (g.researchTimer / g.researchDuration) * 100) : 0;
             const timeLeft = Math.max(0, g.researchDuration - g.researchTimer);
             if (progFill) progFill.style.width = pct + '%';
-            const targetLvl = (g.research[g.researchInProgress] || 0) + 1;
-            if (progText) progText.textContent = `${g.researchInProgress} Lv.${targetLvl} — ${timeLeft.toFixed(1)}s`;
+            // Find node name
+            let nodeName = g.researchInProgress;
+            for (const tk of Object.keys(RESEARCH_TREE)) {
+                const track = RESEARCH_TREE[tk];
+                for (const t of track.tiers) { if (t.id === g.researchInProgress) nodeName = t.name; }
+                for (const bk of ['A', 'B']) {
+                    const b = track.branches[bk];
+                    if (b.id === g.researchInProgress) nodeName = b.name;
+                    for (const ck of ['1', '2']) {
+                        if (b.children[ck].id === g.researchInProgress) nodeName = b.children[ck].name;
+                    }
+                }
+            }
+            if (progText) progText.textContent = `${nodeName} — ${timeLeft.toFixed(1)}s`;
         } else {
             if (progContainer) progContainer.classList.add('hidden');
         }
 
-        // Update research buttons
-        const costMult = g.costMultiplier ? g.costMultiplier() : 1;
-        for (const track of Object.keys(RESEARCH_TRACKS)) {
-            const info = RESEARCH_TRACKS[track];
-            const lvl = g.research[track] || 0;
-            const lvlEl = document.getElementById(`rk-lvl-${track}`);
-            const costEl = document.getElementById(`rk-cost-${track}`);
-            if (lvlEl) lvlEl.textContent = `${lvl}/${info.max_level}`;
+        // Update each track
+        const researching = g.researchInProgress !== null;
 
-            const cost = g.getResearchCost ? g.getResearchCost(track) : null;
-            const researching = g.researchInProgress !== null;
-            const isThis = g.researchInProgress === track;
+        for (const trackKey of Object.keys(RESEARCH_TREE)) {
+            const track = RESEARCH_TREE[trackKey];
+            const progress = getTrackProgress(trackKey, g.research);
 
-            if (costEl) {
-                if (isThis) {
-                    costEl.textContent = '⏳';
-                    costEl.className = 'rk-cost researching';
-                } else if (cost === null) {
-                    costEl.textContent = 'MAX';
-                    costEl.className = 'rk-cost maxed';
-                } else {
-                    costEl.textContent = `${cost}g`;
-                    costEl.className = 'rk-cost' + (g.gold >= cost && !researching ? ' affordable' : ' unaffordable');
+            // Progress display
+            const progEl = document.getElementById(`rt-prog-${trackKey}`);
+            if (progEl) progEl.textContent = `${progress.done}/${progress.max}`;
+
+            // Completed nodes
+            const completedEl = document.getElementById(`rt-completed-${trackKey}`);
+            if (completedEl) {
+                let chips = '';
+                // Show tier completions
+                for (const t of track.tiers) {
+                    if (g.research[t.id]) {
+                        chips += `<span class="rt-chip" data-node="${t.id}" title="${t.desc}">${t.name}</span>`;
+                    }
+                }
+                // Show branch completion
+                for (const bk of ['A', 'B']) {
+                    const b = track.branches[bk];
+                    if (g.research[b.id]) {
+                        chips += `<span class="rt-chip rt-chip-branch" data-node="${b.id}" title="${b.desc}">${b.name}</span>`;
+                    }
+                    for (const ck of ['1', '2']) {
+                        if (g.research[b.children[ck].id]) {
+                            chips += `<span class="rt-chip rt-chip-final" data-node="${b.children[ck].id}" title="${b.children[ck].desc}">${b.children[ck].name}</span>`;
+                        }
+                    }
+                }
+                if (completedEl._lastHtml !== chips) {
+                    completedEl.innerHTML = chips;
+                    completedEl._lastHtml = chips;
                 }
             }
 
-            // Button disabled state
-            const btn = document.querySelector(`.research-btn[data-track="${track}"]`);
-            if (btn) {
-                const canBuy = cost !== null && g.gold >= cost && !researching;
-                btn.classList.toggle('disabled', !canBuy);
-                btn.classList.toggle('active-research', isThis);
+            // Available actions — only update DOM when content changes
+            const actionsEl = document.getElementById(`rt-actions-${trackKey}`);
+            if (actionsEl) {
+                const available = getAvailableNodes(trackKey, g.research);
+                let html = '';
+
+                if (available.length === 0) {
+                    if (progress.done > 0) {
+                        html = '<span class="rt-complete">✓ COMPLETE</span>';
+                    }
+                } else if (available.length === 1) {
+                    // Single next upgrade
+                    const node = available[0];
+                    const cost = g.getResearchCost ? g.getResearchCost(node.id) : node.cost;
+                    const isActive = g.researchInProgress === node.id;
+                    const canBuy = cost !== null && g.gold >= cost && !researching;
+                    const cls = isActive ? 'rt-btn active-research' : canBuy ? 'rt-btn' : 'rt-btn disabled';
+                    html = `<button class="${cls}" data-node="${node.id}" title="${node.desc}">
+                        <span class="rt-btn-name">${node.name}</span>
+                        <span class="rt-btn-desc">${node.desc}</span>
+                        <span class="rt-btn-cost ${isActive ? 'researching' : canBuy ? 'affordable' : 'unaffordable'}">${isActive ? '⏳' : cost !== null ? cost + 'g' : 'MAX'}</span>
+                    </button>`;
+                } else {
+                    // Branch choice — show 2 buttons with a "CHOOSE:" label
+                    html = '<div class="rt-choice-label">CHOOSE SPECIALIZATION:</div><div class="rt-choice-row">';
+                    for (const node of available) {
+                        const cost = g.getResearchCost ? g.getResearchCost(node.id) : node.cost;
+                        const isActive = g.researchInProgress === node.id;
+                        const canBuy = cost !== null && g.gold >= cost && !researching;
+                        const cls = isActive ? 'rt-btn rt-btn-choice active-research' : canBuy ? 'rt-btn rt-btn-choice' : 'rt-btn rt-btn-choice disabled';
+                        // Build capstone preview from children
+                        let capstonePrev = '';
+                        if (node.children) {
+                            const c1 = node.children['1'];
+                            const c2 = node.children['2'];
+                            capstonePrev = `<span class="rt-btn-unlocks">Unlocks: ${c1.name} / ${c2.name}</span>`;
+                        }
+                        // Show immediate effect (before the →) as desc
+                        const immediateDesc = node.desc.includes('→') ? node.desc.split('→')[0].trim() : node.desc;
+                        html += `<button class="${cls}" data-node="${node.id}" title="${node.desc}">
+                            <span class="rt-btn-name">${node.name}</span>
+                            <span class="rt-btn-desc">${immediateDesc}</span>
+                            ${capstonePrev}
+                            <span class="rt-btn-cost ${isActive ? 'researching' : canBuy ? 'affordable' : 'unaffordable'}">${isActive ? '⏳' : cost !== null ? cost + 'g' : ''}</span>
+                        </button>`;
+                    }
+                    html += '</div>';
+                }
+                // Only touch DOM when content actually changed
+                if (actionsEl._lastHtml !== html) {
+                    actionsEl.innerHTML = html;
+                    actionsEl._lastHtml = html;
+                }
             }
         }
     }
@@ -537,7 +672,7 @@ export class HUD {
             }
 
             // Sell
-            actionsHtml += `<button class="tp-btn tp-btn-sell" data-action="sell">SELL (+${t.sellValue()}g)</button>`;
+            actionsHtml += `<button class="tp-btn tp-btn-sell" data-action="sell">SELL (+${t.sellValue(mods.sell_refund || 0.60)}g)</button>`;
         }
 
         // Stats row
@@ -614,6 +749,47 @@ export class HUD {
             prgFill.style.width = Math.round(prog * 100) + '%';
             prgLabel.textContent = `${label}... ${timeLeft.toFixed(1)}s — ${Math.round(prog * 100)}%`;
         }
+    }
+
+    _getResearchTooltips() {
+        return {
+            // ── Damage Track ──
+            dmg_1: { name: 'Weapons I', summary: '+8% tower damage', detail: 'Applies to all tower types multiplicatively.', color: 'rgb(255,0,255)' },
+            dmg_2: { name: 'Weapons II', summary: '+8% tower damage', detail: 'Stacks with Weapons I for +16% total.', color: 'rgb(255,0,255)' },
+            dmg_A: { name: 'Precision', summary: '+10% damage', detail: 'Stacks additively with Weapons I/II.', color: 'rgb(255,0,255)' },
+            dmg_A1: { name: 'Armor Piercing', summary: 'Ignore 50% enemy armor', detail: 'Effective armor is halved before damage reduction. Strongest vs Tanks, Armored, and Bosses.', color: 'rgb(255,0,255)' },
+            dmg_A2: { name: 'Critical Systems', summary: '10% chance for double damage', detail: 'Each hit rolls independently. Works with all towers including AoE and chain hits.', color: 'rgb(255,0,255)' },
+            dmg_B: { name: 'Overload', summary: '+10% damage', detail: 'Stacks additively with Weapons I/II.', color: 'rgb(255,0,255)' },
+            dmg_B1: { name: 'Controlled Damage', summary: '+25% damage vs controlled enemies', detail: 'Triggers when enemy has ANY control: slow, vulnerability, DoT, or freeze.', color: 'rgb(255,0,255)' },
+            dmg_B2: { name: 'Overdrive', summary: '+15% fire rate', detail: 'Reduces fire interval for all towers. Stacks multiplicatively with tower upgrades.', color: 'rgb(255,0,255)' },
+            // ── Range Track ──
+            rng_1: { name: 'Sensors I', summary: '+6% tower range', detail: 'Applies to all tower types.', color: 'rgb(50,255,100)' },
+            rng_2: { name: 'Sensors II', summary: '+6% tower range', detail: 'Stacks with Sensors I for +12% total.', color: 'rgb(50,255,100)' },
+            rng_A: { name: 'Long Optics', summary: '+8% range', detail: 'Stacks additively with Sensors I/II.', color: 'rgb(50,255,100)' },
+            rng_A1: { name: 'Phase Scanner', summary: 'Phased enemies take normal damage', detail: 'Neutralizes phase damage reduction entirely. Phased enemies no longer resist attacks.', color: 'rgb(50,255,100)' },
+            rng_A2: { name: 'Overwatch', summary: '+20% damage beyond 75% range', detail: 'Applies to ALL towers. Rewards long-range placement. Calculated per hit.', color: 'rgb(50,255,100)' },
+            rng_B: { name: 'Wide Spectrum', summary: '+8% range', detail: 'Stacks additively with Sensors I/II.', color: 'rgb(50,255,100)' },
+            rng_B1: { name: 'Field Amplifier', summary: 'Cryo/Nova/Tesla AoE +25%', detail: 'Increases effective radius of area towers. Does not affect Pulse or Rail.', color: 'rgb(50,255,100)' },
+            rng_B2: { name: 'Proximity Boost', summary: '+25% damage within half range', detail: 'Applies to ALL towers. Rewards close-range placement.', color: 'rgb(50,255,100)' },
+            // ── Control Track ──
+            ctl_1: { name: 'Disruption I', summary: '+10% slow/vuln/DoT', detail: 'Strengthens all control effects by 10%.', color: 'rgb(150,220,255)' },
+            ctl_2: { name: 'Disruption II', summary: '+10% slow/vuln/DoT', detail: 'Stacks with Disruption I for +20% total.', color: 'rgb(150,220,255)' },
+            ctl_A: { name: 'Permafrost', summary: '+12% slow/vuln/DoT', detail: 'Stacks with Disruption I/II.', color: 'rgb(150,220,255)' },
+            ctl_A1: { name: 'Deep Freeze', summary: 'Slow effects last 50% longer', detail: 'Affects Cryo tower slow duration. Enemies stay slowed much longer.', color: 'rgb(150,220,255)' },
+            ctl_A2: { name: 'Shatter', summary: '+40% damage vs enemies below 30% HP', detail: 'Execute bonus. Helps finish off tough enemies faster.', color: 'rgb(150,220,255)' },
+            ctl_B: { name: 'Corruption', summary: '+12% slow/vuln/DoT', detail: 'Stacks with Disruption I/II.', color: 'rgb(150,220,255)' },
+            ctl_B1: { name: 'Cascade', summary: 'DoT +60%, tick +30%, spreads on kill', detail: 'When a DoT-affected enemy dies, DoT spreads to nearby enemies within 80px radius.', color: 'rgb(150,220,255)' },
+            ctl_B2: { name: 'Suppression Field', summary: 'Controlled enemies deal 30% less to towers', detail: 'Enemies under slow, DoT, or vulnerability deal reduced damage to your towers.', color: 'rgb(150,220,255)' },
+            // ── Fortify Track ──
+            frt_1: { name: 'Reinforce I', summary: '+12% tower HP', detail: 'All towers gain 12% more max HP. Existing towers heal the difference.', color: 'rgb(0,255,255)' },
+            frt_2: { name: 'Reinforce II', summary: '+12% tower HP', detail: 'Stacks with Reinforce I for +24% total.', color: 'rgb(0,255,255)' },
+            frt_A: { name: 'Hardened', summary: '+15% tower HP', detail: 'Stacks with Reinforce I/II.', color: 'rgb(0,255,255)' },
+            frt_A1: { name: 'Reactive Armor', summary: 'Towers take 40% less sapper damage', detail: 'Reduces all damage from Sapper enemy projectiles.', color: 'rgb(0,255,255)' },
+            frt_A2: { name: 'Auto-Repair', summary: 'Towers regen 1.5% max HP/sec', detail: 'Passive regeneration. Towers slowly heal without spending gold.', color: 'rgb(0,255,255)' },
+            frt_B: { name: 'Efficiency', summary: '+15% tower HP', detail: 'Stacks with Reinforce I/II.', color: 'rgb(0,255,255)' },
+            frt_B1: { name: 'Emergency Overhaul', summary: '75% refund on tower destruction', detail: 'Destroyed towers refund 75% of invested gold. Rebuilding the same tower type within 30s builds 50% faster.', color: 'rgb(0,255,255)' },
+            frt_B2: { name: 'Active Construction', summary: 'Towers fire at 50% while building', detail: 'Towers can attack during construction, upgrade, and branching at 50% damage effectiveness.', color: 'rgb(0,255,255)' },
+        };
     }
 
     showGoldDelta(amount) {

@@ -108,12 +108,22 @@ export class Enemy {
         this.y = lerp(a[1], b[1], this.pathProgress);
     }
 
-    takeDamage(damage) {
+    takeDamage(damage, mods = null) {
         if (this.type === EnemyType.PHASE && this.phased) {
-            damage *= this.phaseReduction;
+            // Phase Scanner research: phased enemies take normal damage
+            if (mods && mods.phase_scanner) {
+                // No reduction — damage passes through normally
+            } else {
+                damage *= this.phaseReduction;
+            }
         }
         if (this.armor > 0) {
-            damage = Math.max(1, damage - this.armor);
+            // Armor pierce research
+            let effectiveArmor = this.armor;
+            if (mods && mods.armor_pierce > 0) {
+                effectiveArmor = Math.round(this.armor * (1.0 - mods.armor_pierce));
+            }
+            damage = Math.max(1, damage - effectiveArmor);
         }
         if (this.vulnerability > 1.0 && this.vulnTimer > 0) {
             damage *= this.vulnerability;
@@ -135,12 +145,17 @@ export class Enemy {
         this.vulnTimer = Math.max(this.vulnTimer, duration);
     }
 
-    applyDot(dps, duration) {
-        this.dotDamage = Math.max(this.dotDamage, dps);
+    applyDot(dps, duration, mods = null) {
+        // dot_tick_bonus increases effective DPS by making ticks faster (same total damage in less time)
+        let effectiveDps = dps;
+        if (mods && mods.dot_tick_bonus > 0) {
+            effectiveDps *= (1.0 + mods.dot_tick_bonus);
+        }
+        this.dotDamage = Math.max(this.dotDamage, effectiveDps);
         this.dotTimer = Math.max(this.dotTimer, duration);
     }
 
-    update(dt, allEnemies) {
+    update(dt, allEnemies, mods = null) {
         if (!this.alive) return;
 
         // Phase cycling
@@ -163,15 +178,19 @@ export class Enemy {
             }
         }
 
-        // Healer
+        // Healer (affected by healer_reduction research)
         if (this.type === EnemyType.HEALER && allEnemies) {
             this.healTimer -= dt;
             if (this.healTimer <= 0) {
                 this.healTimer = this.healRate;
+                let healAmt = this.healAmount;
+                if (mods && mods.healer_reduction > 0) {
+                    healAmt *= (1.0 - mods.healer_reduction);
+                }
                 for (const e of allEnemies) {
                     if (e !== this && e.alive && e.health < e.maxHealth &&
                         dist(this.x, this.y, e.x, e.y) <= this.healRange) {
-                        e.health = Math.min(e.maxHealth, e.health + this.healAmount);
+                        e.health = Math.min(e.maxHealth, e.health + healAmt);
                     }
                 }
             }
@@ -192,7 +211,11 @@ export class Enemy {
             this.slowTimer -= dt;
         }
         if (this.type === EnemyType.SPRINTER && this.sprinting) {
-            effectiveSpeed = this.sprintSpeed;
+            let sprintSpd = this.sprintSpeed;
+            if (mods && mods.sprinter_reduction > 0) {
+                sprintSpd *= (1.0 - mods.sprinter_reduction);
+            }
+            effectiveSpeed = sprintSpd;
         }
         this.speed = effectiveSpeed;
 

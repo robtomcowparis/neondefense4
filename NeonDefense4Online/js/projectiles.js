@@ -112,7 +112,7 @@ export class EnemyProjectile {
         const dy = ty - this.y;
         const d = Math.hypot(dx, dy);
         if (d < this.speed * dt + 8) {
-            this.target.takeDamage(this.damage);
+            this.target.takeDamage(this.damage, true);
             this.alive = false;
             return;
         }

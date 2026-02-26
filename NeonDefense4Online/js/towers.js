@@ -131,6 +131,10 @@ export class Tower {
         this.shieldHp = 0;
         this.shieldMaxHp = 0;
         this.shieldActive = false;
+
+        // Research-driven modifiers (updated by game loop)
+        this._sapperReduction = 0;
+        this._activeConstruction = 0;
     }
 
     _computeBaseMaxHp() {
@@ -150,7 +154,11 @@ export class Tower {
         return maxHp > 0 ? Math.max(0, this.hp / maxHp) : 0;
     }
 
-    takeDamage(damage) {
+    takeDamage(damage, isSapper = false) {
+        // Apply sapper damage reduction from research
+        if (isSapper && this._sapperReduction > 0) {
+            damage *= (1.0 - this._sapperReduction);
+        }
         // Shield absorbs damage first
         if (this.shieldActive && this.shieldHp > 0) {
             if (damage < this.shieldHp) {
@@ -213,7 +221,10 @@ export class Tower {
     }
 
     get damageStat() { return this.stats.damage; }
-    effectiveDamage(mods) { return this.damageStat * (mods ? (mods.damage_mult || 1.0) : 1.0); }
+    effectiveDamage(mods, target = null) {
+        let dmg = this.damageStat * (mods ? (mods.damage_mult || 1.0) : 1.0);
+        return dmg;
+    }
     get fireRate() { return this.stats.fire_rate; }
     effectiveFireRate(mods) {
         const m = mods ? (mods.firerate_mult || 1.0) : 1.0;
@@ -221,7 +232,13 @@ export class Tower {
     }
     get range() { return this.stats.range; }
     effectiveRange(mods) {
-        return Math.round(this.range * (mods ? (mods.range_mult || 1.0) : 1.0));
+        let r = this.range * (mods ? (mods.range_mult || 1.0) : 1.0);
+        if (mods) {
+            if (mods.aoe_bonus && (this.type === TowerType.CRYO || this.type === TowerType.NOVA || this.type === TowerType.TESLA)) {
+                r *= (1.0 + mods.aoe_bonus);
+            }
+        }
+        return Math.round(r);
     }
     get name() {
         if (this.branch) return this.data.branches[this.branch].name;
@@ -263,8 +280,8 @@ export class Tower {
         }
     }
 
-    sellValue() {
-        return Math.round(this.investedGold * 0.6);
+    sellValue(sellRefund = 0.60) {
+        return Math.round(this.investedGold * sellRefund);
     }
 
     get isConstructing() { return this.constructionState !== null; }
@@ -364,6 +381,19 @@ export class Tower {
     update(dt, enemies, projectiles, effects, particles, mods) {
         this.damageFlashTimer = Math.max(0, this.damageFlashTimer - dt);
 
+        // Sync research-driven modifiers
+        this._sapperReduction = mods ? (mods.sapper_reduction || 0) : 0;
+        this._activeConstruction = mods ? (mods.active_construction || 0) : 0;
+
+        // Tower auto-regeneration from research
+        if (mods && mods.tower_regen > 0 && this.hp > 0 && !this.isConstructing) {
+            const fortifyMult = mods ? (mods.fortify_mult || 1.0) : 1.0;
+            const maxHp = this.getMaxHp(fortifyMult);
+            if (this.hp < maxHp) {
+                this.hp = Math.min(maxHp, this.hp + maxHp * mods.tower_regen * dt);
+            }
+        }
+
         // Sparks when low HP
         const fortifyMult = mods ? (mods.fortify_mult || 1.0) : 1.0;
         if (this.hpRatio(fortifyMult) < 0.25 && this.hp > 0) {
@@ -378,8 +408,25 @@ export class Tower {
             }
         }
 
-        this.updateConstruction(dt);
-        if (this.constructionState === 'building') return;
+        // Construction speed bonus from research
+        const buildSpeedDt = mods && mods.build_speed > 0 ? dt * (1.0 + mods.build_speed) : dt;
+        this.updateConstruction(buildSpeedDt);
+
+        // Active Construction: towers can fire at reduced effectiveness while building/upgrading
+        const activeConst = mods ? (mods.active_construction || this._activeConstruction || 0) : (this._activeConstruction || 0);
+        if (this.constructionState === 'building' || this.constructionState === 'upgrading' || this.constructionState === 'branching') {
+            if (activeConst > 0 && this.constructionState !== 'building' || 
+                (activeConst > 0 && this.constructionState === 'building' && this.constructionProgress > 0.3)) {
+                // Fire at reduced rate
+                this.fireTimer -= dt * activeConst;
+                this.findTarget(enemies, mods);
+                if (this.target && this.fireTimer <= 0) {
+                    this.fireTimer = this.effectiveFireRate(mods);
+                    this._fireReduced(enemies, projectiles, effects, particles, mods, activeConst);
+                }
+            }
+            return;
+        }
 
         this.fireTimer -= dt;
         this.findTarget(enemies, mods);
@@ -389,12 +436,57 @@ export class Tower {
         }
     }
 
+    /** Fire with reduced damage for Active Construction */
+    _fireReduced(enemies, projectiles, effects, particles, mods, mult) {
+        // Create a modified mods with reduced damage
+        const reducedMods = mods ? { ...mods, damage_mult: (mods.damage_mult || 1.0) * mult } : { damage_mult: mult };
+        this._fire(enemies, projectiles, effects, particles, reducedMods);
+    }
+
+    /** Compute damage dealt to a specific enemy, factoring research bonuses */
+    _hitDamage(baseDmg, enemy, mods) {
+        let dmg = baseDmg;
+        if (!mods || !enemy) return dmg;
+
+        // Critical Systems: 10% chance for double damage
+        if (mods.critical_chance > 0 && Math.random() < mods.critical_chance) {
+            dmg *= 2.0;
+        }
+        // Controlled Damage: +25% vs enemies under any control effect
+        if (mods.controlled_damage_bonus > 0 &&
+            (enemy.slowTimer > 0 || enemy.vulnTimer > 0 || enemy.dotTimer > 0)) {
+            dmg *= (1.0 + mods.controlled_damage_bonus);
+        }
+        // Overwatch: +20% damage to enemies beyond 75% of tower range
+        if (mods.overwatch_bonus > 0) {
+            const effectiveRng = this.effectiveRange(mods);
+            if (dist(this.x, this.y, enemy.x, enemy.y) > effectiveRng * 0.75) {
+                dmg *= (1.0 + mods.overwatch_bonus);
+            }
+        }
+        // Proximity bonus (close range)
+        if (mods.proximity_bonus > 0) {
+            const halfRange = this.effectiveRange(mods) * 0.5;
+            if (dist(this.x, this.y, enemy.x, enemy.y) <= halfRange) {
+                dmg *= (1.0 + mods.proximity_bonus);
+            }
+        }
+        // Execute bonus (low HP)
+        if (mods.execute_threshold > 0 && mods.execute_bonus > 0) {
+            if (enemy.health / enemy.maxHealth < mods.execute_threshold) {
+                dmg *= (1.0 + mods.execute_bonus);
+            }
+        }
+        return dmg;
+    }
+
     _fire(enemies, projectiles, effects, particles, mods) {
         const stats = this.stats;
 
         if (this.type === TowerType.PULSE) {
+            const baseDmg = this._hitDamage(this.effectiveDamage(mods), this.target, mods);
             projectiles.push(new Projectile(
-                this.x, this.y, this.target, this.effectiveDamage(mods),
+                this.x, this.y, this.target, baseDmg,
                 350, this.color, 3, this,
                 stats.splash_radius || 0, stats.splash_damage || 0
             ));
@@ -423,8 +515,9 @@ export class Tower {
                 const proj = ex * ndx + ey * ndy;
                 if (proj < 0 || proj > this.effectiveRange(mods)) continue;
                 if (Math.abs(ex * ndy - ey * ndx) < e.size + 8) {
-                    e.takeDamage(this.effectiveDamage(mods));
-                    this.totalDamage += this.effectiveDamage(mods);
+                    const dmg = this._hitDamage(this.effectiveDamage(mods), e, mods);
+                    e.takeDamage(dmg, mods);
+                    this.totalDamage += dmg;
                     if (!e.alive) this.kills++;
                     hit++;
                     particles.emitTrail(e.x, e.y, this.color, 3, 40, 0.2);
@@ -434,14 +527,16 @@ export class Tower {
 
         } else if (this.type === TowerType.TESLA) {
             const chains = stats.chains || 3;
-            const chainRange = stats.chain_range || 80;
+            const chainRange = Math.round((stats.chain_range || 80) * (1.0 + (mods && mods.aoe_bonus ? mods.aoe_bonus : 0)));
             let dotD = stats.dot_damage || 0;
             const dotDur = stats.dot_duration || 0;
             dotD = dotD * (mods ? (mods.control_mult || 1.0) : 1.0);
+            if (mods && mods.dot_damage_bonus > 0) dotD *= (1.0 + mods.dot_damage_bonus);
             const hitE = [this.target];
-            this.target.takeDamage(this.effectiveDamage(mods));
-            this.totalDamage += this.effectiveDamage(mods);
-            if (dotD > 0) this.target.applyDot(dotD, dotDur);
+            const dmg0 = this._hitDamage(this.effectiveDamage(mods), this.target, mods);
+            this.target.takeDamage(dmg0, mods);
+            this.totalDamage += dmg0;
+            if (dotD > 0) this.target.applyDot(dotD, dotDur, mods);
             if (!this.target.alive) this.kills++;
             const arcPts = [[this.x, this.y], [this.target.x, this.target.y]];
             let current = this.target;
@@ -454,10 +549,10 @@ export class Tower {
                     if (dd < bd) { bd = dd; bn = e; }
                 }
                 if (!bn) break;
-                const cd = Math.round(this.effectiveDamage(mods) * 0.7);
-                bn.takeDamage(cd);
+                const cd = Math.round(this._hitDamage(this.effectiveDamage(mods), bn, mods) * 0.7);
+                bn.takeDamage(cd, mods);
                 this.totalDamage += cd;
-                if (dotD > 0) bn.applyDot(dotD, dotDur);
+                if (dotD > 0) bn.applyDot(dotD, dotDur, mods);
                 if (!bn.alive) this.kills++;
                 hitE.push(bn);
                 arcPts.push([bn.x, bn.y]);
@@ -467,20 +562,23 @@ export class Tower {
 
         } else if (this.type === TowerType.CRYO) {
             let sf = stats.slow_factor || 0.5;
-            const sd = stats.slow_duration || 2.0;
+            let sd = stats.slow_duration || 2.0;
             const ctl = mods ? (mods.control_mult || 1.0) : 1.0;
             const slowAmt = (1.0 - sf) * ctl;
             sf = clamp(1.0 - slowAmt, 0.10, 0.95);
             let vuln = stats.vulnerability || 1.0;
             if (vuln > 1.0) vuln = 1.0 + (vuln - 1.0) * ctl;
+            // Deep Freeze: slow duration bonus
+            if (mods && mods.slow_duration_mult > 0) sd *= (1.0 + mods.slow_duration_mult);
 
             for (const e of enemies) {
                 if (!e.alive) continue;
                 if (dist(this.x, this.y, e.x, e.y) <= this.effectiveRange(mods)) {
-                    e.takeDamage(this.effectiveDamage(mods));
+                    const dmg = this._hitDamage(this.effectiveDamage(mods), e, mods);
+                    e.takeDamage(dmg, mods);
                     e.applySlow(sf, sd);
                     if (vuln > 1.0) e.applyVulnerability(vuln, sd);
-                    this.totalDamage += this.effectiveDamage(mods);
+                    this.totalDamage += dmg;
                 }
             }
             effects.push(new VisualEffect('cryo_field', 0.3, { center: [this.x, this.y], radius: this.range, color: this.color }));
@@ -489,8 +587,9 @@ export class Tower {
             for (const e of enemies) {
                 if (!e.alive) continue;
                 if (dist(this.x, this.y, e.x, e.y) <= this.effectiveRange(mods)) {
-                    e.takeDamage(this.effectiveDamage(mods));
-                    this.totalDamage += this.effectiveDamage(mods);
+                    const dmg = this._hitDamage(this.effectiveDamage(mods), e, mods);
+                    e.takeDamage(dmg, mods);
+                    this.totalDamage += dmg;
                     if (!e.alive) this.kills++;
                     particles.emitTrail(e.x, e.y, HOT_PINK, 3, 50, 0.3);
                 }

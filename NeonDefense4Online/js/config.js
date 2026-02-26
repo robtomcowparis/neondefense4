@@ -214,12 +214,231 @@ export const ENEMY_DATA = {
                             attack_damage: 8, attack_range: 130, attack_rate: 2.2, miss_chance: 0.35 },
 };
 
-// ─── Research Tracks ─────────────────────────────────────────
+// ─── Research Tree (branching) ───────────────────────────────
+// Structure per track: tier1 → tier2 → [branch A or B] → [sub A1/A2 or B1/B2]
+// Each node has: id, name, desc, cost, time, effect (additive mods)
+// "effect" keys match globalMods() output fields
+
+export const RESEARCH_TREE = {
+    Damage: {
+        name: "Damage",
+        icon: "⚡",
+        color: MAGENTA,
+        tiers: [
+            { id: "dmg_1", name: "Weapons I",  desc: "+8% tower damage",  cost: 350,  time: 8,
+              effect: { damage_mult: 0.08 } },
+            { id: "dmg_2", name: "Weapons II", desc: "+8% tower damage",  cost: 580,  time: 10,
+              effect: { damage_mult: 0.08 } },
+        ],
+        branches: {
+            A: {
+                id: "dmg_A", name: "Precision", desc: "+10% damage → Armor Pierce / Crits",
+                cost: 950, time: 12,
+                effect: { damage_mult: 0.10 },
+                children: {
+                    1: { id: "dmg_A1", name: "Armor Piercing", desc: "Ignore 50% enemy armor",
+                         cost: 1400, time: 15, effect: { armor_pierce: 0.50 } },
+                    2: { id: "dmg_A2", name: "Critical Systems", desc: "10% chance to deal double damage",
+                         cost: 1400, time: 15, effect: { critical_chance: 0.10 } },
+                }
+            },
+            B: {
+                id: "dmg_B", name: "Overload", desc: "+10% damage → Control Synergy / Fire Rate",
+                cost: 950, time: 12,
+                effect: { damage_mult: 0.10 },
+                children: {
+                    1: { id: "dmg_B1", name: "Controlled Damage", desc: "+25% damage vs controlled enemies",
+                         cost: 1400, time: 15, effect: { controlled_damage_bonus: 0.25 } },
+                    2: { id: "dmg_B2", name: "Overdrive", desc: "+15% fire rate",
+                         cost: 1400, time: 15, effect: { firerate_bonus: 0.15 } },
+                }
+            }
+        }
+    },
+    Range: {
+        name: "Range",
+        icon: "◎",
+        color: NEON_GREEN,
+        tiers: [
+            { id: "rng_1", name: "Sensors I",  desc: "+6% tower range",  cost: 320,  time: 8,
+              effect: { range_mult: 0.06 } },
+            { id: "rng_2", name: "Sensors II", desc: "+6% tower range",  cost: 510,  time: 10,
+              effect: { range_mult: 0.06 } },
+        ],
+        branches: {
+            A: {
+                id: "rng_A", name: "Long Optics", desc: "+8% range → Phase Counter / Long-range Dmg",
+                cost: 900, time: 12,
+                effect: { range_mult: 0.08 },
+                children: {
+                    1: { id: "rng_A1", name: "Phase Scanner", desc: "Phased enemies take normal damage",
+                         cost: 1300, time: 15, effect: { phase_scanner: 1 } },
+                    2: { id: "rng_A2", name: "Overwatch", desc: "+20% damage beyond 75% range",
+                         cost: 1300, time: 15, effect: { overwatch_bonus: 0.20 } },
+                }
+            },
+            B: {
+                id: "rng_B", name: "Wide Spectrum", desc: "+8% range → AoE Boost / Close-range Dmg",
+                cost: 900, time: 12,
+                effect: { range_mult: 0.08 },
+                children: {
+                    1: { id: "rng_B1", name: "Field Amplifier", desc: "Cryo/Nova/Tesla AoE +25%",
+                         cost: 1300, time: 15, effect: { aoe_bonus: 0.25 } },
+                    2: { id: "rng_B2", name: "Proximity Boost", desc: "+25% damage to enemies within half range",
+                         cost: 1300, time: 15, effect: { proximity_bonus: 0.25 } },
+                }
+            }
+        }
+    },
+    Control: {
+        name: "Control",
+        icon: "❄",
+        color: ICE_BLUE,
+        tiers: [
+            { id: "ctl_1", name: "Disruption I",  desc: "+10% slow/vuln/dot", cost: 380,  time: 8,
+              effect: { control_mult: 0.10 } },
+            { id: "ctl_2", name: "Disruption II", desc: "+10% slow/vuln/dot", cost: 630,  time: 10,
+              effect: { control_mult: 0.10 } },
+        ],
+        branches: {
+            A: {
+                id: "ctl_A", name: "Permafrost", desc: "+12% control → Longer Slows / Execute Dmg",
+                cost: 1000, time: 12,
+                effect: { control_mult: 0.12 },
+                children: {
+                    1: { id: "ctl_A1", name: "Deep Freeze", desc: "Slow effects last 50% longer",
+                         cost: 1500, time: 15, effect: { slow_duration_mult: 0.50 } },
+                    2: { id: "ctl_A2", name: "Shatter", desc: "Enemies below 30% HP take +40% damage",
+                         cost: 1500, time: 15, effect: { execute_threshold: 0.30, execute_bonus: 0.40 } },
+                }
+            },
+            B: {
+                id: "ctl_B", name: "Corruption", desc: "+12% control → DoT Spread / Sapper Defense",
+                cost: 1000, time: 12,
+                effect: { control_mult: 0.12 },
+                children: {
+                    1: { id: "ctl_B1", name: "Cascade", desc: "DoT +60%, tick +30%, spreads on kill",
+                         cost: 1500, time: 15, effect: { dot_damage_bonus: 0.60, dot_tick_bonus: 0.30, cascade_spread: 1 } },
+                    2: { id: "ctl_B2", name: "Suppression Field", desc: "Controlled enemies deal 30% less to towers",
+                         cost: 1500, time: 15, effect: { suppression_field: 0.30 } },
+                }
+            }
+        }
+    },
+    Fortify: {
+        name: "Fortify",
+        icon: "🛡",
+        color: CYAN,
+        tiers: [
+            { id: "frt_1", name: "Reinforce I",  desc: "+12% tower HP",  cost: 300,  time: 8,
+              effect: { fortify_mult: 0.12 } },
+            { id: "frt_2", name: "Reinforce II", desc: "+12% tower HP",  cost: 480,  time: 10,
+              effect: { fortify_mult: 0.12 } },
+        ],
+        branches: {
+            A: {
+                id: "frt_A", name: "Hardened", desc: "+15% tower HP → Sapper Resist / Auto-Heal",
+                cost: 850, time: 12,
+                effect: { fortify_mult: 0.15 },
+                children: {
+                    1: { id: "frt_A1", name: "Reactive Armor", desc: "Towers take 40% less sapper damage",
+                         cost: 1200, time: 15, effect: { sapper_reduction: 0.40 } },
+                    2: { id: "frt_A2", name: "Auto-Repair", desc: "Towers regen 1.5% max HP/sec",
+                         cost: 1200, time: 15, effect: { tower_regen: 0.015 } },
+                }
+            },
+            B: {
+                id: "frt_B", name: "Efficiency", desc: "+15% tower HP → Rebuild Refund / Build & Fight",
+                cost: 850, time: 12,
+                effect: { fortify_mult: 0.15 },
+                children: {
+                    1: { id: "frt_B1", name: "Emergency Overhaul", desc: "Destroyed towers refund 75%, rebuild same type 50% faster",
+                         cost: 1200, time: 15, effect: { destroy_refund: 0.75, rebuild_speed: 0.50 } },
+                    2: { id: "frt_B2", name: "Active Construction", desc: "Towers operate at 50% while building/upgrading",
+                         cost: 1200, time: 15, effect: { active_construction: 0.50 } },
+                }
+            }
+        }
+    },
+};
+
+// Helper: iterate all nodes in a track (flat list)
+export function getTrackNodes(trackKey) {
+    const track = RESEARCH_TREE[trackKey];
+    if (!track) return [];
+    const nodes = [];
+    for (const t of track.tiers) nodes.push({ ...t, depth: 'tier' });
+    for (const bKey of ['A', 'B']) {
+        const b = track.branches[bKey];
+        nodes.push({ ...b, depth: 'branch', branchKey: bKey });
+        for (const cKey of ['1', '2']) {
+            const c = b.children[cKey];
+            nodes.push({ ...c, depth: 'child', branchKey: bKey, childKey: cKey });
+        }
+    }
+    return nodes;
+}
+
+// Helper: get the next purchasable node(s) for a track given current research state
+export function getAvailableNodes(trackKey, researchState) {
+    const track = RESEARCH_TREE[trackKey];
+    if (!track) return [];
+    const has = (id) => !!researchState[id];
+
+    // Tier 1 not done?
+    if (!has(track.tiers[0].id)) return [track.tiers[0]];
+    // Tier 2 not done?
+    if (!has(track.tiers[1].id)) return [track.tiers[1]];
+
+    // Both tiers done — check branches
+    const hasA = has(track.branches.A.id);
+    const hasB = has(track.branches.B.id);
+
+    if (!hasA && !hasB) {
+        // Offer both branches as choice
+        return [track.branches.A, track.branches.B];
+    }
+
+    // One branch chosen — offer its children
+    const chosen = hasA ? track.branches.A : track.branches.B;
+    const c1 = chosen.children['1'];
+    const c2 = chosen.children['2'];
+    const hasC1 = has(c1.id);
+    const hasC2 = has(c2.id);
+
+    if (!hasC1 && !hasC2) return [c1, c2];
+
+    // Track complete
+    return [];
+}
+
+// Helper: is a track fully complete?
+export function isTrackComplete(trackKey, researchState) {
+    return getAvailableNodes(trackKey, researchState).length === 0
+        && !!researchState[RESEARCH_TREE[trackKey].tiers[0].id];
+}
+
+// Helper: count completed nodes in a track
+export function getTrackProgress(trackKey, researchState) {
+    const track = RESEARCH_TREE[trackKey];
+    if (!track) return { done: 0, max: 4 };
+    let done = 0;
+    for (const t of track.tiers) if (researchState[t.id]) done++;
+    for (const bKey of ['A', 'B']) {
+        if (researchState[track.branches[bKey].id]) done++;
+        for (const cKey of ['1', '2']) {
+            if (researchState[track.branches[bKey].children[cKey].id]) done++;
+        }
+    }
+    return { done, max: 4 }; // max reachable is 4 (tier1, tier2, branch, child)
+}
+
+// Backward compat: old RESEARCH_TRACKS (for any code that references it)
 export const RESEARCH_TRACKS = {
-    Damage:  { max_level: 6, base_cost: 350, cost_mult: 1.65, per_level: 0.08 },  // +8% dmg
-    Range:   { max_level: 6, base_cost: 320, cost_mult: 1.60, per_level: 0.06 },  // +6% range
-    Control: { max_level: 6, base_cost: 380, cost_mult: 1.65, per_level: 0.10 },  // +10% slow/vuln/dot
-    Fortify: { max_level: 6, base_cost: 300, cost_mult: 1.60, per_level: 0.12 },  // +12% tower HP
+    Damage:  { max_level: 4 },
+    Range:   { max_level: 4 },
+    Control: { max_level: 4 },
+    Fortify: { max_level: 4 },
 };
 
 // ─── Economy Constants ───────────────────────────────────────
