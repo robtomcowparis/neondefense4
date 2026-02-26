@@ -62,29 +62,22 @@ export class HUD {
                 </div>
             </div>
             <div class="sb-resources">
-                <div class="res-row">
-                    <span class="res-label">WAVE</span>
-                    <span id="resWave" class="res-value res-wave">0</span>
+                <div class="res-inline">
+                    <div class="res-cell">
+                        <span class="res-label">WAVE</span>
+                        <span id="resWave" class="res-value res-wave">0</span>
+                    </div>
+                    <div class="res-cell">
+                        <span class="res-label">GOLD</span>
+                        <span id="resGold" class="res-value res-gold">1000</span>
+                        <span id="goldDelta" class="gold-delta"></span>
+                    </div>
+                    <div class="res-cell">
+                        <span class="res-label">LIVES</span>
+                        <span id="resLives" class="res-value res-lives">30</span>
+                    </div>
                     <span id="resWaveStatus" class="res-status"></span>
                 </div>
-                <div class="res-row">
-                    <span class="res-label">GOLD</span>
-                    <span id="resGold" class="res-value res-gold">1000</span>
-                    <span id="goldDelta" class="gold-delta"></span>
-                </div>
-                <div class="res-row">
-                    <span class="res-label">LIVES</span>
-                    <span id="resLives" class="res-value res-lives">30</span>
-                </div>
-            </div>
-            <div id="waveControl" class="sb-wave-control">
-                <div id="waveCountdownBar" class="wave-cd-bar">
-                    <div id="waveCountdownFill" class="wave-cd-fill"></div>
-                    <span id="waveCountdownText" class="wave-cd-text"></span>
-                </div>
-                <button id="btnSendEarly" class="btn-send-early hidden">
-                    SEND WAVE <span id="earlyBonus" class="early-bonus"></span>
-                </button>
             </div>
             <div class="sb-section">
                 <div class="sb-section-title">RESEARCH</div>
@@ -279,12 +272,6 @@ export class HUD {
     }
 
     _bindEvents() {
-        const btnSend = document.getElementById('btnSendEarly');
-        if (btnSend) {
-            btnSend.addEventListener('click', () => {
-                if (this.callbacks.onSendEarly) this.callbacks.onSendEarly();
-            });
-        }
         const btnMute = document.getElementById('btnMute');
         if (btnMute) {
             btnMute.addEventListener('click', () => {
@@ -337,9 +324,6 @@ export class HUD {
             }
         }
 
-        // Wave control
-        this._updateWaveControl();
-
         // Research
         this._updateResearch();
 
@@ -348,34 +332,6 @@ export class HUD {
 
         // Tower info panel
         this._updateTowerPanel();
-    }
-
-    _updateWaveControl() {
-        const g = this.game;
-        const cdBar = document.getElementById('waveCountdownBar');
-        const cdFill = document.getElementById('waveCountdownFill');
-        const cdText = document.getElementById('waveCountdownText');
-        const btnSend = document.getElementById('btnSendEarly');
-        const earlyBonus = document.getElementById('earlyBonus');
-
-        if (g.waveMgr.countdownActive && g.waveMgr.waveCountdown > 0 && !g.waveMgr.spawning) {
-            if (cdBar) cdBar.classList.remove('hidden');
-            if (btnSend) btnSend.classList.remove('hidden');
-            // Determine max countdown for progress bar
-            let maxCd = 18;
-            if (g.waveMgr.currentWave === 0) maxCd = 18;
-            else if (g.waveMgr.currentWave <= 1) maxCd = 15;
-            else if (g.waveMgr.currentWave <= 2) maxCd = 10;
-            else maxCd = 3;
-            const pct = Math.max(0, (g.waveMgr.waveCountdown / maxCd) * 100);
-            if (cdFill) cdFill.style.width = pct + '%';
-            if (cdText) cdText.textContent = `Next wave: ${g.waveMgr.waveCountdown.toFixed(1)}s`;
-            const bonus = Math.round(g.waveMgr.waveCountdown * 3);
-            if (earlyBonus) earlyBonus.textContent = `(+${bonus}g)`;
-        } else {
-            if (cdBar) cdBar.classList.add('hidden');
-            if (btnSend) btnSend.classList.add('hidden');
-        }
     }
 
     _updateResearch() {

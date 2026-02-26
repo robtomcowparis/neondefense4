@@ -83,7 +83,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 14px 6px;
+    padding: 6px 14px 4px;
     border-bottom: 1px solid var(--border-dim);
 }
 .sb-title {
@@ -132,25 +132,28 @@ body {
 
 /* ─── Resources ───────────────────────────────────────────── */
 .sb-resources {
-    padding: 8px 14px;
+    padding: 5px 14px;
     border-bottom: 1px solid var(--border-dim);
 }
-.res-row {
+.res-inline {
     display: flex;
     align-items: baseline;
-    gap: 8px;
-    padding: 3px 0;
+    gap: 10px;
+}
+.res-cell {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
 }
 .res-label {
     font-family: var(--font-display);
-    font-size: 10px;
+    font-size: 9px;
     color: var(--text-dim);
-    letter-spacing: 1px;
-    width: 48px;
+    letter-spacing: 0.5px;
 }
 .res-value {
     font-family: var(--font-display);
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 700;
 }
 .res-wave { color: var(--magenta); text-shadow: 0 0 8px rgba(255, 0, 255, 0.4); }
@@ -176,64 +179,9 @@ body {
 .gold-delta.positive { color: var(--green); }
 .gold-delta.negative { color: var(--red); }
 
-/* ─── Wave Control ────────────────────────────────────────── */
-.sb-wave-control {
-    padding: 6px 14px 8px;
-    border-bottom: 1px solid var(--border-dim);
-}
-.wave-cd-bar {
-    position: relative;
-    height: 18px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-dim);
-    border-radius: 3px;
-    margin-bottom: 6px;
-    overflow: hidden;
-    transition: opacity 0.15s;
-}
-.wave-cd-bar.hidden { opacity: 0; pointer-events: none; }
-.wave-cd-fill {
-    height: 100%;
-    background: linear-gradient(90deg, rgba(0,180,200,0.3), rgba(0,255,255,0.15));
-    transition: width 0.15s linear;
-}
-.wave-cd-text {
-    position: absolute;
-    top: 0; left: 8px;
-    line-height: 18px;
-    font-size: 11px;
-    color: var(--cyan);
-}
-.btn-send-early {
-    width: 100%;
-    padding: 8px 10px;
-    font-family: var(--font-display);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--cyan);
-    background: rgba(0, 180, 200, 0.08);
-    border: 1px solid var(--cyan);
-    border-radius: 4px;
-    cursor: pointer;
-    letter-spacing: 1px;
-    transition: all 0.2s;
-    animation: pulse-glow-cyan 2s ease-in-out infinite;
-}
-.btn-send-early:hover {
-    background: rgba(0, 255, 255, 0.15);
-    box-shadow: 0 0 16px rgba(0, 255, 255, 0.4);
-}
-.btn-send-early.hidden { visibility: hidden; pointer-events: none; }
-.early-bonus { color: var(--gold); margin-left: 6px; }
-
-@keyframes pulse-glow-cyan {
-    0%, 100% { box-shadow: 0 0 4px rgba(0, 255, 255, 0.2); }
-    50% { box-shadow: 0 0 12px rgba(0, 255, 255, 0.4); }
-}
-
 /* ─── Sections ────────────────────────────────────────────── */
 .sb-section {
-    padding: 6px 14px;
+    padding: 4px 14px;
     border-bottom: 1px solid var(--border-dim);
 }
 .sb-section-title {
@@ -241,13 +189,13 @@ body {
     font-size: 10px;
     color: var(--border-cyan);
     letter-spacing: 2px;
-    margin-bottom: 4px;
-    padding-bottom: 3px;
+    margin-bottom: 3px;
+    padding-bottom: 2px;
     border-bottom: 1px solid rgba(0, 180, 200, 0.2);
 }
 .sb-tower-panel {
     flex: 1;
-    min-height: 180px;
+    min-height: 160px;
     border-bottom: none;
 }
 
@@ -427,12 +375,12 @@ body {
 .tower-buttons {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
 }
 .tower-btn {
     display: block;
     width: 100%;
-    padding: 6px 8px;
+    padding: 4px 8px;
     background: var(--bg-btn);
     border: 1px solid var(--border-dim);
     border-radius: 4px;
@@ -487,25 +435,25 @@ body {
 .tw-desc {
     font-size: 11px;
     color: var(--text-dim);
-    margin-top: 2px;
-    padding-left: 24px;
+    margin-top: 1px;
+    padding-left: 0;
 }
 
 /* ─── Tower Panel (selected tower info) ───────────────────── */
 .tower-panel {
-    min-height: 140px;
+    min-height: 120px;
 }
 .tower-panel-empty {
     color: var(--text-dim);
     font-size: 12px;
     text-align: center;
-    padding: 20px 10px;
+    padding: 14px 10px;
 }
 .tp-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 .tp-name {
     font-family: var(--font-display);
@@ -518,15 +466,15 @@ body {
     font-size: 11px;
     color: var(--gold);
 }
-.tp-desc { font-size: 11px; color: var(--text-dim); margin-bottom: 4px; }
-.tp-stats { font-size: 11px; color: var(--text); margin-bottom: 2px; }
-.tp-stats-extra { font-size: 10px; color: var(--ice); margin-bottom: 4px; }
+.tp-desc { font-size: 11px; color: var(--text-dim); margin-bottom: 2px; }
+.tp-stats { font-size: 11px; color: var(--text); margin-bottom: 1px; }
+.tp-stats-extra { font-size: 10px; color: var(--ice); margin-bottom: 2px; }
 .tp-hint { font-size: 11px; color: var(--text-dim); font-style: italic; }
 .tp-stat { font-size: 11px; color: var(--text); }
-.tp-tracker { font-size: 10px; color: var(--text-dim); margin: 4px 0; }
+.tp-tracker { font-size: 10px; color: var(--text-dim); margin: 1px 0; }
 
 /* HP */
-.tp-hp { margin: 6px 0; }
+.tp-hp { margin: 2px 0; }
 .tp-hp-text { font-size: 11px; }
 .tp-hp.hp-good .tp-hp-text { color: var(--green); }
 .tp-hp.hp-warn .tp-hp-text { color: #ffdd44; }
@@ -545,7 +493,7 @@ body {
 .tp-hp.hp-crit .tp-hp-fill { background: var(--red); }
 
 /* Shield HP */
-.tp-shield { margin: 4px 0; }
+.tp-shield { margin: 2px 0; }
 .tp-shield-text { font-size: 11px; color: var(--ice); }
 .tp-shield-bar {
     height: 6px;
@@ -568,8 +516,7 @@ body {
     background: var(--bg-card);
     border: 1px solid var(--border-dim);
     border-radius: 3px;
-    margin: 6px 0;
-    overflow: hidden;
+    margin: 3px 0;    overflow: hidden;
 }
 .tp-prg-fill {
     height: 100%;
@@ -592,12 +539,12 @@ body {
 .tp-actions {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    margin-top: 6px;
+    gap: 2px;
+    margin-top: 3px;
 }
 .tp-btn {
     width: 100%;
-    padding: 6px 10px;
+    padding: 4px 10px;
     font-family: var(--font-mono);
     font-size: 12px;
     border-radius: 3px;
@@ -627,11 +574,11 @@ body {
 .tp-btn-sell:hover { box-shadow: 0 0 8px rgba(200, 60, 60, 0.3); }
 .tp-btn-shield { color: var(--ice); background: rgba(100, 180, 255, 0.06); border-color: rgba(100, 180, 255, 0.3); }
 .tp-btn-shield:hover:not(.disabled) { box-shadow: 0 0 8px rgba(100, 180, 255, 0.3); }
-.tp-maxed { font-size: 11px; color: var(--text-dim); padding: 4px 0; }
+.tp-maxed { font-size: 11px; color: var(--text-dim); padding: 2px 0; }
 
 /* ─── Messages ────────────────────────────────────────────── */
 .message-area {
-    padding: 4px 14px 8px;
+    padding: 2px 14px 4px;
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -1109,18 +1056,10 @@ body {
         flex-direction: column;
     }
 
-    /* Wave control */
-    .btn-send-early {
-        padding: 12px 10px;
-        font-size: 13px;
-        min-height: 48px;
-    }
-
     /* Sidebar sections tighter */
-    .sb-section { padding: 8px 12px; }
-    .sb-resources { padding: 6px 12px; }
-    .sb-wave-control { padding: 6px 12px 8px; }
-    .sb-header { padding: 8px 12px 6px; }
+    .sb-section { padding: 6px 12px; }
+    .sb-resources { padding: 4px 12px; }
+    .sb-header { padding: 6px 12px 4px; }
 
     /* ─── Overlays on Mobile ──────────────────────────────── */
     .menu-content {
@@ -1267,20 +1206,14 @@ body {
     .sb-icon-btn { padding: 2px 4px; font-size: 14px; min-width: 28px; min-height: 28px; }
     .speed-badge { font-size: 9px; padding: 1px 4px; }
 
-    .sb-resources { padding: 4px 8px; }
-    .res-row { gap: 4px; padding: 1px 0; }
-    .res-label { font-size: 9px; width: 36px; letter-spacing: 0.5px; }
-    .res-value { font-size: 15px; }
+    .sb-resources { padding: 3px 8px; }
+    .res-inline { gap: 6px; }
+    .res-label { font-size: 8px; letter-spacing: 0.5px; }
+    .res-value { font-size: 13px; }
     .res-status { font-size: 9px; }
     .gold-delta { font-size: 11px; }
 
-    .sb-wave-control { padding: 3px 8px 4px; }
-    .wave-cd-bar { height: 14px; margin-bottom: 3px; }
-    .wave-cd-text { font-size: 9px; line-height: 14px; }
-    .btn-send-early { padding: 5px 6px; font-size: 10px; min-height: 32px; letter-spacing: 0.5px; }
-    .early-bonus { margin-left: 3px; }
-
-    .sb-section { padding: 4px 8px; }
+    .sb-section { padding: 3px 8px; }
     .sb-section-title { font-size: 9px; letter-spacing: 1px; margin-bottom: 3px; padding-bottom: 2px; }
     .sb-tower-panel { min-height: 100px; }
 
