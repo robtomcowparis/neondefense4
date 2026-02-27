@@ -772,46 +772,26 @@ export class Tower {
             }
         }
 
-        // HP arc bar (curved around tower ring — no overflow below)
+        // HP bar when damaged
         const maxHp = this.getMaxHp(fortifyMult);
-        const hpArcR = baseSize + (this.branch ? 7 : 4);
-        const _ARC_START = (140 * Math.PI) / 180;
-        const _ARC_SPAN  = (260 * Math.PI) / 180;
         if (this.hp < maxHp) {
+            const barW = 28, barH = 3;
+            const bx = ix - barW / 2, by = iy + (visible ? baseSize : 12) + 10;
+            ctx.fillStyle = 'rgb(30,30,30)';
+            ctx.fillRect(bx, by, barW, barH);
             const ratio = Math.max(0, this.hp / maxHp);
             const fc = ratio > 0.5 ? NEON_GREEN : ratio > 0.25 ? YELLOW : RED;
-            // Dark background arc
-            ctx.beginPath();
-            ctx.arc(ix, iy, hpArcR, _ARC_START, _ARC_START + _ARC_SPAN, false);
-            ctx.strokeStyle = 'rgba(30,30,40,0.85)';
-            ctx.lineWidth = 3;
-            ctx.lineCap = 'round';
-            ctx.stroke();
-            // Filled portion
-            if (ratio > 0.005) {
-                ctx.beginPath();
-                ctx.arc(ix, iy, hpArcR, _ARC_START, _ARC_START + ratio * _ARC_SPAN, false);
-                ctx.strokeStyle = rgb(fc);
-                ctx.lineWidth = 3;
-                ctx.lineCap = 'round';
-                ctx.stroke();
-                // Bright tip glow
-                const tipAngle = _ARC_START + ratio * _ARC_SPAN;
-                const tipX = ix + Math.cos(tipAngle) * hpArcR;
-                const tipY = iy + Math.sin(tipAngle) * hpArcR;
-                ctx.beginPath();
-                ctx.arc(tipX, tipY, 2, 0, Math.PI * 2);
-                ctx.fillStyle = rgba(fc, 0.7);
-                ctx.fill();
-            }
-            ctx.lineCap = 'butt';
+            ctx.fillStyle = rgb(fc);
+            ctx.fillRect(bx, by, Math.round(barW * ratio), barH);
+            ctx.strokeStyle = 'rgb(80,80,80)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(bx, by, barW, barH);
         }
 
-        // Shield: bright outer glow + arc bar
+        // Shield: bright outer glow + HP bar
         if (this.shieldActive && this.shieldHp > 0) {
             const shieldPulse = 0.5 + 0.5 * Math.sin(performance.now() * 0.005);
             const sRatio = Math.max(0, this.shieldHp / this.shieldMaxHp);
-            const shieldArcR = hpArcR + 4;
             const glowR = baseSize + (this.branch ? 10 : 7);
 
             // ── Prominent outer glow (always visible, scales with shield HP) ──
@@ -842,30 +822,18 @@ export class Tower {
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // ── Shield arc bar (just outside HP arc) ──
-            ctx.beginPath();
-            ctx.arc(ix, iy, shieldArcR, _ARC_START, _ARC_START + _ARC_SPAN, false);
-            ctx.strokeStyle = 'rgba(20,40,60,0.7)';
-            ctx.lineWidth = 2.5;
-            ctx.lineCap = 'round';
-            ctx.stroke();
-            if (sRatio > 0.005) {
-                ctx.beginPath();
-                ctx.arc(ix, iy, shieldArcR, _ARC_START, _ARC_START + sRatio * _ARC_SPAN, false);
-                ctx.strokeStyle = rgba(SHIELD_COLOR, 0.85 + 0.15 * shieldPulse);
-                ctx.lineWidth = 2.5;
-                ctx.lineCap = 'round';
-                ctx.stroke();
-                // Bright tip dot
-                const tipAngle = _ARC_START + sRatio * _ARC_SPAN;
-                const tipX = ix + Math.cos(tipAngle) * shieldArcR;
-                const tipY = iy + Math.sin(tipAngle) * shieldArcR;
-                ctx.beginPath();
-                ctx.arc(tipX, tipY, 1.5, 0, Math.PI * 2);
-                ctx.fillStyle = rgba([200, 230, 255], 0.9);
-                ctx.fill();
-            }
-            ctx.lineCap = 'butt';
+            // ── Shield HP bar (below the HP bar or below tower) ──
+            const shieldBarW = 28, shieldBarH = 2;
+            const hpBarOffset = this.hp < maxHp ? 15 : 10;
+            const sby = iy + (visible ? baseSize : 12) + hpBarOffset;
+            const sbx = ix - shieldBarW / 2;
+            ctx.fillStyle = 'rgb(20,30,50)';
+            ctx.fillRect(sbx, sby, shieldBarW, shieldBarH);
+            ctx.fillStyle = rgba(SHIELD_COLOR, 0.9);
+            ctx.fillRect(sbx, sby, Math.round(shieldBarW * sRatio), shieldBarH);
+            ctx.strokeStyle = rgba(SHIELD_COLOR, 0.4);
+            ctx.lineWidth = 1;
+            ctx.strokeRect(sbx, sby, shieldBarW, shieldBarH);
         }
 
         // Construction progress bar
