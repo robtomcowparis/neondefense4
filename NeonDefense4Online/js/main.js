@@ -262,7 +262,9 @@ function setState(newState) {
     const pauseEl = document.getElementById('pauseOverlay');
     const goEl = document.getElementById('gameOverOverlay');
     const gameEl = document.getElementById('gameContainer');
+    const htpEl = document.getElementById('howToPlayOverlay');
 
+    if (htpEl) htpEl.classList.add('hidden');
     if (menuEl) menuEl.classList.toggle('hidden', newState !== GameState.MENU);
     if (pauseEl) pauseEl.classList.toggle('hidden', newState !== GameState.PAUSED);
     if (goEl) goEl.classList.toggle('hidden', newState !== GameState.GAME_OVER);
@@ -409,6 +411,16 @@ function saveScoreLocal() {
 
 // ─── Input Handling ──────────────────────────────────────────
 function handleKeyDown(e) {
+    // Close How to Play overlay if open
+    const htpOverlay = document.getElementById('howToPlayOverlay');
+    if (htpOverlay && !htpOverlay.classList.contains('hidden')) {
+        if (e.key === 'Escape') {
+            htpOverlay.classList.add('hidden');
+            document.getElementById('menuOverlay')?.classList.remove('hidden');
+        }
+        return;
+    }
+
     if (game.state === GameState.MENU) {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
@@ -1210,6 +1222,16 @@ function init() {
     document.getElementById('btnStart')?.addEventListener('click', () => {
         startGame();
     });
+    document.getElementById('btnHowToPlay')?.addEventListener('click', () => {
+        document.getElementById('menuOverlay')?.classList.add('hidden');
+        document.getElementById('howToPlayOverlay')?.classList.remove('hidden');
+    });
+    const closeHtp = () => {
+        document.getElementById('howToPlayOverlay')?.classList.add('hidden');
+        document.getElementById('menuOverlay')?.classList.remove('hidden');
+    };
+    document.getElementById('btnHtpClose')?.addEventListener('click', closeHtp);
+    document.getElementById('btnHtpBack')?.addEventListener('click', closeHtp);
     document.getElementById('btnResume')?.addEventListener('click', () => {
         setState(GameState.PLAYING);
     });

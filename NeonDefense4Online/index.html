@@ -19,6 +19,7 @@
             <div class="menu-subtitle">INFINITE SURVIVAL</div>
             <div class="menu-divider"></div>
             <button id="btnStart" class="menu-btn pulse-btn">▶ START GAME</button>
+            <button id="btnHowToPlay" class="menu-btn menu-btn-help">? HOW TO PLAY</button>
             <div class="menu-keys">
                 <div>1–5 Select Tower &nbsp;|&nbsp; LMB Place &nbsp;|&nbsp; RMB Cancel</div>
                 <div>SPACE Send Early &nbsp;|&nbsp; F Fast Forward &nbsp;|&nbsp; ESC Pause</div>
@@ -27,6 +28,118 @@
             <div class="menu-section-title">GLOBAL LEADERBOARD</div>
             <div id="menuLeaderboard" class="leaderboard-table">
                 <div class="lb-loading">Loading scores...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ How To Play Overlay ═══ -->
+    <div id="howToPlayOverlay" class="overlay hidden">
+        <div class="scanlines"></div>
+        <div class="htp-content">
+            <div class="htp-header">
+                <h2 class="htp-title">HOW TO PLAY</h2>
+                <button id="btnHtpClose" class="htp-close-btn">✕</button>
+            </div>
+            <div class="htp-scroll">
+
+                <div class="htp-section">
+                    <div class="htp-section-title">OBJECTIVE</div>
+                    <p>Three enemy paths converge from the left side of the map. Build towers to destroy enemies before they reach the exit on the right. You start with <span class="htp-hl-gold">1,000 gold</span> and <span class="htp-hl-green">30 lives</span>. Lose all lives and it's game over. Survive as many waves as you can.</p>
+                </div>
+
+                <div class="htp-section">
+                    <div class="htp-section-title">CONTROLS</div>
+                    <div class="htp-controls-grid">
+                        <span class="htp-key">1–5</span><span>Select tower type</span>
+                        <span class="htp-key">LMB</span><span>Place tower / Select tower</span>
+                        <span class="htp-key">RMB</span><span>Cancel placement</span>
+                        <span class="htp-key">SPACE</span><span>Send next wave early (+bonus gold)</span>
+                        <span class="htp-key">F</span><span>Fast forward (2× speed)</span>
+                        <span class="htp-key">ESC</span><span>Pause / Resume</span>
+                        <span class="htp-key">Q</span><span>Quit to menu (while paused)</span>
+                    </div>
+                </div>
+
+                <div class="htp-section">
+                    <div class="htp-section-title">TOWERS</div>
+                    <p>Each tower can be upgraded twice (Lv1 → Lv2 → Lv3), then specialized into one of two unique branches. Towers take time to build (5–10s), so plan placements ahead of incoming waves. Towers have HP and can be damaged by Sappers — click a placed tower to see its stats, repair, upgrade, sell, or (after branching) buy a shield.</p>
+                    <div class="htp-tower-list">
+                        <div class="htp-tower" style="--tw-c: var(--cyan);">
+                            <div class="htp-tw-name">PULSE <span class="htp-tw-cost">100g</span></div>
+                            <div class="htp-tw-desc">Rapid-fire energy bolts. Cheap, fast, bread-and-butter DPS.</div>
+                            <div class="htp-tw-branches">⤷ Overclock (fire rate) · Heavy Bolts (splash)</div>
+                        </div>
+                        <div class="htp-tower" style="--tw-c: var(--magenta);">
+                            <div class="htp-tw-name">RAIL <span class="htp-tw-cost">150g</span></div>
+                            <div class="htp-tw-desc">Fixed-aim piercing beam. Hits multiple enemies in a line. Click once to place, again to set direction.</div>
+                            <div class="htp-tw-branches">⤷ Longline (range + pierce) · Capacitor (massive single hit)</div>
+                        </div>
+                        <div class="htp-tower" style="--tw-c: var(--blue);">
+                            <div class="htp-tw-name">TESLA <span class="htp-tw-cost">180g</span></div>
+                            <div class="htp-tw-desc">Chain lightning arcing between nearby enemies. Strong vs clusters.</div>
+                            <div class="htp-tw-branches">⤷ Arc Web (many chains) · Burn (chains apply DoT)</div>
+                        </div>
+                        <div class="htp-tower" style="--tw-c: var(--ice);">
+                            <div class="htp-tw-name">CRYO <span class="htp-tw-cost">160g</span></div>
+                            <div class="htp-tw-desc">Area slow. Low damage but gives your DPS towers more time.</div>
+                            <div class="htp-tw-branches">⤷ Deep Freeze (strong slow) · Brittle (slowed enemies take +50% dmg)</div>
+                        </div>
+                        <div class="htp-tower" style="--tw-c: var(--pink);">
+                            <div class="htp-tw-name">NOVA <span class="htp-tw-cost">300g</span></div>
+                            <div class="htp-tw-desc">Periodic radial burst. Expensive but hits everything in range.</div>
+                            <div class="htp-tw-branches">⤷ Shockwave (huge radius) · Focused Core (small but devastating)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="htp-section">
+                    <div class="htp-section-title">ENEMIES</div>
+                    <div class="htp-enemy-list">
+                        <div class="htp-enemy"><span class="htp-en-name" style="color:var(--green)">Drone</span> <span class="htp-en-wave">W1</span> — Basic. Moderate HP and speed.</div>
+                        <div class="htp-enemy"><span class="htp-en-name" style="color:#ffff3c">Swarm</span> <span class="htp-en-wave">W3</span> — Fast, numerous, low HP. Overwhelm with quantity.</div>
+                        <div class="htp-enemy"><span class="htp-en-name" style="color:var(--red)">Tank</span> <span class="htp-en-wave">W5</span> — High HP, slow. Costs 3 lives.</div>
+                        <div class="htp-enemy"><span class="htp-en-name" style="color:var(--red)">Sapper</span> <span class="htp-en-wave">W6</span> — Shoots and damages your towers while walking. Costs 2 lives.</div>
+                        <div class="htp-enemy"><span class="htp-en-name" style="color:#00c8b4">Sprinter</span> <span class="htp-en-wave">W7</span> — Periodic bursts of very high speed.</div>
+                        <div class="htp-enemy"><span class="htp-en-name" style="color:#b4b4c8">Armored</span> <span class="htp-en-wave">W8</span> — Armor reduces damage per hit. Costs 2 lives.</div>
+                        <div class="htp-enemy"><span class="htp-en-name" style="color:var(--green)">Healer</span> <span class="htp-en-wave">W11</span> — Heals nearby enemies. Priority target! Costs 2 lives.</div>
+                        <div class="htp-enemy"><span class="htp-en-name" style="color:#b464ff">Phase</span> <span class="htp-en-wave">W12</span> — Phases in/out, taking reduced damage while phased. Costs 2 lives.</div>
+                        <div class="htp-enemy"><span class="htp-en-name" style="color:var(--orange)">Splitter</span> <span class="htp-en-wave">W14</span> — Splits into 3 shards on death.</div>
+                        <div class="htp-enemy"><span class="htp-en-name" style="color:#c832ff">Boss</span> <span class="htp-en-wave">W5,10,15…</span> — 4,000 HP, armored, costs 8 lives.</div>
+                        <div class="htp-enemy"><span class="htp-en-name" style="color:var(--red)">Overlord</span> <span class="htp-en-wave">W28+</span> — Mega-boss. 6,500 HP, heavy armor, costs 15 lives.</div>
+                    </div>
+                    <p class="htp-note">After wave 12, enemies can spawn as <span class="htp-hl-cyan">elites</span> with boosted stats and rewards.</p>
+                </div>
+
+                <div class="htp-section">
+                    <div class="htp-section-title">RESEARCH</div>
+                    <p>Four global research tracks in the sidebar. Each has a branching structure: two linear tiers, then a branch choice (A or B) which unlocks two final sub-specializations. You can reach 4 nodes per track. Research takes time and costs scale steeply — plan these as long-term investments.</p>
+                    <div class="htp-research-list">
+                        <div class="htp-research"><span class="htp-res-icon">⚡</span> <strong>Damage</strong> — +8% dmg per tier → <em>Precision</em> (armor pierce / crits) or <em>Overload</em> (control synergy / fire rate)</div>
+                        <div class="htp-research"><span class="htp-res-icon">◎</span> <strong>Range</strong> — +6% range per tier → <em>Long Optics</em> (phase counter / long-range dmg) or <em>Wide Spectrum</em> (AoE boost / proximity dmg)</div>
+                        <div class="htp-research"><span class="htp-res-icon">❄</span> <strong>Control</strong> — +10% slow/vuln/DoT per tier → <em>Permafrost</em> (longer slows / execute dmg) or <em>Corruption</em> (DoT spread / sapper suppression)</div>
+                        <div class="htp-research"><span class="htp-res-icon">🛡</span> <strong>Fortify</strong> — +12% tower HP per tier → <em>Hardened</em> (sapper resist / auto-heal) or <em>Efficiency</em> (rebuild refund / active construction)</div>
+                    </div>
+                </div>
+
+                <div class="htp-section">
+                    <div class="htp-section-title">SHIELDS</div>
+                    <p>After specializing (branching) a tower, you can purchase a <span class="htp-hl-cyan">consumable shield</span> for it. Shields absorb incoming damage before the tower's HP is touched. Once the shield breaks, you can buy another one.</p>
+                    <div class="htp-shield-stats">
+                        <span>Shield HP: 240% of tower max HP</span>
+                        <span>Cost: 50% of gold invested in tower</span>
+                        <span>Deploy time: 6 seconds</span>
+                    </div>
+                </div>
+
+                <div class="htp-section">
+                    <div class="htp-section-title">ECONOMY & STRATEGY</div>
+                    <p>Gold comes from kills and wave-clear bonuses. Kill rewards decay slightly each wave (down to 50% minimum), and tower costs inflate by 2% per wave. Selling towers refunds 60% of their cost — don't be afraid to reposition. Research can improve sell rates.</p>
+                    <p>Cryo towers at path convergence points are extremely valuable since they slow enemies from all three paths. Pair with Tesla or Nova for area coverage, and use Rail towers on long straight segments. Prioritize killing Healers and watch for Sappers chewing through undefended towers. Once towers are branched, invest in shields on your most exposed positions — they're consumable but can save a critical tower from Sapper fire.</p>
+                </div>
+
+            </div>
+            <div class="htp-footer">
+                <button id="btnHtpBack" class="menu-btn">← BACK TO MENU</button>
             </div>
         </div>
     </div>
