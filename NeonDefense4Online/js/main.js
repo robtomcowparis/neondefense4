@@ -15,7 +15,7 @@ import { TILE_SIZE, MAP_COLS, MAP_ROWS, MAP_WIDTH, MAP_HEIGHT,
          COST_INFLATION_PER_WAVE, MAX_COST_MULT,
          BUILD_BAR_COLOR, UPGRADE_BAR_COLOR, BRANCH_BAR_COLOR, REPAIR_BAR_COLOR,
          RESEARCH_BAR_COLOR, HEAL_GREEN,
-         BUILD_TIMES, PATH_COLORS } from './config.js';
+         BUILD_TIMES, PATH_COLORS, SHIELD_COLOR } from './config.js';
 import { clamp, dist, rgba, rgb, drawText, drawGlowRect, drawGlowCircle, randomUniform } from './utils.js';
 import { generatePath, ALL_PATHS } from './path.js';
 import { GameMap } from './map.js';
@@ -872,6 +872,13 @@ function update(dt) {
         // Shield broke this frame
         if (towerShieldBefore.get(t) > 0 && t.shieldHp <= 0) {
             showHUDMessage(`${t.name} shield destroyed!`, 'warn');
+            const lvl = t.branch ? 3 : t.level;
+            const bsz = 12 + lvl * 3;
+            const shieldR = bsz + (t.branch ? 10 : 7);
+            game.effects.push(new VisualEffect('shield_break', 0.6,
+                { center: [t.x, t.y], radius: shieldR }));
+            game.particles.emitRing(t.x, t.y, SHIELD_COLOR, shieldR, 16, 0.5, 2);
+            game.particles.emitExplosion(t.x, t.y, SHIELD_COLOR, 8, 100, 0.4, 2);
         }
     }
 

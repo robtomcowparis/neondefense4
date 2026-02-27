@@ -88,6 +88,57 @@ export class VisualEffect {
             const a = ar * 0.16 * p;
             ctx.beginPath(); ctx.arc(ctr[0], ctr[1], r, 0, Math.PI * 2);
             ctx.fillStyle = rgba(c, a); ctx.fill();
+
+        } else if (this.type === 'shield_break') {
+            const ctr = this.kw.center;
+            const r = this.kw.radius;
+            const sc = SHIELD_COLOR;
+
+            // Quick white flash on the tower (fades fast)
+            if (t < 0.25) {
+                const flashA = (1.0 - t / 0.25) * 0.45;
+                ctx.beginPath();
+                ctx.arc(ctr[0], ctr[1], r * 0.8, 0, Math.PI * 2);
+                ctx.fillStyle = rgba([220, 240, 255], flashA);
+                ctx.fill();
+            }
+
+            // Expanding shatter ring
+            const expandR = r + r * 1.8 * t;
+            ctx.beginPath();
+            ctx.arc(ctr[0], ctr[1], expandR, 0, Math.PI * 2);
+            ctx.strokeStyle = rgba(sc, ar * 0.85);
+            ctx.lineWidth = Math.max(1, 4 * ar);
+            ctx.stroke();
+
+            // Second thinner ring (slightly delayed)
+            if (t > 0.1) {
+                const t2 = t - 0.1;
+                const expandR2 = r + r * 1.4 * t2;
+                ctx.beginPath();
+                ctx.arc(ctr[0], ctr[1], expandR2, 0, Math.PI * 2);
+                ctx.strokeStyle = rgba([200, 230, 255], ar * 0.4);
+                ctx.lineWidth = Math.max(1, 2 * ar);
+                ctx.stroke();
+            }
+
+            // Fragment lines radiating outward
+            const numFrags = 10;
+            for (let i = 0; i < numFrags; i++) {
+                const angle = (Math.PI * 2 * i) / numFrags + 0.37;
+                const innerDist = r * 0.6 + r * 1.0 * t;
+                const outerDist = r * 1.0 + r * 2.4 * t;
+                const sx = ctr[0] + Math.cos(angle) * innerDist;
+                const sy = ctr[1] + Math.sin(angle) * innerDist;
+                const ex = ctr[0] + Math.cos(angle) * outerDist;
+                const ey = ctr[1] + Math.sin(angle) * outerDist;
+                ctx.beginPath();
+                ctx.moveTo(sx, sy);
+                ctx.lineTo(ex, ey);
+                ctx.strokeStyle = rgba(sc, ar * 0.55);
+                ctx.lineWidth = Math.max(1, 2.5 * ar);
+                ctx.stroke();
+            }
         }
     }
 }
@@ -721,70 +772,100 @@ export class Tower {
             }
         }
 
-        // HP bar when damaged
+        // HP arc bar (curved around tower ring — no overflow below)
         const maxHp = this.getMaxHp(fortifyMult);
+        const hpArcR = baseSize + (this.branch ? 7 : 4);
+        const _ARC_START = (140 * Math.PI) / 180;
+        const _ARC_SPAN  = (260 * Math.PI) / 180;
         if (this.hp < maxHp) {
-            const barW = 28, barH = 3;
-            const bx = ix - barW / 2, by = iy + (visible ? baseSize : 12) + 10;
-            ctx.fillStyle = 'rgb(30,30,30)';
-            ctx.fillRect(bx, by, barW, barH);
             const ratio = Math.max(0, this.hp / maxHp);
             const fc = ratio > 0.5 ? NEON_GREEN : ratio > 0.25 ? YELLOW : RED;
-            ctx.fillStyle = rgb(fc);
-            ctx.fillRect(bx, by, Math.round(barW * ratio), barH);
-            ctx.strokeStyle = 'rgb(80,80,80)';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(bx, by, barW, barH);
+            // Dark background arc
+            ctx.beginPath();
+            ctx.arc(ix, iy, hpArcR, _ARC_START, _ARC_START + _ARC_SPAN, false);
+            ctx.strokeStyle = 'rgba(30,30,40,0.85)';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+            // Filled portion
+            if (ratio > 0.005) {
+                ctx.beginPath();
+                ctx.arc(ix, iy, hpArcR, _ARC_START, _ARC_START + ratio * _ARC_SPAN, false);
+                ctx.strokeStyle = rgb(fc);
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+                // Bright tip glow
+                const tipAngle = _ARC_START + ratio * _ARC_SPAN;
+                const tipX = ix + Math.cos(tipAngle) * hpArcR;
+                const tipY = iy + Math.sin(tipAngle) * hpArcR;
+                ctx.beginPath();
+                ctx.arc(tipX, tipY, 2, 0, Math.PI * 2);
+                ctx.fillStyle = rgba(fc, 0.7);
+                ctx.fill();
+            }
+            ctx.lineCap = 'butt';
         }
 
-        // Shield inner glow visual + shield HP bar
+        // Shield: bright outer glow + arc bar
         if (this.shieldActive && this.shieldHp > 0) {
-            const shieldPulse = 0.55 + 0.45 * Math.sin(performance.now() * 0.004);
+            const shieldPulse = 0.5 + 0.5 * Math.sin(performance.now() * 0.005);
             const sRatio = Math.max(0, this.shieldHp / this.shieldMaxHp);
-            const innerR = visible ? baseSize : 12;
+            const shieldArcR = hpArcR + 4;
+            const glowR = baseSize + (this.branch ? 10 : 7);
 
-            // Inner glow layers (bright core fill inside the tower)
+            // ── Prominent outer glow (always visible, scales with shield HP) ──
+            // Outermost soft bloom
             ctx.beginPath();
-            ctx.arc(ix, iy, innerR + 1, 0, Math.PI * 2);
-            ctx.fillStyle = rgba(SHIELD_COLOR, 0.08 * shieldPulse * sRatio);
+            ctx.arc(ix, iy, glowR + 10, 0, Math.PI * 2);
+            ctx.fillStyle = rgba(SHIELD_COLOR, (0.04 + 0.04 * shieldPulse) * sRatio);
             ctx.fill();
 
+            // Wide glow ring
             ctx.beginPath();
-            ctx.arc(ix, iy, innerR * 0.7, 0, Math.PI * 2);
-            ctx.fillStyle = rgba(SHIELD_COLOR, 0.18 * shieldPulse * sRatio);
-            ctx.fill();
+            ctx.arc(ix, iy, glowR + 8, 0, Math.PI * 2);
+            ctx.strokeStyle = rgba(SHIELD_COLOR, (0.18 + 0.14 * shieldPulse) * sRatio);
+            ctx.lineWidth = 5;
+            ctx.stroke();
 
+            // Mid glow ring
             ctx.beginPath();
-            ctx.arc(ix, iy, innerR * 0.35, 0, Math.PI * 2);
-            ctx.fillStyle = rgba(SHIELD_COLOR, 0.30 * shieldPulse * sRatio);
-            ctx.fill();
+            ctx.arc(ix, iy, glowR + 4, 0, Math.PI * 2);
+            ctx.strokeStyle = rgba(SHIELD_COLOR, (0.30 + 0.22 * shieldPulse) * sRatio);
+            ctx.lineWidth = 3;
+            ctx.stroke();
 
-            // Bright inner ring on the tower border
+            // Bright inner glow ring (tight to tower)
             ctx.beginPath();
-            ctx.arc(ix, iy, innerR + 1, 0, Math.PI * 2);
-            ctx.strokeStyle = rgba(SHIELD_COLOR, 0.55 * shieldPulse * sRatio);
+            ctx.arc(ix, iy, glowR, 0, Math.PI * 2);
+            ctx.strokeStyle = rgba(SHIELD_COLOR, (0.50 + 0.35 * shieldPulse) * sRatio);
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // Subtle outer halo (thin, close)
+            // ── Shield arc bar (just outside HP arc) ──
             ctx.beginPath();
-            ctx.arc(ix, iy, innerR + 4, 0, Math.PI * 2);
-            ctx.strokeStyle = rgba(SHIELD_COLOR, 0.12 * shieldPulse * sRatio);
-            ctx.lineWidth = 1;
+            ctx.arc(ix, iy, shieldArcR, _ARC_START, _ARC_START + _ARC_SPAN, false);
+            ctx.strokeStyle = 'rgba(20,40,60,0.7)';
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = 'round';
             ctx.stroke();
-
-            // Shield HP bar (below the HP bar or below tower)
-            const shieldBarW = 28, shieldBarH = 2;
-            const hpBarOffset = this.hp < maxHp ? 15 : 10;
-            const sby = iy + (visible ? baseSize : 12) + hpBarOffset;
-            const sbx = ix - shieldBarW / 2;
-            ctx.fillStyle = 'rgb(20,30,50)';
-            ctx.fillRect(sbx, sby, shieldBarW, shieldBarH);
-            ctx.fillStyle = rgba(SHIELD_COLOR, 0.9);
-            ctx.fillRect(sbx, sby, Math.round(shieldBarW * sRatio), shieldBarH);
-            ctx.strokeStyle = rgba(SHIELD_COLOR, 0.4);
-            ctx.lineWidth = 1;
-            ctx.strokeRect(sbx, sby, shieldBarW, shieldBarH);
+            if (sRatio > 0.005) {
+                ctx.beginPath();
+                ctx.arc(ix, iy, shieldArcR, _ARC_START, _ARC_START + sRatio * _ARC_SPAN, false);
+                ctx.strokeStyle = rgba(SHIELD_COLOR, 0.85 + 0.15 * shieldPulse);
+                ctx.lineWidth = 2.5;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+                // Bright tip dot
+                const tipAngle = _ARC_START + sRatio * _ARC_SPAN;
+                const tipX = ix + Math.cos(tipAngle) * shieldArcR;
+                const tipY = iy + Math.sin(tipAngle) * shieldArcR;
+                ctx.beginPath();
+                ctx.arc(tipX, tipY, 1.5, 0, Math.PI * 2);
+                ctx.fillStyle = rgba([200, 230, 255], 0.9);
+                ctx.fill();
+            }
+            ctx.lineCap = 'butt';
         }
 
         // Construction progress bar

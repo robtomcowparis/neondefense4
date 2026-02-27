@@ -17,7 +17,7 @@ export class Enemy {
         this.health = this.maxHealth;
         this.baseSpeed = data.speed;
         this.speed = this.baseSpeed;
-        this.reward = data.reward;
+        this.reward = Math.round(data.reward * Math.pow(waveScale, 0.45));
         this.color = [...data.color];
         this.size = data.size;
         this.livesCost = data.lives_cost;
@@ -71,7 +71,7 @@ export class Enemy {
         this.towerTarget = null;
         this.missChance = 0.0;
         if (enemyType === EnemyType.SAPPER) {
-            this.attackDamage = Math.round((data.attack_damage || 8) * (1.0 + (waveScale - 1.0) * 0.15));
+            this.attackDamage = Math.min(28, Math.round((data.attack_damage || 8) * (1.0 + (waveScale - 1.0) * 0.15)));
             this.attackRange = data.attack_range || 130;
             this.attackRate = data.attack_rate || 2.2;
             this.missChance = data.miss_chance || 0.35;
