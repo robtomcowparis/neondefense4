@@ -6,6 +6,7 @@
 import { TowerType, TOWER_DATA, TOWER_HP_PER_LEVEL, TOWER_HP_BRANCH_BONUS,
          BUILD_TIMES, UPGRADE_TIME_BY_LEVEL, BRANCH_TIME, REPAIR_TIME_BASE, REPAIR_TIME_MAX,
          SHIELD_HP_MULT, SHIELD_COST_MULT, SHIELD_BUILD_TIME, SHIELD_COLOR,
+         OVERCHARGE_DURATION, OVERCHARGE_DAMAGE_MULT, OVERCHARGE_COST_BASE, OVERCHARGE_COLOR,
          TILE_SIZE, MAP_WIDTH, MAP_HEIGHT, EnemyType,
          BUILD_BAR_COLOR, UPGRADE_BAR_COLOR, BRANCH_BAR_COLOR, REPAIR_BAR_COLOR,
          CYAN, MAGENTA, WHITE, GOLD_COLOR, NEON_GREEN, YELLOW, RED, NEON_ORANGE,
@@ -183,6 +184,10 @@ export class Tower {
         this.shieldMaxHp = 0;
         this.shieldActive = false;
 
+        // Overcharge system (temporary damage buff, available after branching)
+        this.overchargeTimer = 0;
+        this.overchargeActive = false;
+
         // Research-driven modifiers (updated by game loop)
         this._sapperReduction = 0;
         this._activeConstruction = 0;
@@ -227,14 +232,34 @@ export class Tower {
         if (this.hp < 0) this.hp = 0;
     }
 
-    // ─── Shield System (consumable — buy, use, buy again) ─────
+    // ─── Shield System (consumable — buy, recharge, buy again) ─────
     canBuyShield() {
-        // Available after branching; can rebuy any time shield is not active
-        return this.branch !== null && !this.shieldActive && !this.isConstructing;
+        // Available after branching; can buy fresh or recharge partial shield
+        if (this.branch === null || this.isConstructing) return false;
+        // Can buy if no shield, or shield is damaged
+        if (!this.shieldActive) return true;
+        return this.shieldHp < this.shieldMaxHp;
     }
 
-    shieldCost(costMult = 1.0) {
+    /** Full shield cost (used as base for fresh deploy) */
+    _fullShieldCost(costMult = 1.0) {
         return Math.round(this.investedGold * SHIELD_COST_MULT * costMult);
+    }
+
+    /** Actual shield cost — prorated if recharging a partial shield */
+    shieldCost(costMult = 1.0) {
+        const fullCost = this._fullShieldCost(costMult);
+        if (this.shieldActive && this.shieldMaxHp > 0) {
+            // Prorated: pay only for the missing portion
+            const missingRatio = 1.0 - (this.shieldHp / this.shieldMaxHp);
+            return Math.max(1, Math.round(fullCost * missingRatio));
+        }
+        return fullCost;
+    }
+
+    /** Whether this is a recharge (partial) vs fresh deploy */
+    get isShieldRecharge() {
+        return this.shieldActive && this.shieldHp > 0 && this.shieldHp < this.shieldMaxHp;
     }
 
     shieldMaxHpCalc(fortifyMult = 1.0) {
@@ -243,16 +268,46 @@ export class Tower {
 
     startShield(paidCost = 0, fortifyMult = 1.0) {
         this.constructionState = 'shielding';
-        this.constructionDuration = SHIELD_BUILD_TIME;
+        // Recharge is faster proportional to how much shield remains
+        if (this.shieldActive && this.shieldMaxHp > 0) {
+            const missingRatio = 1.0 - (this.shieldHp / this.shieldMaxHp);
+            this.constructionDuration = Math.max(1.5, SHIELD_BUILD_TIME * missingRatio);
+        } else {
+            this.constructionDuration = SHIELD_BUILD_TIME;
+        }
         this.constructionTimer = 0;
         this._pendingPaidCost = paidCost;
         this._pendingFortifyMult = fortifyMult;
     }
 
     _applyShield(fortifyMult = 1.0) {
-        this.shieldMaxHp = this.shieldMaxHpCalc(fortifyMult);
-        this.shieldHp = this.shieldMaxHp;
+        const maxShield = this.shieldMaxHpCalc(fortifyMult);
+        this.shieldMaxHp = maxShield;
+        this.shieldHp = maxShield; // Always restores to full (cost was prorated)
         this.shieldActive = true;
+    }
+
+    // ─── Overcharge System (temporary buff, available after branching) ─────
+    canOvercharge() {
+        return this.branch !== null && !this.overchargeActive && !this.isConstructing;
+    }
+
+    overchargeCost(costMult = 1.0) {
+        return Math.round(this.investedGold * OVERCHARGE_COST_BASE * costMult);
+    }
+
+    startOvercharge() {
+        this.overchargeTimer = OVERCHARGE_DURATION;
+        this.overchargeActive = true;
+    }
+
+    updateOvercharge(dt) {
+        if (!this.overchargeActive) return;
+        this.overchargeTimer -= dt;
+        if (this.overchargeTimer <= 0) {
+            this.overchargeTimer = 0;
+            this.overchargeActive = false;
+        }
     }
 
     repairCost(fortifyMult = 1.0) {
@@ -274,6 +329,7 @@ export class Tower {
     get damageStat() { return this.stats.damage; }
     effectiveDamage(mods, target = null) {
         let dmg = this.damageStat * (mods ? (mods.damage_mult || 1.0) : 1.0);
+        if (this.overchargeActive) dmg *= (1.0 + OVERCHARGE_DAMAGE_MULT);
         return dmg;
     }
     get fireRate() { return this.stats.fire_rate; }
@@ -431,6 +487,9 @@ export class Tower {
 
     update(dt, enemies, projectiles, effects, particles, mods) {
         this.damageFlashTimer = Math.max(0, this.damageFlashTimer - dt);
+
+        // Overcharge countdown
+        this.updateOvercharge(dt);
 
         // Sync research-driven modifiers
         this._sapperReduction = mods ? (mods.sapper_reduction || 0) : 0;
@@ -834,6 +893,35 @@ export class Tower {
             ctx.strokeStyle = rgba(SHIELD_COLOR, 0.4);
             ctx.lineWidth = 1;
             ctx.strokeRect(sbx, sby, shieldBarW, shieldBarH);
+        }
+
+        // Overcharge: warm golden glow when active
+        if (this.overchargeActive) {
+            const ocPulse = 0.5 + 0.5 * Math.sin(performance.now() * 0.008);
+            const ocR = baseSize + (this.branch ? 10 : 7);
+            const timeRatio = Math.min(1, this.overchargeTimer / OVERCHARGE_DURATION);
+
+            // Warm outer bloom
+            ctx.beginPath();
+            ctx.arc(ix, iy, ocR + 6, 0, Math.PI * 2);
+            ctx.fillStyle = rgba(OVERCHARGE_COLOR, (0.06 + 0.05 * ocPulse) * timeRatio);
+            ctx.fill();
+
+            // Bright inner ring
+            ctx.beginPath();
+            ctx.arc(ix, iy, ocR + 2, 0, Math.PI * 2);
+            ctx.strokeStyle = rgba(OVERCHARGE_COLOR, (0.45 + 0.30 * ocPulse) * timeRatio);
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Timer arc (shows remaining time as a sweep)
+            const startAngle = -Math.PI / 2;
+            const endAngle = startAngle + Math.PI * 2 * timeRatio;
+            ctx.beginPath();
+            ctx.arc(ix, iy, ocR + 4, startAngle, endAngle);
+            ctx.strokeStyle = rgba(OVERCHARGE_COLOR, 0.7 * timeRatio);
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
         }
 
         // Construction progress bar

@@ -350,8 +350,18 @@ function handleTowerAction(action, key) {
         if (game.gold >= cost) {
             game.gold -= cost;
             t.startShield(cost, fortifyMult);
-            showMessage("Deploying shield...");
+            const label = t.isShieldRecharge ? "Recharging shield..." : "Deploying shield...";
+            showMessage(label);
             soundMgr.play('upgrade');
+        } else showMessage("Not enough gold!");
+    } else if (action === 'overcharge') {
+        const cost = t.overchargeCost(cm);
+        if (game.gold >= cost) {
+            game.gold -= cost;
+            t.startOvercharge();
+            showMessage(`${t.name} overcharged! +25% damage for 60s`);
+            soundMgr.play('upgrade');
+            if (hud) hud.showGoldDelta(-cost);
         } else showMessage("Not enough gold!");
     } else if (action === 'sell') {
         const val = t.sellValue(mods.sell_refund);

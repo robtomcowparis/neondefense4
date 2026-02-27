@@ -17,7 +17,7 @@ export class Enemy {
         this.health = this.maxHealth;
         this.baseSpeed = data.speed;
         this.speed = this.baseSpeed;
-        this.reward = Math.round(data.reward * Math.pow(waveScale, 0.45));
+        this.reward = Math.round(data.reward * Math.pow(waveScale, 0.35));
         this.color = [...data.color];
         this.size = data.size;
         this.livesCost = data.lives_cost;
@@ -71,15 +71,16 @@ export class Enemy {
         this.towerTarget = null;
         this.missChance = 0.0;
         if (enemyType === EnemyType.SAPPER) {
-            this.attackDamage = Math.min(28, Math.round((data.attack_damage || 8) * (1.0 + (waveScale - 1.0) * 0.15)));
+            this.attackDamage = Math.min(65, Math.round((data.attack_damage || 8) * (1.0 + (waveScale - 1.0) * 0.22)));
             this.attackRange = data.attack_range || 130;
-            this.attackRate = data.attack_rate || 2.2;
+            // Gentle fire rate scaling: gets slightly faster in late game
+            this.attackRate = Math.max(1.4, (data.attack_rate || 2.2) - Math.min(0.5, (waveScale - 1.0) * 0.012));
             this.missChance = data.miss_chance || 0.35;
             this.sapperFireTimer = randomUniform(1.0, this.attackRate + 1.0);
             if (eliteLevel > 0) {
-                this.attackDamage = Math.round(this.attackDamage * (1.0 + 0.15 * eliteLevel));
-                this.attackRate = Math.max(1.2, this.attackRate - 0.12 * eliteLevel);
-                this.missChance = Math.max(0.15, this.missChance - 0.05 * eliteLevel);
+                this.attackDamage = Math.round(this.attackDamage * (1.0 + 0.25 * eliteLevel));
+                this.attackRate = Math.max(1.0, this.attackRate - 0.18 * eliteLevel);
+                this.missChance = Math.max(0.10, this.missChance - 0.08 * eliteLevel);
             }
         }
 

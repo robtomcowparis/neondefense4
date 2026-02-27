@@ -5,7 +5,8 @@
 
 import { TowerType, TOWER_DATA, TOWER_TYPES_ORDERED, RESEARCH_TRACKS,
          RESEARCH_TREE, getAvailableNodes, isTrackComplete, getTrackProgress,
-         BUILD_TIMES, ENEMY_DATA, EnemyType } from './config.js';
+         BUILD_TIMES, ENEMY_DATA, EnemyType,
+         OVERCHARGE_DURATION, OVERCHARGE_COST_BASE } from './config.js';
 
 // ─── Message Queue ───────────────────────────────────────────
 const messageQueue = [];
@@ -525,6 +526,7 @@ export class HUD {
         const canAffordBranchA = t.canBranch() && t.data.branches.A && g.gold >= t.branchCost('A', costMult);
         const canAffordBranchB = t.canBranch() && t.data.branches.B && g.gold >= t.branchCost('B', costMult);
         const canAffordShield = t.canBuyShield() && g.gold >= t.shieldCost(costMult);
+        const canAffordOvercharge = t.canOvercharge() && g.gold >= t.overchargeCost(costMult);
 
         return [
             t.col, t.row,  // tower identity
@@ -533,8 +535,9 @@ export class HUD {
             t.canUpgrade(), t.canBranch(),
             t.hp < maxHp,
             t.fixedAngle !== null,
-            t.shieldActive, t.shieldHp > 0,
-            canAffordUpgrade, canAffordRepair, canAffordBranchA, canAffordBranchB, canAffordShield,
+            t.shieldActive, t.shieldHp > 0, t.isShieldRecharge,
+            t.overchargeActive,
+            canAffordUpgrade, canAffordRepair, canAffordBranchA, canAffordBranchB, canAffordShield, canAffordOvercharge,
         ].join('|');
     }
 
@@ -614,11 +617,23 @@ export class HUD {
                 actionsHtml += `<div class="tp-maxed">${label}</div>`;
             }
 
-            // Shield (available after branching, consumable — buy anytime)
+            // Shield (available after branching, consumable — buy or recharge)
             if (t.canBuyShield()) {
                 const sc = t.shieldCost(costMult);
                 const canShield = g.gold >= sc;
-                actionsHtml += `<button class="tp-btn tp-btn-shield ${canShield ? '' : 'disabled'}" data-action="shield">BUY SHIELD (${sc}g)</button>`;
+                const shieldLabel = t.isShieldRecharge ? 'RECHARGE SHIELD' : 'BUY SHIELD';
+                actionsHtml += `<button class="tp-btn tp-btn-shield ${canShield ? '' : 'disabled'}" data-action="shield">${shieldLabel} (${sc}g)</button>`;
+            }
+
+            // Overcharge (available after branching, temporary +25% damage)
+            if (t.canOvercharge()) {
+                const oc = t.overchargeCost(costMult);
+                const canOC = g.gold >= oc;
+                actionsHtml += `<button class="tp-btn tp-btn-overcharge ${canOC ? '' : 'disabled'}" data-action="overcharge">⚡ OVERCHARGE (${oc}g)</button>`;
+            }
+            if (t.overchargeActive) {
+                const timeLeft = Math.ceil(t.overchargeTimer);
+                actionsHtml += `<div class="tp-overcharge-active" data-id="tp-overcharge">⚡ OVERCHARGED — ${timeLeft}s remaining</div>`;
             }
 
             // Rail set direction
@@ -704,6 +719,11 @@ export class HUD {
             const label = stateLabels[t.constructionState] || 'WORKING';
             prgFill.style.width = Math.round(prog * 100) + '%';
             prgLabel.textContent = `${label}... ${timeLeft.toFixed(1)}s — ${Math.round(prog * 100)}%`;
+        }
+        // Overcharge timer
+        const ocEl = panel.querySelector('[data-id="tp-overcharge"]');
+        if (ocEl && t.overchargeActive) {
+            ocEl.textContent = `⚡ OVERCHARGED — ${Math.ceil(t.overchargeTimer)}s remaining`;
         }
     }
 

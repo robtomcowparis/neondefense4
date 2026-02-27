@@ -574,6 +574,18 @@ body {
 .tp-btn-sell:hover { box-shadow: 0 0 8px rgba(200, 60, 60, 0.3); }
 .tp-btn-shield { color: var(--ice); background: rgba(100, 180, 255, 0.06); border-color: rgba(100, 180, 255, 0.3); }
 .tp-btn-shield:hover:not(.disabled) { box-shadow: 0 0 8px rgba(100, 180, 255, 0.3); }
+.tp-btn-overcharge { color: #ffc832; background: rgba(255, 200, 50, 0.08); border-color: rgba(255, 200, 50, 0.35); }
+.tp-btn-overcharge:hover:not(.disabled) { box-shadow: 0 0 10px rgba(255, 200, 50, 0.35); }
+.tp-overcharge-active {
+    font-size: 11px; padding: 4px 8px; margin-top: 2px;
+    color: #ffc832; background: rgba(255, 200, 50, 0.10);
+    border: 1px solid rgba(255, 200, 50, 0.3); border-radius: 4px;
+    text-align: center; animation: overcharge-pulse 1.5s ease-in-out infinite;
+}
+@keyframes overcharge-pulse {
+    0%, 100% { border-color: rgba(255, 200, 50, 0.3); }
+    50% { border-color: rgba(255, 200, 50, 0.7); box-shadow: 0 0 8px rgba(255, 200, 50, 0.2); }
+}
 .tp-maxed { font-size: 11px; color: var(--text-dim); padding: 2px 0; }
 
 /* ─── Messages ────────────────────────────────────────────── */

@@ -170,6 +170,12 @@ export const SHIELD_COST_MULT = 0.50;     // Cost = 50% of total invested gold
 export const SHIELD_BUILD_TIME = 6;       // Seconds to deploy shield
 export const SHIELD_COLOR = [100, 180, 255];
 
+// Overcharge system (temporary buff, available after branching)
+export const OVERCHARGE_DURATION = 60;        // seconds
+export const OVERCHARGE_DAMAGE_MULT = 0.25;   // +25% damage
+export const OVERCHARGE_COST_BASE = 0.30;     // 30% of invested gold * cost multiplier
+export const OVERCHARGE_COLOR = [255, 200, 50];
+
 // Construction bar colors
 export const BUILD_BAR_COLOR    = CYAN;
 export const UPGRADE_BAR_COLOR  = NEON_GREEN;
@@ -449,7 +455,7 @@ export const REWARD_DECAY_STOP_WAVE = 25;    // Reward mult stops decaying after
 export const MIN_REWARD_MULT = 0.50;
 export const WAVE_CLEAR_BASE_BONUS = 70;
 export const WAVE_CLEAR_BONUS_PER_WAVE = 20;
-export const WAVE_CLEAR_LATE_BONUS_PER_WAVE = 40; // Extra per wave after wave 25
+export const WAVE_CLEAR_LATE_BONUS_PER_WAVE = 22; // Extra per wave after wave 25
 export const COST_INFLATION_PER_WAVE = 0.020;
 export const MAX_COST_MULT = 2.5;
 
