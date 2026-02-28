@@ -10,9 +10,14 @@ import { TowerType, TOWER_DATA, TOWER_HP_PER_LEVEL, TOWER_HP_BRANCH_BONUS,
          TILE_SIZE, MAP_WIDTH, MAP_HEIGHT, EnemyType,
          BUILD_BAR_COLOR, UPGRADE_BAR_COLOR, BRANCH_BAR_COLOR, REPAIR_BAR_COLOR,
          CYAN, MAGENTA, WHITE, GOLD_COLOR, NEON_GREEN, YELLOW, RED, NEON_ORANGE,
-         HOT_PINK, DAMAGE_RED, SCREEN_WIDTH, SCREEN_HEIGHT } from './config.js';
+         HOT_PINK, DAMAGE_RED, SCREEN_WIDTH, SCREEN_HEIGHT,
+         POWER_AMBER, UNPOWERED_GRAY, POWER_CIRCLE_ALPHA } from './config.js';
 import { dist, rgba, rgb, clamp, drawText, drawGlowCircle } from './utils.js';
 import { Projectile } from './projectiles.js';
+
+// Tower ID counter for stable power assignment
+let _nextTowerId = 1;
+export function resetTowerIds() { _nextTowerId = 1; }
 
 // Visual effect helper class
 export class VisualEffect {
@@ -146,6 +151,7 @@ export class VisualEffect {
 
 export class Tower {
     constructor(towerType, col, row, paidCost = null) {
+        this.id = _nextTowerId++;
         this.type = towerType;
         this.col = col;
         this.row = row;
@@ -161,6 +167,11 @@ export class Tower {
         this.angle = 0;
         this.totalDamage = 0;
         this.kills = 0;
+
+        // Power Plant system
+        this._isPowerPlant = towerType === TowerType.POWER_PLANT;
+        this.isPowered = this._isPowerPlant; // plants are always "powered"
+        this.poweredByPlantId = null;
 
         // Rail fixed direction
         this.fixedAngle = null;
@@ -289,7 +300,26 @@ export class Tower {
 
     // ─── Overcharge System (temporary buff, available after branching) ─────
     canOvercharge() {
-        return this.branch !== null && !this.overchargeActive && !this.isConstructing;
+        return this.branch !== null && !this.overchargeActive && !this.isConstructing && !this._isPowerPlant;
+    }
+
+    /** Power Plant radius based on current level/branch */
+    get powerRadius() {
+        if (!this._isPowerPlant) return 0;
+        const s = this.stats;
+        return s.powerRadius || 0;
+    }
+
+    /** Power Plant capacity based on current level/branch */
+    get powerCapacity() {
+        if (!this._isPowerPlant) return 0;
+        const s = this.stats;
+        return s.powerCapacity || 0;
+    }
+
+    /** How much power capacity this tower consumes */
+    get powerCost() {
+        return this.data.powerCost || 0;
     }
 
     overchargeCost(costMult = 1.0) {
@@ -522,6 +552,12 @@ export class Tower {
         const buildSpeedDt = mods && mods.build_speed > 0 ? dt * (1.0 + mods.build_speed) : dt;
         this.updateConstruction(buildSpeedDt);
 
+        // ── Power Plant towers never fire ──
+        if (this._isPowerPlant) return;
+
+        // ── Unpowered towers: no targeting, no firing, no effects ──
+        if (!this.isPowered) return;
+
         // Active Construction: towers can fire at reduced effectiveness while building/upgrading
         const activeConst = mods ? (mods.active_construction || this._activeConstruction || 0) : (this._activeConstruction || 0);
         if (this.constructionState === 'building' || this.constructionState === 'upgrading' || this.constructionState === 'branching') {
@@ -714,6 +750,28 @@ export class Tower {
         const baseSize = 12 + lvl * 3;
         let color = this.color;
 
+        // ── Power Plant: range circle (only when selected, like other towers) ──
+        if (this._isPowerPlant && selected) {
+            const pRadius = this.powerRadius;
+            if (pRadius > 0) {
+                const pulse = 0.5 + 0.5 * Math.sin(performance.now() * 0.003);
+                const alpha = POWER_CIRCLE_ALPHA * (0.7 + 0.3 * pulse);
+                ctx.beginPath();
+                ctx.arc(ix, iy, pRadius, 0, Math.PI * 2);
+                ctx.fillStyle = rgba(POWER_AMBER, alpha * 0.4);
+                ctx.fill();
+                ctx.strokeStyle = rgba(POWER_AMBER, alpha + 0.1);
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+            }
+        }
+
+        // ── Unpowered overlay: grey out non-plant towers ──
+        const unpowered = !this._isPowerPlant && !this.isPowered;
+        if (unpowered) {
+            color = UNPOWERED_GRAY;
+        }
+
         // Flicker when low HP
         const hpR = this.hpRatio(fortifyMult);
         let visible = true;
@@ -723,7 +781,7 @@ export class Tower {
         if (this.damageFlashTimer > 0) color = DAMAGE_RED;
 
         // Range circle
-        if (showRange || selected) {
+        if ((showRange || selected) && !this._isPowerPlant) {
             ctx.beginPath();
             ctx.arc(ix, iy, this.range, 0, Math.PI * 2);
             ctx.fillStyle = rgba(color, 0.1);
@@ -817,6 +875,32 @@ export class Tower {
                 ctx.fillStyle = rgb(HOT_PINK); ctx.fill();
                 ctx.beginPath(); ctx.arc(ix, iy, Math.max(1, cr - 2), 0, Math.PI * 2);
                 ctx.fillStyle = rgb(WHITE); ctx.fill();
+            } else if (this.type === TowerType.POWER_PLANT) {
+                // Glowing amber core with radiating power lines
+                const rotSpeed = performance.now() * 0.001;
+                const pp = 0.5 + 0.5 * Math.sin(performance.now() * 0.004);
+                const coreR = baseSize * 0.35;
+                // Radiating lines (6 spokes, rotating)
+                for (let i = 0; i < 6; i++) {
+                    const a = rotSpeed + (Math.PI * 2 * i) / 6;
+                    const innerR = coreR + 2;
+                    const outerR = baseSize * 0.85;
+                    ctx.beginPath();
+                    ctx.moveTo(ix + Math.cos(a) * innerR, iy + Math.sin(a) * innerR);
+                    ctx.lineTo(ix + Math.cos(a) * outerR, iy + Math.sin(a) * outerR);
+                    ctx.strokeStyle = rgba(color, 0.5 + 0.3 * pp);
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+                // Outer glow
+                ctx.beginPath(); ctx.arc(ix, iy, coreR + 4, 0, Math.PI * 2);
+                ctx.fillStyle = rgba(color, 0.15 + 0.1 * pp); ctx.fill();
+                // Core circle
+                ctx.beginPath(); ctx.arc(ix, iy, coreR, 0, Math.PI * 2);
+                ctx.fillStyle = rgb(color); ctx.fill();
+                // White center
+                ctx.beginPath(); ctx.arc(ix, iy, Math.max(1, coreR - 3), 0, Math.PI * 2);
+                ctx.fillStyle = rgb(WHITE); ctx.fill();
             }
 
             // Level dots
@@ -829,6 +913,15 @@ export class Tower {
             if (this.branch) {
                 drawText(ctx, this.branch, ix + baseSize + 2, iy - 6, GOLD_COLOR, 10);
             }
+        }
+
+        // ── Unpowered indicator: small red X near tower ──
+        if (unpowered && visible) {
+            const ux = ix + baseSize + 3, uy = iy - baseSize - 1;
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = rgba(RED, 0.8);
+            ctx.beginPath(); ctx.moveTo(ux - 4, uy - 4); ctx.lineTo(ux + 4, uy + 4); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(ux + 4, uy - 4); ctx.lineTo(ux - 4, uy + 4); ctx.stroke();
         }
 
         // HP bar when damaged

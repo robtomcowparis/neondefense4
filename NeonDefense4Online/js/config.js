@@ -47,6 +47,9 @@ export const BOSS_PURPLE  = [200, 50, 255];
 export const ULTRA_RED    = [255, 30, 80];
 export const SAPPER_RED   = [255, 80, 40];
 export const DAMAGE_RED   = [255, 40, 40];
+export const POWER_AMBER  = [255, 200, 50];
+export const UNPOWERED_GRAY = [80, 80, 100];
+export const POWER_CIRCLE_ALPHA = 0.12;
 
 // Path color palette — each path gets a slightly different hue
 export const PATH_COLORS = [
@@ -62,13 +65,14 @@ export const TowerType = {
     TESLA: 'TESLA',
     CRYO:  'CRYO',
     NOVA:  'NOVA',
+    POWER_PLANT: 'POWER_PLANT',
 };
-export const TOWER_TYPES_ORDERED = [TowerType.PULSE, TowerType.RAIL, TowerType.TESLA, TowerType.CRYO, TowerType.NOVA];
+export const TOWER_TYPES_ORDERED = [TowerType.PULSE, TowerType.RAIL, TowerType.TESLA, TowerType.CRYO, TowerType.NOVA, TowerType.POWER_PLANT];
 
 // ─── Tower Data ──────────────────────────────────────────────
 export const TOWER_DATA = {
     [TowerType.PULSE]: {
-        name: "Pulse", description: "Rapid-fire energy bolts", color: CYAN, cost: 100,
+        name: "Pulse", description: "Rapid-fire energy bolts", color: CYAN, cost: 100, powerCost: 1,
         hp: 200,
         levels: [
             { damage: 12, fire_rate: 0.35, range: 120, upgrade_cost: 0 },
@@ -83,7 +87,7 @@ export const TOWER_DATA = {
         },
     },
     [TowerType.RAIL]: {
-        name: "Rail", description: "Fixed-aim piercing beam", color: MAGENTA, cost: 150,
+        name: "Rail", description: "Fixed-aim piercing beam", color: MAGENTA, cost: 150, powerCost: 1,
         hp: 250,
         levels: [
             { damage: 45, fire_rate: 1.4, range: 200, pierce: 3, upgrade_cost: 0 },
@@ -98,7 +102,7 @@ export const TOWER_DATA = {
         },
     },
     [TowerType.TESLA]: {
-        name: "Tesla", description: "Chain lightning arcs", color: ELECTRIC_BLUE, cost: 180,
+        name: "Tesla", description: "Chain lightning arcs", color: ELECTRIC_BLUE, cost: 180, powerCost: 2,
         hp: 220,
         levels: [
             { damage: 18, fire_rate: 0.7, range: 130, chains: 3, chain_range: 80, upgrade_cost: 0 },
@@ -114,7 +118,7 @@ export const TOWER_DATA = {
         },
     },
     [TowerType.CRYO]: {
-        name: "Cryo", description: "Slows enemies in area", color: ICE_BLUE, cost: 160,
+        name: "Cryo", description: "Slows enemies in area", color: ICE_BLUE, cost: 160, powerCost: 2,
         hp: 150,
         levels: [
             { damage: 3, fire_rate: 0.8, range: 100, slow_factor: 0.72, slow_duration: 1.2, upgrade_cost: 0 },
@@ -130,7 +134,7 @@ export const TOWER_DATA = {
         },
     },
     [TowerType.NOVA]: {
-        name: "Nova", description: "Periodic radial burst", color: HOT_PINK, cost: 300,
+        name: "Nova", description: "Periodic radial burst", color: HOT_PINK, cost: 300, powerCost: 3,
         hp: 400,
         levels: [
             { damage: 45, fire_rate: 2.8, range: 140, upgrade_cost: 0 },
@@ -142,6 +146,21 @@ export const TOWER_DATA = {
                  cost: 700, damage: 140, fire_rate: 1.5, range: 300 },
             B: { name: "Focused Core", desc: "Small but devastating",
                  cost: 750, damage: 380, fire_rate: 1.7, range: 145 },
+        },
+    },
+    [TowerType.POWER_PLANT]: {
+        name: "Power", description: "Powers nearby towers", color: POWER_AMBER, cost: 100, powerCost: 0,
+        hp: 300,
+        levels: [
+            { damage: 0, fire_rate: 999, range: 0, powerRadius: 80, powerCapacity: 5, upgrade_cost: 0 },
+            { damage: 0, fire_rate: 999, range: 0, powerRadius: 110, powerCapacity: 8, upgrade_cost: 80 },
+            { damage: 0, fire_rate: 999, range: 0, powerRadius: 140, powerCapacity: 12, upgrade_cost: 160 },
+        ],
+        branches: {
+            A: { name: "Grid Hub", desc: "Massive capacity, moderate range",
+                 cost: 400, damage: 0, fire_rate: 999, range: 0, powerRadius: 160, powerCapacity: 30 },
+            B: { name: "Relay Core", desc: "Huge range, good capacity",
+                 cost: 400, damage: 0, fire_rate: 999, range: 0, powerRadius: 280, powerCapacity: 20 },
         },
     },
 };
@@ -157,6 +176,7 @@ export const BUILD_TIMES = {
     [TowerType.TESLA]: 8,
     [TowerType.CRYO]:  7,
     [TowerType.NOVA]: 10,
+    [TowerType.POWER_PLANT]: 6,
 };
 export const UPGRADE_TIME_BY_LEVEL = { 1: 5, 2: 8 };
 export const BRANCH_TIME = 12;

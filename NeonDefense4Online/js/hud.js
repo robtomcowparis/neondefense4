@@ -221,6 +221,18 @@ export class HUD {
     _showTowerTooltip(e, tt) {
         const data = TOWER_DATA[tt];
         const lvl0 = data.levels[0];
+        if (tt === TowerType.POWER_PLANT) {
+            this._showTooltipAt(e.currentTarget, `
+                <div class="tt-title" style="color:rgb(${data.color.join(',')})">${data.name}</div>
+                <div class="tt-desc">${data.description}</div>
+                <div class="tt-stat">Power Radius: ${lvl0.powerRadius}px</div>
+                <div class="tt-stat">Capacity: ${lvl0.powerCapacity} towers</div>
+                <div class="tt-stat">HP: ${data.hp}</div>
+                <div class="tt-stat">Build Time: ${BUILD_TIMES[tt]}s</div>
+                <div class="tt-note">Towers need power to operate</div>
+            `);
+            return;
+        }
         this._showTooltipAt(e.currentTarget, `
             <div class="tt-title" style="color:rgb(${data.color.join(',')})">${data.name}</div>
             <div class="tt-desc">${data.description}</div>
@@ -228,6 +240,7 @@ export class HUD {
             <div class="tt-stat">Fire Rate: ${lvl0.fire_rate}s</div>
             <div class="tt-stat">Range: ${lvl0.range}</div>
             <div class="tt-stat">HP: ${data.hp}</div>
+            <div class="tt-stat">Power: ⚡${data.powerCost || 1}</div>
             <div class="tt-stat">Build Time: ${BUILD_TIMES[tt]}s</div>
             ${tt === TowerType.RAIL ? '<div class="tt-note">Click to aim after placing</div>' : ''}
         `);
@@ -512,6 +525,13 @@ export class HUD {
         }
     }
 
+    /** Count how much capacity is used by a specific plant */
+    _getPlantUsedCapacity(plant, g) {
+        if (!g.towers) return 0;
+        return g.towers.filter(t => t.poweredByPlantId === plant.id && !t.isDead)
+            .reduce((sum, t) => sum + (t.powerCost || 1), 0);
+    }
+
     /** Build a compact fingerprint of tower state that changes when we need a full re-render */
     _towerFingerprint(t) {
         const g = this.game;
@@ -537,6 +557,7 @@ export class HUD {
             t.fixedAngle !== null,
             t.shieldActive, t.shieldHp > 0, t.isShieldRecharge,
             t.overchargeActive,
+            t.isPowered, t.poweredByPlantId,
             canAffordUpgrade, canAffordRepair, canAffordBranchA, canAffordBranchB, canAffordShield, canAffordOvercharge,
         ].join('|');
     }
@@ -646,17 +667,46 @@ export class HUD {
             actionsHtml += `<button class="tp-btn tp-btn-sell" data-action="sell">SELL (+${t.sellValue(mods.sell_refund || 0.60)}g)</button>`;
         }
 
-        // Stats row
-        const dmg = Math.round(t.effectiveDamage(mods));
-        const rng = t.effectiveRange(mods);
+        // Stats row — different for Power Plant vs combat towers
+        const isPP = t._isPowerPlant;
+        let statsHtml, trackerHtml, powerStatusHtml = '';
+
+        if (isPP) {
+            const used = this._getPlantUsedCapacity(t, g);
+            statsHtml = `Radius: ${t.powerRadius}px &nbsp; Cap: ${used}/${t.powerCapacity}`;
+            trackerHtml = `Powering: ${used}/${t.powerCapacity} capacity used`;
+        } else {
+            const dmg = Math.round(t.effectiveDamage(mods));
+            const rng = t.effectiveRange(mods);
+            statsHtml = `Dmg: ${dmg} &nbsp; Rate: ${t.fireRate.toFixed(2)}s &nbsp; Rng: ${rng}`;
+            trackerHtml = `Dmg dealt: ${t.totalDamage} &nbsp; Kills: ${t.kills}`;
+
+            // Power status for non-plant towers
+            if (t.isPowered) {
+                powerStatusHtml = `<div class="tp-power tp-power-on" data-id="tp-power">⚡ POWERED (cost: ${t.powerCost})</div>`;
+            } else {
+                // Determine reason
+                const plants = g.towers ? g.towers.filter(p => p._isPowerPlant && !p.isDead) : [];
+                let reason = 'No Power Plant';
+                if (plants.length > 0) {
+                    const inRange = plants.some(p => {
+                        const dx = p.x - t.x, dy = p.y - t.y;
+                        return Math.sqrt(dx * dx + dy * dy) <= p.powerRadius;
+                    });
+                    reason = inRange ? 'No plant capacity' : 'Out of range';
+                }
+                powerStatusHtml = `<div class="tp-power tp-power-off" data-id="tp-power">⚠ NO POWER — ${reason}</div>`;
+            }
+        }
 
         panel.innerHTML = `
             <div class="tp-header" style="--tw-color:rgb(${t.color.join(',')})">
                 <span class="tp-name">${t.name}</span>
                 <span class="tp-level">Lv.${t.level} ${t.branch ? `[${t.branch}]` : ''}</span>
             </div>
+            ${powerStatusHtml}
             <div class="tp-stats" data-id="tp-stats">
-                Dmg: ${dmg} &nbsp; Rate: ${t.fireRate.toFixed(2)}s &nbsp; Rng: ${rng}
+                ${statsHtml}
             </div>
             ${statsExtra ? `<div class="tp-stats-extra">${statsExtra}</div>` : ''}
             <div class="tp-hp ${hpClass}" data-id="tp-hp">
@@ -672,7 +722,7 @@ export class HUD {
                     <div class="tp-shield-fill" data-id="tp-shield-fill" style="width:${Math.round((t.shieldHp / t.shieldMaxHp) * 100)}%"></div>
                 </div>
             </div>` : ''}
-            <div class="tp-tracker" data-id="tp-tracker">Dmg dealt: ${t.totalDamage} &nbsp; Kills: ${t.kills}</div>
+            <div class="tp-tracker" data-id="tp-tracker">${trackerHtml}</div>
             <div class="tp-actions">${actionsHtml}</div>
         `;
 
@@ -682,12 +732,38 @@ export class HUD {
 
     /** Patch only the dynamic text/values without replacing DOM structure */
     _patchTowerPanel(panel, t, mods, fortifyMult, maxHp, hpRatio, costMult) {
+        const g = this.game;
         // Stats line
         const statsEl = panel.querySelector('[data-id="tp-stats"]');
         if (statsEl) {
-            const dmg = Math.round(t.effectiveDamage(mods));
-            const rng = t.effectiveRange(mods);
-            statsEl.innerHTML = `Dmg: ${dmg} &nbsp; Rate: ${t.fireRate.toFixed(2)}s &nbsp; Rng: ${rng}`;
+            if (t._isPowerPlant) {
+                const used = this._getPlantUsedCapacity(t, g);
+                statsEl.innerHTML = `Radius: ${t.powerRadius}px &nbsp; Cap: ${used}/${t.powerCapacity}`;
+            } else {
+                const dmg = Math.round(t.effectiveDamage(mods));
+                const rng = t.effectiveRange(mods);
+                statsEl.innerHTML = `Dmg: ${dmg} &nbsp; Rate: ${t.fireRate.toFixed(2)}s &nbsp; Rng: ${rng}`;
+            }
+        }
+        // Power status for non-plant towers
+        const powerEl = panel.querySelector('[data-id="tp-power"]');
+        if (powerEl && !t._isPowerPlant) {
+            if (t.isPowered) {
+                powerEl.className = 'tp-power tp-power-on';
+                powerEl.textContent = `⚡ POWERED (cost: ${t.powerCost})`;
+            } else {
+                const plants = g.towers ? g.towers.filter(p => p._isPowerPlant && !p.isDead) : [];
+                let reason = 'No Power Plant';
+                if (plants.length > 0) {
+                    const inRange = plants.some(p => {
+                        const dx = p.x - t.x, dy = p.y - t.y;
+                        return Math.sqrt(dx * dx + dy * dy) <= p.powerRadius;
+                    });
+                    reason = inRange ? 'No plant capacity' : 'Out of range';
+                }
+                powerEl.className = 'tp-power tp-power-off';
+                powerEl.textContent = `⚠ NO POWER — ${reason}`;
+            }
         }
         // HP
         const hpClass = hpRatio > 0.5 ? 'hp-good' : hpRatio > 0.25 ? 'hp-warn' : 'hp-crit';
@@ -699,7 +775,14 @@ export class HUD {
         if (hpFill) hpFill.style.width = Math.round(hpRatio * 100) + '%';
         // Tracker
         const tracker = panel.querySelector('[data-id="tp-tracker"]');
-        if (tracker) tracker.innerHTML = `Dmg dealt: ${t.totalDamage} &nbsp; Kills: ${t.kills}`;
+        if (tracker) {
+            if (t._isPowerPlant) {
+                const used = this._getPlantUsedCapacity(t, g);
+                tracker.innerHTML = `Powering: ${used}/${t.powerCapacity} capacity used`;
+            } else {
+                tracker.innerHTML = `Dmg dealt: ${t.totalDamage} &nbsp; Kills: ${t.kills}`;
+            }
+        }
         // Shield HP
         const shieldText = panel.querySelector('[data-id="tp-shield-text"]');
         const shieldFill = panel.querySelector('[data-id="tp-shield-fill"]');

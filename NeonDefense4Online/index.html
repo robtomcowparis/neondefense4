@@ -21,7 +21,7 @@
             <button id="btnStart" class="menu-btn pulse-btn">▶ START GAME</button>
             <button id="btnHowToPlay" class="menu-btn menu-btn-help">? HOW TO PLAY</button>
             <div class="menu-keys">
-                <div>1–5 Select Tower &nbsp;|&nbsp; LMB Place &nbsp;|&nbsp; RMB Cancel</div>
+                <div>1–6 Select Tower &nbsp;|&nbsp; LMB Place &nbsp;|&nbsp; RMB Cancel</div>
                 <div>SPACE Send Early &nbsp;|&nbsp; F Fast Forward &nbsp;|&nbsp; ESC Pause</div>
             </div>
             <div class="menu-divider"></div>
@@ -50,7 +50,7 @@
                 <div class="htp-section">
                     <div class="htp-section-title">CONTROLS</div>
                     <div class="htp-controls-grid">
-                        <span class="htp-key">1–5</span><span>Select tower type</span>
+                        <span class="htp-key">1–6</span><span>Select tower type</span>
                         <span class="htp-key">LMB</span><span>Place tower / Select tower</span>
                         <span class="htp-key">RMB</span><span>Cancel placement</span>
                         <span class="htp-key">SPACE</span><span>Send next wave early (+bonus gold)</span>
@@ -63,7 +63,13 @@
                 <div class="htp-section">
                     <div class="htp-section-title">TOWERS</div>
                     <p>Each tower can be upgraded twice (Lv1 → Lv2 → Lv3), then specialized into one of two unique branches. Towers take time to build (5–10s), so plan placements ahead of incoming waves. Towers have HP and can be damaged by Sappers — click a placed tower to see its stats, repair, upgrade, sell, or (after branching) buy a shield.</p>
+                    <p><span class="htp-hl-gold">Power:</span> All combat towers require power to operate. Build Power Plants to provide power to nearby towers. Unpowered towers cannot target or fire. Plan your Power Plant coverage to keep your defenses online!</p>
                     <div class="htp-tower-list">
+                        <div class="htp-tower" style="--tw-c: rgb(255, 200, 50);">
+                            <div class="htp-tw-name">POWER <span class="htp-tw-cost">100g</span></div>
+                            <div class="htp-tw-desc">Support structure. Powers nearby towers within its radius. Does not attack.</div>
+                            <div class="htp-tw-branches">⤷ Grid Hub (30 cap, 160px radius) · Relay Core (20 cap, 280px radius)</div>
+                        </div>
                         <div class="htp-tower" style="--tw-c: var(--cyan);">
                             <div class="htp-tw-name">PULSE <span class="htp-tw-cost">100g</span></div>
                             <div class="htp-tw-desc">Rapid-fire energy bolts. Cheap, fast, bread-and-butter DPS.</div>

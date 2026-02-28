@@ -15,12 +15,13 @@ import { TILE_SIZE, MAP_COLS, MAP_ROWS, MAP_WIDTH, MAP_HEIGHT,
          COST_INFLATION_PER_WAVE, MAX_COST_MULT,
          BUILD_BAR_COLOR, UPGRADE_BAR_COLOR, BRANCH_BAR_COLOR, REPAIR_BAR_COLOR,
          RESEARCH_BAR_COLOR, HEAL_GREEN,
-         BUILD_TIMES, PATH_COLORS, SHIELD_COLOR } from './config.js';
+         BUILD_TIMES, PATH_COLORS, SHIELD_COLOR,
+         POWER_AMBER, POWER_CIRCLE_ALPHA } from './config.js';
 import { clamp, dist, rgba, rgb, drawText, drawGlowRect, drawGlowCircle, randomUniform } from './utils.js';
 import { generatePath, ALL_PATHS } from './path.js';
 import { GameMap } from './map.js';
 import { Enemy } from './enemies.js';
-import { Tower, VisualEffect } from './towers.js';
+import { Tower, VisualEffect, resetTowerIds } from './towers.js';
 import { Projectile, EnemyProjectile } from './projectiles.js';
 import { ParticleSystem } from './particles.js';
 import { WaveManager } from './waves.js';
@@ -148,6 +149,71 @@ function globalMods() {
 game.globalMods = globalMods;
 game.costMultiplier = costMultiplier;
 
+// ─── Power Network ──────────────────────────────────────────
+game.powerDirty = true;
+
+function markPowerDirty() { game.powerDirty = true; }
+
+function recomputePowerNetwork() {
+    game.powerDirty = false;
+    const towers = game.towers;
+
+    // Collect plants and consumers
+    const plants = [];
+    const consumers = [];
+    for (const t of towers) {
+        if (t.hp <= 0) continue;
+        if (t._isPowerPlant) {
+            // Only operational plants (finished building or in progress — plants always provide power)
+            plants.push(t);
+        } else {
+            consumers.push(t);
+        }
+    }
+
+    // Reset all consumers
+    for (const c of consumers) {
+        c.isPowered = false;
+        c.poweredByPlantId = null;
+    }
+
+    if (plants.length === 0) return;
+
+    // Build distance pairs: [consumer, plant, distance]
+    const pairs = [];
+    for (const c of consumers) {
+        for (const p of plants) {
+            const d = dist(c.x, c.y, p.x, p.y);
+            if (d <= p.powerRadius) {
+                pairs.push({ consumer: c, plant: p, dist: d });
+            }
+        }
+    }
+
+    // Sort: nearest first, tie-break by oldest plant (lowest id)
+    pairs.sort((a, b) => {
+        const dd = a.dist - b.dist;
+        if (Math.abs(dd) > 0.01) return dd;
+        return a.plant.id - b.plant.id;
+    });
+
+    // Greedy assignment: track used capacity per plant
+    const usedCap = new Map();
+    for (const p of plants) usedCap.set(p.id, 0);
+
+    for (const pair of pairs) {
+        const { consumer, plant } = pair;
+        if (consumer.isPowered) continue; // already assigned
+        const used = usedCap.get(plant.id);
+        const cost = consumer.powerCost || 1;
+        if (used + cost <= plant.powerCapacity) {
+            consumer.isPowered = true;
+            consumer.poweredByPlantId = plant.id;
+            usedCap.set(plant.id, used + cost);
+        }
+    }
+}
+
 // Look up a specific research node by ID across all tracks
 function findResearchNode(nodeId) {
     for (const trackKey of Object.keys(RESEARCH_TREE)) {
@@ -252,7 +318,9 @@ function reset() {
     game._waveStartPlayed = false;
     game._lastDestroyedType = null;
     game._lastDestroyedTime = 0;
+    game.powerDirty = true;
     _scoreSubmitted = false;
+    resetTowerIds();
 }
 
 // ─── State Transitions ──────────────────────────────────────
@@ -372,6 +440,7 @@ function handleTowerAction(action, key) {
         showMessage(`Tower sold for ${val}g`);
         soundMgr.play('sell');
         hud.showGoldDelta(val);
+        markPowerDirty();
     }
 }
 
@@ -536,6 +605,7 @@ function handleClick(e) {
                     game.gameMap.placeTower(col, row);
                     game.towersBuilt++;
                     soundMgr.play('place_tower');
+                    markPowerDirty();
                     if (game.selectedTowerType === TowerType.RAIL) {
                         game.aimingTower = t;
                         showMessage("Click to set Rail firing direction!", 5.0);
@@ -720,6 +790,7 @@ function _doTouchTap(pos) {
                     game.gameMap.placeTower(col, row);
                     game.towersBuilt++;
                     soundMgr.play('place_tower');
+                    markPowerDirty();
                     if (game.selectedTowerType === TowerType.RAIL) {
                         game.aimingTower = t;
                         showMessage("Tap to set Rail firing direction!", 5.0);
@@ -777,6 +848,9 @@ function update(dt) {
 
     game.gameTime += dt;
     if (game.messageTimer > 0) game.messageTimer -= dt;
+
+    // Recompute power network if dirty
+    if (game.powerDirty) recomputePowerNetwork();
 
     // Research timer
     if (game.researchInProgress) {
@@ -928,11 +1002,15 @@ function update(dt) {
         showHUDMessage(`${t.name} tower destroyed!`, 'warn');
     }
     game.towers = game.towers.filter(t => t.hp > 0);
+    if (destroyed.length > 0) markPowerDirty();
 
     // Towers act — with sound hooks
     for (const t of game.towers) {
         const firedBefore = t.fireTimer;
+        const constBefore = t.constructionState;
         t.update(dt, game.enemies, game.projectiles, game.effects, game.particles, mods);
+        // Detect construction completion → power network may have changed
+        if (constBefore !== null && t.constructionState === null) markPowerDirty();
         // Detect if tower just fired (timer reset)
         if (firedBefore <= 0 && t.fireTimer > 0 && t.constructionState !== 'building') {
             const soundMap = {
@@ -1052,15 +1130,17 @@ function drawGame() {
     if (game.selectedTowerType && game.hoverCol >= 0) {
         if (game.gameMap.isBuildable(game.hoverCol, game.hoverRow)) {
             const [cx, cy] = game.gameMap.tileCenter(game.hoverCol, game.hoverRow);
-            const c = TOWER_DATA[game.selectedTowerType].color;
-            const rng = TOWER_DATA[game.selectedTowerType].levels[0].range;
+            const tdata = TOWER_DATA[game.selectedTowerType];
+            const c = tdata.color;
+            const isPP = game.selectedTowerType === TowerType.POWER_PLANT;
+            const rng = isPP ? tdata.levels[0].powerRadius : tdata.levels[0].range;
             // Range preview
             ctx.beginPath();
             ctx.arc(cx, cy, rng, 0, Math.PI * 2);
-            ctx.fillStyle = rgba(c, 0.06);
+            ctx.fillStyle = rgba(c, isPP ? 0.08 : 0.06);
             ctx.fill();
-            ctx.strokeStyle = rgba(c, 0.2);
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = rgba(c, isPP ? 0.3 : 0.2);
+            ctx.lineWidth = isPP ? 1.5 : 1;
             ctx.stroke();
             // Tower preview
             ctx.beginPath();

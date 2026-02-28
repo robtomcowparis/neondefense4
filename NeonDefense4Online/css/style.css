@@ -588,6 +588,12 @@ body {
 }
 .tp-maxed { font-size: 11px; color: var(--text-dim); padding: 2px 0; }
 
+/* Power status indicators */
+.tp-power { font-size: 10px; padding: 2px 6px; margin: 2px 0; border-radius: 3px; font-family: 'Share Tech Mono', monospace; }
+.tp-power-on { color: #ffc832; background: rgba(255, 200, 50, 0.1); border: 1px solid rgba(255, 200, 50, 0.3); }
+.tp-power-off { color: #ff6464; background: rgba(255, 80, 80, 0.1); border: 1px solid rgba(255, 80, 80, 0.3); animation: power-pulse 1.5s ease-in-out infinite; }
+@keyframes power-pulse { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
+
 /* ─── Messages ────────────────────────────────────────────── */
 .message-area {
     padding: 2px 14px 4px;
