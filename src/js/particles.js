@@ -156,17 +156,22 @@ export class ParticleSystem {
     }
 
     emitNovaImpact(x, y, color, level, branch) {
-        var count = 10 + level * 3;
-        var speed = 80 + level * 20;
-        this.emitExplosion(x, y, color, count, speed, 0.4, 3, 10);
-        // Expanding ground ring
-        this.emitRing(x, y, color, 15 + level * 5, 20, 0.5, 2);
-        // White core flash
-        for (var i = 0; i < 5; i++) {
+        // Small central burst — no outward explosion that fills the range area
+        var burstCount = 4 + level;
+        for (var i = 0; i < burstCount; i++) {
             var a = Math.random() * Math.PI * 2;
+            var spd = 20 + Math.random() * 30;
             this.particles.push(new Particle(
-                x, y, Math.cos(a) * 10, Math.sin(a) * 10,
-                [255, 255, 255], 0.12, 8, 15, 10
+                x, y, Math.cos(a) * spd, Math.sin(a) * spd,
+                color, 0.25 + Math.random() * 0.15, 2, 20 + Math.random() * 20, 8
+            ));
+        }
+        // Tiny white core flash
+        for (var j = 0; j < 3; j++) {
+            var a2 = Math.random() * Math.PI * 2;
+            this.particles.push(new Particle(
+                x, y, Math.cos(a2) * 8, Math.sin(a2) * 8,
+                [255, 255, 255], 0.10, 3, 10, 8
             ));
         }
     }

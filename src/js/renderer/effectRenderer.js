@@ -164,13 +164,13 @@ function _buildNovaRing(group, effect) {
     var maxRadius = effect.kw.radius;
     var worldWidth, baseOpacity;
     if (branch) {
-        worldWidth = 4; baseOpacity = 0.28;
+        worldWidth = 3; baseOpacity = 0.10;
     } else if (level >= 3) {
-        worldWidth = 3; baseOpacity = 0.22;
+        worldWidth = 2.5; baseOpacity = 0.08;
     } else if (level >= 2) {
-        worldWidth = 2.5; baseOpacity = 0.20;
+        worldWidth = 2; baseOpacity = 0.07;
     } else {
-        worldWidth = 2; baseOpacity = 0.18;
+        worldWidth = 2; baseOpacity = 0.06;
     }
     var innerRatio = Math.max(0.80, 1.0 - worldWidth / maxRadius);
 
@@ -183,7 +183,8 @@ function _buildNovaRing(group, effect) {
     });
     var ring = new THREE.Mesh(ringGeo, ringMat);
     ring.rotation.x = -Math.PI / 2;
-    ring.position.set(center[0], 2, center[1]);
+    // Match the range circle's y=0.5 so perspective projection aligns correctly
+    ring.position.set(center[0], 0.5, center[1]);
     group.add(ring);
 
     group.userData.ring = ring;
