@@ -164,13 +164,13 @@ function _buildNovaRing(group, effect) {
     var maxRadius = effect.kw.radius;
     var worldWidth, baseOpacity;
     if (branch) {
-        worldWidth = 3; baseOpacity = 0.10;
+        worldWidth = 3; baseOpacity = 0.06;
     } else if (level >= 3) {
-        worldWidth = 2.5; baseOpacity = 0.08;
+        worldWidth = 2.5; baseOpacity = 0.05;
     } else if (level >= 2) {
-        worldWidth = 2; baseOpacity = 0.07;
+        worldWidth = 2; baseOpacity = 0.045;
     } else {
-        worldWidth = 2; baseOpacity = 0.06;
+        worldWidth = 2; baseOpacity = 0.04;
     }
     var innerRatio = Math.max(0.80, 1.0 - worldWidth / maxRadius);
 
@@ -338,11 +338,13 @@ export function updateEffectMesh(effect) {
             var branch = group.userData.branch;
 
             if (novaRing) {
-                // Branch B (Focused Core) expands to 60% of range; others expand to full range
-                var targetR = (branch === 'B') ? maxRadius * 0.6 : maxRadius;
+                // Cap at 88% of range so the ring stays visibly inside the attack perimeter.
+                // Branch B (Focused Core) is already smaller — keep it at 55%.
+                var targetR = (branch === 'B') ? maxRadius * 0.55 : maxRadius * 0.88;
                 var tr = Math.max(0.01, targetR * t);
                 novaRing.scale.set(tr, tr, tr);
-                novaRingMat.opacity = ar * baseOpacity;
+                // Quadratic fade: ring is brightest when small, vanishes quickly as it expands.
+                novaRingMat.opacity = ar * ar * baseOpacity;
             }
             break;
         }
