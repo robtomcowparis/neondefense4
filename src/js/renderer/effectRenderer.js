@@ -159,39 +159,33 @@ function _buildNovaRing(group, effect) {
     var level = effect.kw.level || 1;
     var c = toColor(color);
 
-    // Ring width is specified in world units so it stays thin at any range.
-    // innerRatio = 1 - (worldWidth / maxRadius), clamped so it never inverts.
-    var maxRadius = effect.kw.radius;
-    var worldWidth, baseOpacity;
-    if (branch) {
-        worldWidth = 3; baseOpacity = 0.06;
-    } else if (level >= 3) {
-        worldWidth = 2.5; baseOpacity = 0.05;
-    } else if (level >= 2) {
-        worldWidth = 2; baseOpacity = 0.045;
-    } else {
-        worldWidth = 2; baseOpacity = 0.04;
-    }
-    var innerRatio = Math.max(0.80, 1.0 - worldWidth / maxRadius);
+    // Tower-top elevation matches getTowerTopY in towerMeshes.js
+    var topY;
+    if (branch === 'A') topY = 55;
+    else if (branch === 'B') topY = 42;
+    else if (level >= 2) topY = 32;
+    else if (level >= 1) topY = 24;
+    else topY = 16;
 
-    var ringGeo = new THREE.RingGeometry(innerRatio, 1.0, 56);
-    var ringMat = new THREE.MeshBasicMaterial({
-        color: c,
-        transparent: true,
-        opacity: baseOpacity,
-        side: THREE.DoubleSide,
-    });
-    var ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.rotation.x = -Math.PI / 2;
-    // Match the range circle's y=0.5 so perspective projection aligns correctly
-    ring.position.set(center[0], 0.5, center[1]);
-    group.add(ring);
+    // White core flash — tight sphere at tower top
+    var coreRadius = 6 + level * 1.5 + (branch ? 4 : 0);
+    var coreGeo = new THREE.SphereGeometry(coreRadius, 8, 6);
+    var coreMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(1, 1, 1), transparent: true, opacity: 0.95 });
+    var core = new THREE.Mesh(coreGeo, coreMat);
+    core.position.set(center[0], topY, center[1]);
+    group.add(core);
 
-    group.userData.ring = ring;
-    group.userData.ringMat = ringMat;
-    group.userData.baseOpacity = baseOpacity;
-    group.userData.maxRadius = maxRadius;
-    group.userData.branch = branch;
+    // Soft color halo — slightly larger, tower color
+    var haloGeo = new THREE.SphereGeometry(coreRadius * 2.2, 8, 6);
+    var haloMat = new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.4 });
+    var halo = new THREE.Mesh(haloGeo, haloMat);
+    halo.position.set(center[0], topY, center[1]);
+    group.add(halo);
+
+    group.userData.core = core;
+    group.userData.coreMat = coreMat;
+    group.userData.halo = halo;
+    group.userData.haloMat = haloMat;
 }
 
 function _buildCryoField(group, effect) {
@@ -331,21 +325,13 @@ export function updateEffectMesh(effect) {
             break;
         }
         case 'nova_ring': {
-            var novaRing = group.userData.ring;
-            var novaRingMat = group.userData.ringMat;
-            var maxRadius = group.userData.maxRadius;
-            var baseOpacity = group.userData.baseOpacity;
-            var branch = group.userData.branch;
-
-            if (novaRing) {
-                // Cap at 88% of range so the ring stays visibly inside the attack perimeter.
-                // Branch B (Focused Core) is already smaller — keep it at 55%.
-                var targetR = (branch === 'B') ? maxRadius * 0.55 : maxRadius * 0.88;
-                var tr = Math.max(0.01, targetR * t);
-                novaRing.scale.set(tr, tr, tr);
-                // Quadratic fade: ring is brightest when small, vanishes quickly as it expands.
-                novaRingMat.opacity = ar * ar * baseOpacity;
-            }
+            // Flash pulse at tower top — no horizontal expansion.
+            var coreMat = group.userData.coreMat;
+            var haloMat = group.userData.haloMat;
+            // Quadratic fade: snappy at start, gone quickly
+            var flashAr = ar * ar;
+            if (coreMat) coreMat.opacity = flashAr * 0.95;
+            if (haloMat) haloMat.opacity = flashAr * 0.40;
             break;
         }
         case 'cryo_field': {
