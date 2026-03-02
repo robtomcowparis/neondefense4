@@ -1270,19 +1270,10 @@ function _buildNovaL0(group, c) {
     core.position.y = 14;
     group.add(core);
 
-    var grGeo0 = new THREE.RingGeometry(1, 2, 32);
-    var grMat0 = makeGlowMaterial(toColor([255, 50, 150]), 0.3);
-    grMat0._ignoreColor = true;
-    var groundRing0 = new THREE.Mesh(grGeo0, grMat0);
-    groundRing0.rotation.x = -Math.PI / 2;
-    groundRing0.position.y = 1;
-    groundRing0.visible = false;
-    group.add(groundRing0);
-
     group.userData.ring = null;
     group.userData.ring2 = null;
     group.userData.core = core;
-    group.userData.groundRing = groundRing0;
+    group.userData.groundRing = null;
 }
 
 // L1 — ~24 units: taller pedestal, 4 struts, larger sphere, horizontal torus
@@ -1319,19 +1310,10 @@ function _buildNovaL1(group, c) {
     ring.rotation.x = Math.PI / 2;
     group.add(ring);
 
-    var grGeo1 = new THREE.RingGeometry(1, 2, 32);
-    var grMat1 = makeGlowMaterial(toColor([255, 50, 150]), 0.3);
-    grMat1._ignoreColor = true;
-    var groundRing1 = new THREE.Mesh(grGeo1, grMat1);
-    groundRing1.rotation.x = -Math.PI / 2;
-    groundRing1.position.y = 1;
-    groundRing1.visible = false;
-    group.add(groundRing1);
-
     group.userData.ring = ring;
     group.userData.ring2 = null;
     group.userData.core = core;
-    group.userData.groundRing = groundRing1;
+    group.userData.groundRing = null;
 }
 
 // L2 — ~32 units: proper pedestal, 4 struts, large core, horizontal + vertical rings
@@ -1375,19 +1357,10 @@ function _buildNovaL2(group, c) {
     ring2.position.y = 28;
     group.add(ring2);
 
-    var grGeo2 = new THREE.RingGeometry(1, 2, 32);
-    var grMat2 = makeGlowMaterial(toColor([255, 50, 150]), 0.3);
-    grMat2._ignoreColor = true;
-    var groundRing2 = new THREE.Mesh(grGeo2, grMat2);
-    groundRing2.rotation.x = -Math.PI / 2;
-    groundRing2.position.y = 1;
-    groundRing2.visible = false;
-    group.add(groundRing2);
-
     group.userData.ring = ring;
     group.userData.ring2 = ring2;
     group.userData.core = core;
-    group.userData.groundRing = groundRing2;
+    group.userData.groundRing = null;
 }
 
 // Branch A "Shockwave" — ~55 units: thin pillar, elevated core, 3 massive tilted rings
@@ -1430,19 +1403,10 @@ function _buildNovaBranchA(group, c) {
     ring3.rotation.z = Math.PI / 3;
     group.add(ring3);
 
-    var grGeoA = new THREE.RingGeometry(1, 2, 32);
-    var grMatA = makeGlowMaterial(toColor([255, 50, 150]), 0.3);
-    grMatA._ignoreColor = true;
-    var groundRingA = new THREE.Mesh(grGeoA, grMatA);
-    groundRingA.rotation.x = -Math.PI / 2;
-    groundRingA.position.y = 1;
-    groundRingA.visible = false;
-    group.add(groundRingA);
-
     group.userData.ring = ring1;
     group.userData.ring2 = ring2;
     group.userData.core = core;
-    group.userData.groundRing = groundRingA;
+    group.userData.groundRing = null;
 }
 
 // Branch B "Focused Core" — ~42 units: compact cage, massive bright core, tight ring
@@ -1488,19 +1452,10 @@ function _buildNovaBranchB(group, c) {
     ring.rotation.x = Math.PI / 2;
     group.add(ring);
 
-    var grGeoB2 = new THREE.RingGeometry(1, 2, 32);
-    var grMatB2 = makeGlowMaterial(toColor([255, 50, 150]), 0.3);
-    grMatB2._ignoreColor = true;
-    var groundRingB2 = new THREE.Mesh(grGeoB2, grMatB2);
-    groundRingB2.rotation.x = -Math.PI / 2;
-    groundRingB2.position.y = 1;
-    groundRingB2.visible = false;
-    group.add(groundRingB2);
-
     group.userData.ring = ring;
     group.userData.ring2 = null;
     group.userData.core = core;
-    group.userData.groundRing = groundRingB2;
+    group.userData.groundRing = null;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2074,7 +2029,6 @@ export function updateTowerMesh(tower, selected, showRange, fortifyMult, dt, aim
         var ncore = model.userData.core;
         var nring1 = model.userData.ring;
         var nring2 = model.userData.ring2;
-        var gr = model.userData.groundRing;
         if (fireAge < 500) {
             if (ncore) {
                 var cflash = 1 + 0.5 * Math.exp(-fireAge * 3 / 400);
@@ -2083,18 +2037,10 @@ export function updateTowerMesh(tower, selected, showRange, fortifyMult, dt, aim
             var rburst = 1 + 0.2 * Math.exp(-fireAge * 5 / 300);
             if (nring1) nring1.scale.setScalar(rburst);
             if (nring2) nring2.scale.setScalar(rburst);
-            if (gr) {
-                gr.visible = true;
-                var grT = fireAge / 500;
-                var grScale = grT * (tower.range || 80);
-                gr.scale.setScalar(Math.max(0.1, grScale));
-                gr.material.opacity = 0.3 * Math.max(0, 1 - grT);
-            }
         } else {
             if (ncore) ncore.scale.setScalar(1);
             if (nring1) nring1.scale.setScalar(1);
             if (nring2) nring2.scale.setScalar(1);
-            if (gr) gr.visible = false;
         }
     }
 
