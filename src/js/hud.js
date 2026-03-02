@@ -59,6 +59,7 @@ export class HUD {
                 <div class="sb-title">NEON DEFENSE</div>
                 <div class="sb-controls">
                     <button id="btnMute" class="sb-icon-btn" title="Toggle Sound">🔊</button>
+                    <button id="btnFullscreen" class="sb-icon-btn sb-icon-btn-fs" title="Toggle Fullscreen">⛶</button>
                     <span id="speedIndicator" class="speed-badge hidden">▶▶ 2×</span>
                 </div>
             </div>
@@ -293,6 +294,12 @@ export class HUD {
                     const muted = this.callbacks.onToggleMute();
                     btnMute.textContent = muted ? '🔇' : '🔊';
                 }
+            });
+        }
+        const btnFs = document.getElementById('btnFullscreen');
+        if (btnFs) {
+            btnFs.addEventListener('click', () => {
+                if (this.callbacks.onToggleFullscreen) this.callbacks.onToggleFullscreen();
             });
         }
     }

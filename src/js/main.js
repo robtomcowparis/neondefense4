@@ -3,7 +3,7 @@
 //  Game loop, state management, input, rendering orchestration
 // ═══════════════════════════════════════════════════════════════
 
-import { TILE_SIZE, MAP_COLS, MAP_ROWS, MAP_WIDTH, MAP_HEIGHT,
+import { TILE_SIZE, MAP_COLS, MAP_ROWS, MAP_WIDTH, MAP_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT,
          CYAN, MAGENTA, SAPPER_RED, ELECTRIC_BLUE,
          DAMAGE_RED, SHIELD_COLOR,
          GameState, TowerType, EnemyType, TOWER_DATA, ENEMY_DATA,
@@ -359,6 +359,34 @@ function reset() {
     if (scene) initParticleRenderer(game.particles);
 }
 
+// ─── Fullscreen ──────────────────────────────────────────────
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+        document.exitFullscreen().catch(() => {});
+    }
+}
+
+function onFullscreenChange() {
+    const container = document.getElementById('gameContainer');
+    const btn = document.getElementById('btnFullscreen');
+    if (document.fullscreenElement) {
+        const scale = Math.min(window.innerWidth / SCREEN_WIDTH, window.innerHeight / SCREEN_HEIGHT);
+        if (container) {
+            container.style.transformOrigin = 'center center';
+            container.style.transform = `scale(${scale})`;
+        }
+        if (btn) { btn.textContent = '⊡'; btn.title = 'Exit Fullscreen'; }
+    } else {
+        if (container) {
+            container.style.transform = '';
+            container.style.transformOrigin = '';
+        }
+        if (btn) { btn.textContent = '⛶'; btn.title = 'Toggle Fullscreen'; }
+    }
+}
+
 // ─── State Transitions ───────────────────────────────────────
 function setState(newState) {
     game.state = newState;
@@ -409,7 +437,8 @@ function startGame() {
         },
         onToggleMute: () => {
             return soundMgr.toggleMute();
-        }
+        },
+        onToggleFullscreen: toggleFullscreen
     });
 }
 
@@ -1356,6 +1385,7 @@ function init() {
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('resize', onWindowResize);
+    document.addEventListener('fullscreenchange', onFullscreenChange);
 
     // Mobile drawer toggle
     const drawerToggle = document.getElementById('drawerToggle');

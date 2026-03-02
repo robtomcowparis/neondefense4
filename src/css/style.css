@@ -124,6 +124,15 @@ body {
     border-color: var(--cyan);
     box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
 }
+.sb-icon-btn-fs {
+    color: var(--green);
+    border-color: rgba(50, 255, 100, 0.35);
+    font-size: 18px;
+}
+.sb-icon-btn-fs:hover {
+    border-color: var(--green);
+    box-shadow: 0 0 8px rgba(50, 255, 100, 0.4);
+}
 .speed-badge {
     font-family: var(--font-display);
     font-size: 11px;
