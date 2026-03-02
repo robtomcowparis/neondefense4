@@ -159,19 +159,20 @@ function _buildNovaRing(group, effect) {
     var level = effect.kw.level || 1;
     var c = toColor(color);
 
-    // Ring thickness and brightness scale slightly with upgrade level / branch.
-    // innerRatio controls the ring band width (as a fraction of the outer radius).
-    // Because the ring is scaled uniformly, the world-space width = (1 - innerRatio) * maxRadius.
-    var innerRatio, baseOpacity;
+    // Ring width is specified in world units so it stays thin at any range.
+    // innerRatio = 1 - (worldWidth / maxRadius), clamped so it never inverts.
+    var maxRadius = effect.kw.radius;
+    var worldWidth, baseOpacity;
     if (branch) {
-        innerRatio = 0.93; baseOpacity = 0.60;
+        worldWidth = 4; baseOpacity = 0.28;
     } else if (level >= 3) {
-        innerRatio = 0.95; baseOpacity = 0.50;
+        worldWidth = 3; baseOpacity = 0.22;
     } else if (level >= 2) {
-        innerRatio = 0.96; baseOpacity = 0.45;
+        worldWidth = 2.5; baseOpacity = 0.20;
     } else {
-        innerRatio = 0.97; baseOpacity = 0.40;
+        worldWidth = 2; baseOpacity = 0.18;
     }
+    var innerRatio = Math.max(0.80, 1.0 - worldWidth / maxRadius);
 
     var ringGeo = new THREE.RingGeometry(innerRatio, 1.0, 56);
     var ringMat = new THREE.MeshBasicMaterial({
@@ -188,7 +189,7 @@ function _buildNovaRing(group, effect) {
     group.userData.ring = ring;
     group.userData.ringMat = ringMat;
     group.userData.baseOpacity = baseOpacity;
-    group.userData.maxRadius = effect.kw.radius;
+    group.userData.maxRadius = maxRadius;
     group.userData.branch = branch;
 }
 
