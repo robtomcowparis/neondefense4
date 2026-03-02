@@ -519,7 +519,7 @@ export class Tower {
                     this.totalDamage += dmg;
                     if (!e.alive) this.kills++;
                     hit++;
-                    particles.emitTrail(e.x, e.y, this.color, 3, 40, 0.2);
+                    particles.emitTrail(e.x, e.y, this.color, 2, 40, 0.2);
                     particles.emitRailImpact(e.x, e.y, this.color, this.level, this.branch, Math.atan2(ndy, ndx));
                 }
             }

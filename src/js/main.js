@@ -1080,7 +1080,7 @@ function update(dt) {
                 } else if (t.type === 'CRYO') {
                     game.particles.emitCryoImpact(p.targetX, p.targetY, t.color, t.level, t.branch);
                 } else {
-                    game.particles.emitExplosion(p.targetX, p.targetY, t.color, 15, 150, 0.5, 3, 10);
+                    game.particles.emitExplosion(p.targetX, p.targetY, t.color, 8, 120, 0.4, 3, 10);
                 }
             }
         }
@@ -1096,7 +1096,7 @@ function update(dt) {
         const reward = Math.max(1, Math.round(e.reward * rewardMult));
         game.gold += reward;
         game.enemiesKilled++;
-        game.particles.emitExplosion(e.x, e.y, e.color, 15, 150, 0.5, 3);
+        game.particles.emitExplosion(e.x, e.y, e.color, 8, 130, 0.45, 3);
         soundMgr.play('enemy_die');
 
         if (mods.cascade_spread > 0 && e.dotDamage > 0 && e.dotTimer > 0) {

@@ -70,12 +70,12 @@ export class ParticleSystem {
     }
 
     emitPulseImpact(x, y, color, level, branch) {
-        var count = 8 + level * 4;
+        var count = 4 + level * 2;
         var speed = 100 + level * 30;
         var life = 0.3 + level * 0.1;
         this.emitExplosion(x, y, color, count, speed, life, 3, 10);
         // Bright white core flash
-        for (var i = 0; i < 3; i++) {
+        for (var i = 0; i < 2; i++) {
             var a = Math.random() * Math.PI * 2;
             this.particles.push(new Particle(
                 x, y, Math.cos(a) * 10, Math.sin(a) * 10,
@@ -83,17 +83,17 @@ export class ParticleSystem {
             ));
         }
         if (branch === 'B') {
-            this.emitRing(x, y, [255, 255, 255], 25, 16, 0.3, 2);
+            this.emitRing(x, y, [255, 255, 255], 25, 10, 0.3, 2);
         }
     }
 
     emitCryoImpact(x, y, color, level, branch) {
-        var count = 8 + level * 3;
+        var count = 4 + level * 2;
         var speed = 50 + level * 15;
         var life = 0.6 + level * 0.15;
         this.emitExplosion(x, y, color, count, speed, life, 2, 6);
         // Upward-drifting ice motes
-        var moteCount = 4 + level * 2;
+        var moteCount = 2 + level;
         for (var i = 0; i < moteCount; i++) {
             var a = Math.random() * Math.PI * 2;
             var spd = 10 + Math.random() * 15;
@@ -104,14 +104,14 @@ export class ParticleSystem {
             ));
         }
         if (branch === 'A') {
-            this.emitRing(x, y, [150, 220, 255], 30, 20, 0.4, 2);
+            this.emitRing(x, y, [150, 220, 255], 30, 12, 0.4, 2);
         }
     }
 
     emitRailImpact(x, y, color, level, branch, beamAngle) {
         // Directional sparks perpendicular to beam
         var perpAngle = beamAngle + Math.PI / 2;
-        for (var i = 0; i < 8; i++) {
+        for (var i = 0; i < 4; i++) {
             var side = (i % 2 === 0) ? 1 : -1;
             var spread = (Math.random() - 0.5) * 0.6;
             var a = perpAngle * side + spread;
@@ -123,7 +123,7 @@ export class ParticleSystem {
             ));
         }
         if (branch === 'B') {
-            for (var j = 0; j < 8; j++) {
+            for (var j = 0; j < 4; j++) {
                 var a2 = Math.random() * Math.PI * 2;
                 var spd2 = 30 + Math.random() * 40;
                 this.particles.push(new Particle(
@@ -137,7 +137,7 @@ export class ParticleSystem {
 
     emitTeslaHitSpark(x, y, color) {
         // Fast short-lived sparks
-        for (var i = 0; i < 6; i++) {
+        for (var i = 0; i < 3; i++) {
             var a = Math.random() * Math.PI * 2;
             var spd = 50 + Math.random() * 30;
             this.particles.push(new Particle(
@@ -146,7 +146,7 @@ export class ParticleSystem {
             ));
         }
         // Upward fountain
-        for (var j = 0; j < 3; j++) {
+        for (var j = 0; j < 2; j++) {
             var a2 = Math.random() * Math.PI * 2;
             this.particles.push(new Particle(
                 x, y, Math.cos(a2) * 20, Math.sin(a2) * 20,
@@ -157,7 +157,7 @@ export class ParticleSystem {
 
     emitNovaImpact(x, y, color, level, branch) {
         // Small central burst — no outward explosion that fills the range area
-        var burstCount = 4 + level;
+        var burstCount = 2 + Math.ceil(level * 0.5);
         for (var i = 0; i < burstCount; i++) {
             var a = Math.random() * Math.PI * 2;
             var spd = 20 + Math.random() * 30;
@@ -167,7 +167,7 @@ export class ParticleSystem {
             ));
         }
         // Tiny white core flash
-        for (var j = 0; j < 3; j++) {
+        for (var j = 0; j < 2; j++) {
             var a2 = Math.random() * Math.PI * 2;
             this.particles.push(new Particle(
                 x, y, Math.cos(a2) * 8, Math.sin(a2) * 8,
