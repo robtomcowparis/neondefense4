@@ -600,7 +600,7 @@ export class Tower {
                     particles.emitTrail(e.x, e.y, HOT_PINK, 3, 50, 0.3);
                 }
             }
-            effects.push(new VisualEffect('nova_ring', 0.4, { center: [this.x, this.y], radius: this.range, color: this.color, branch: this.branch }));
+            effects.push(new VisualEffect('nova_ring', 0.4, { center: [this.x, this.y], radius: this.range, color: this.color, branch: this.branch, level: this.level }));
             particles.emitNovaImpact(this.x, this.y, this.color, this.level, this.branch);
         }
     }

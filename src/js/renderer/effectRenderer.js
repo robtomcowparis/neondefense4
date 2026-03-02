@@ -156,55 +156,39 @@ function _buildNovaRing(group, effect) {
     var center = effect.kw.center;
     var color = effect.kw.color;
     var branch = effect.kw.branch || null;
-    var startY = 22;
+    var level = effect.kw.level || 1;
     var c = toColor(color);
 
-    // Expanding wireframe sphere (original)
-    var sphereGeo = new THREE.SphereGeometry(1, 14, 9);
-    var sphereMat = new THREE.MeshBasicMaterial({
+    // Ring thickness and brightness scale slightly with upgrade level / branch.
+    // innerRatio controls the ring band width (as a fraction of the outer radius).
+    // Because the ring is scaled uniformly, the world-space width = (1 - innerRatio) * maxRadius.
+    var innerRatio, baseOpacity;
+    if (branch) {
+        innerRatio = 0.93; baseOpacity = 0.60;
+    } else if (level >= 3) {
+        innerRatio = 0.95; baseOpacity = 0.50;
+    } else if (level >= 2) {
+        innerRatio = 0.96; baseOpacity = 0.45;
+    } else {
+        innerRatio = 0.97; baseOpacity = 0.40;
+    }
+
+    var ringGeo = new THREE.RingGeometry(innerRatio, 1.0, 56);
+    var ringMat = new THREE.MeshBasicMaterial({
         color: c,
         transparent: true,
-        opacity: 0.12,
-        wireframe: true,
+        opacity: baseOpacity,
+        side: THREE.DoubleSide,
     });
-    var sphere = new THREE.Mesh(sphereGeo, sphereMat);
-    sphere.position.set(center[0], startY, center[1]);
-    group.add(sphere);
+    var ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.set(center[0], 2, center[1]);
+    group.add(ring);
 
-    // Flat torus ring at ground level — expands outward
-    var tubeRadius = (branch === 'A') ? 6 : 4;
-    var torusGeo = new THREE.TorusGeometry(1, tubeRadius, 6, 32);
-    var torusMat = new THREE.MeshBasicMaterial({
-        color: c,
-        transparent: true,
-        opacity: 0.15,
-    });
-    var torus = new THREE.Mesh(torusGeo, torusMat);
-    torus.rotation.x = Math.PI / 2;
-    torus.position.set(center[0], 1, center[1]);
-    group.add(torus);
-
-    // Vertical light column at center
-    var colGeo = new THREE.CylinderGeometry(1.5, 1.5, 20, 6, 1);
-    var colMat = new THREE.MeshBasicMaterial({
-        color: new THREE.Color(Math.min(1, c.r + 0.1), Math.min(1, c.g + 0.1), Math.min(1, c.b + 0.1)),
-        transparent: true,
-        opacity: 0.12,
-    });
-    var column = new THREE.Mesh(colGeo, colMat);
-    column.position.set(center[0], 10, center[1]);
-    group.add(column);
-
-    group.userData.sphere = sphere;
-    group.userData.sphereMat = sphereMat;
-    group.userData.torus = torus;
-    group.userData.torusMat = torusMat;
-    group.userData.torusTubeRadius = tubeRadius;
-    group.userData.column = column;
-    group.userData.colMat = colMat;
+    group.userData.ring = ring;
+    group.userData.ringMat = ringMat;
+    group.userData.baseOpacity = baseOpacity;
     group.userData.maxRadius = effect.kw.radius;
-    group.userData.center = center;
-    group.userData.startY = startY;
     group.userData.branch = branch;
 }
 
@@ -345,46 +329,18 @@ export function updateEffectMesh(effect) {
             break;
         }
         case 'nova_ring': {
-            var sphere = group.userData.sphere;
-            var sphereMat = group.userData.sphereMat;
+            var novaRing = group.userData.ring;
+            var novaRingMat = group.userData.ringMat;
             var maxRadius = group.userData.maxRadius;
-            var torus = group.userData.torus;
-            var torusMat = group.userData.torusMat;
-            var column = group.userData.column;
-            var colMat = group.userData.colMat;
+            var baseOpacity = group.userData.baseOpacity;
             var branch = group.userData.branch;
 
-            if (sphere) {
-                var r = Math.max(0.1, maxRadius * t);
-                sphere.scale.setScalar(r);
-                sphereMat.opacity = ar * 0.12;
-            }
-
-            // Torus expansion
-            if (torus) {
-                var torusScaleMult = (branch === 'A') ? 1.3 : 1.0;
-                var maxTorusR;
-                if (branch === 'B') {
-                    // Focused Core: stops at radius * 0.6, pulses in place
-                    var targetR = maxRadius * 0.6;
-                    var expandT = Math.min(1, t * 3); // reach target in first third
-                    maxTorusR = targetR * expandT;
-                    // Pulse in place once reached
-                    if (expandT >= 1) {
-                        maxTorusR = targetR * (1.0 + 0.1 * Math.sin(t * 20));
-                    }
-                } else {
-                    maxTorusR = maxRadius * 1.2 * t * torusScaleMult;
-                }
-                var tr = Math.max(0.01, maxTorusR);
-                torus.scale.set(tr, tr, tr);
-                // Tube thins as it expands
-                torusMat.opacity = ar * 0.15;
-            }
-
-            // Light column fades
-            if (colMat) {
-                colMat.opacity = ar * 0.12;
+            if (novaRing) {
+                // Branch B (Focused Core) expands to 60% of range; others expand to full range
+                var targetR = (branch === 'B') ? maxRadius * 0.6 : maxRadius;
+                var tr = Math.max(0.01, targetR * t);
+                novaRing.scale.set(tr, tr, tr);
+                novaRingMat.opacity = ar * baseOpacity;
             }
             break;
         }
