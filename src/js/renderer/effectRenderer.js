@@ -164,7 +164,7 @@ function _buildNovaRing(group, effect) {
     var sphereMat = new THREE.MeshBasicMaterial({
         color: c,
         transparent: true,
-        opacity: 0.32,
+        opacity: 0.12,
         wireframe: true,
     });
     var sphere = new THREE.Mesh(sphereGeo, sphereMat);
@@ -177,7 +177,7 @@ function _buildNovaRing(group, effect) {
     var torusMat = new THREE.MeshBasicMaterial({
         color: c,
         transparent: true,
-        opacity: 0.4,
+        opacity: 0.15,
     });
     var torus = new THREE.Mesh(torusGeo, torusMat);
     torus.rotation.x = Math.PI / 2;
@@ -185,14 +185,14 @@ function _buildNovaRing(group, effect) {
     group.add(torus);
 
     // Vertical light column at center
-    var colGeo = new THREE.CylinderGeometry(1.5, 1.5, 60, 6, 1);
+    var colGeo = new THREE.CylinderGeometry(1.5, 1.5, 20, 6, 1);
     var colMat = new THREE.MeshBasicMaterial({
-        color: new THREE.Color(Math.min(1, c.r + 0.3), Math.min(1, c.g + 0.3), Math.min(1, c.b + 0.3)),
+        color: new THREE.Color(Math.min(1, c.r + 0.1), Math.min(1, c.g + 0.1), Math.min(1, c.b + 0.1)),
         transparent: true,
-        opacity: 0.5,
+        opacity: 0.12,
     });
     var column = new THREE.Mesh(colGeo, colMat);
-    column.position.set(center[0], 30, center[1]);
+    column.position.set(center[0], 10, center[1]);
     group.add(column);
 
     group.userData.sphere = sphere;
@@ -357,7 +357,7 @@ export function updateEffectMesh(effect) {
             if (sphere) {
                 var r = Math.max(0.1, maxRadius * t);
                 sphere.scale.setScalar(r);
-                sphereMat.opacity = ar * 0.32;
+                sphereMat.opacity = ar * 0.12;
             }
 
             // Torus expansion
@@ -379,12 +379,12 @@ export function updateEffectMesh(effect) {
                 var tr = Math.max(0.01, maxTorusR);
                 torus.scale.set(tr, tr, tr);
                 // Tube thins as it expands
-                torusMat.opacity = ar * 0.4;
+                torusMat.opacity = ar * 0.15;
             }
 
             // Light column fades
             if (colMat) {
-                colMat.opacity = ar * 0.5;
+                colMat.opacity = ar * 0.12;
             }
             break;
         }
