@@ -680,17 +680,20 @@ export function createEnemyMesh(enemy) {
     group.add(model);
     group.userData.model = model;
 
-    // HP bar (CSS2D label)
-    const hpDiv = document.createElement('div');
-    hpDiv.className = 'hp-bar-container';
-    hpDiv.innerHTML = `<div class="hp-bar-bg"><div class="hp-bar-fill" style="width:100%;background:#32ff64"></div></div>`;
-    hpDiv.style.pointerEvents = 'none';
-    const hpLabel = new CSS2DObject(hpDiv);
-    const hoverHeight = enemy.size + 8;
-    hpLabel.position.set(0, hoverHeight + 4, 0);
-    group.userData.hpLabel = hpLabel;
-    group.userData.hpDiv = hpDiv;
-    group.add(hpLabel);
+    // HP bar (CSS2D label) — only for bosses
+    const isBoss = enemy.type === EnemyType.BOSS || enemy.type === EnemyType.ULTRA_BOSS;
+    if (isBoss) {
+        const hpDiv = document.createElement('div');
+        hpDiv.className = 'hp-bar-container';
+        hpDiv.innerHTML = `<div class="hp-bar-bg"><div class="hp-bar-fill" style="width:100%;background:#32ff64"></div></div>`;
+        hpDiv.style.pointerEvents = 'none';
+        const hpLabel = new CSS2DObject(hpDiv);
+        const hoverHeight = enemy.size + 8;
+        hpLabel.position.set(0, hoverHeight + 4, 0);
+        group.userData.hpLabel = hpLabel;
+        group.userData.hpDiv = hpDiv;
+        group.add(hpLabel);
+    }
 
     // Initial position — hover above ground
     const baseY = enemy.size + 5;
