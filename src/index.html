@@ -1,215 +1,688 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>NEON DEFENSE 3D</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neon Arcade</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --deep:       #040410;
+    --panel:      rgba(8, 8, 26, 0.94);
+    --card-bg:    #0c0c22;
+    --input-bg:   #10102a;
+    --subtle-bg:  #1a2233;
+    --cyan:       #00ffff;
+    --magenta:    #ff00ff;
+    --gold:       #ffd700;
+    --orange:     #ffaa00;
+    --green:      #00ff88;
+    --red:        #ff3333;
+    --text:       #e8e8f0;
+    --text-blue:  #aaccff;
+    --text-mid:   #88aacc;
+    --text-dim:   #667788;
+    --text-dark:  #445566;
+    --text-ghost: #334455;
+    --border-sub: rgba(0, 180, 200, 0.2);
+    --border-card: rgba(100, 120, 180, 0.1);
+  }
+
+  body {
+    background: var(--deep);
+    color: var(--text);
+    font-family: 'Consolas', 'Courier New', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Three.js canvas ── */
+  #bg-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ── Vignette overlay on top of 3D ── */
+  .vignette {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    background: radial-gradient(ellipse at center,
+      rgba(4,4,16,0.3) 0%,
+      rgba(4,4,16,0.75) 60%,
+      rgba(4,4,16,0.95) 100%);
+    pointer-events: none;
+  }
+
+  .page {
+    position: relative;
+    z-index: 2;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px 48px;
+  }
+
+  /* ── Title ── */
+  .title {
+    font-size: 72px;
+    font-weight: 900;
+    letter-spacing: 8px;
+    color: var(--cyan);
+    text-shadow:
+      0 0 10px rgba(0,255,255,0.8),
+      0 0 30px rgba(0,255,255,0.5),
+      0 0 60px rgba(0,255,255,0.3);
+    animation: title-pulse 3s ease-in-out infinite;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  @keyframes title-pulse {
+    0%, 100% {
+      text-shadow:
+        0 0 10px rgba(0,255,255,0.8),
+        0 0 30px rgba(0,255,255,0.5),
+        0 0 60px rgba(0,255,255,0.3);
+    }
+    50% {
+      text-shadow:
+        0 0 15px rgba(0,255,255,1),
+        0 0 40px rgba(0,255,255,0.7),
+        0 0 80px rgba(0,255,255,0.4),
+        0 0 120px rgba(0,255,255,0.2);
+    }
+  }
+
+  .subtitle {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 12px;
+    color: var(--magenta);
+    text-shadow:
+      0 0 10px rgba(255,0,255,0.6),
+      0 0 30px rgba(255,0,255,0.3);
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  /* ── Divider ── */
+  .divider {
+    width: 180px;
+    height: 1px;
+    margin-bottom: 48px;
+    background: linear-gradient(90deg, transparent, rgba(0,255,255,0.25), transparent);
+  }
+
+  /* ── Game grid ── */
+  .games {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    max-width: 860px;
+    width: 100%;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-card);
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    opacity: 0;
+    animation: fadeUp 0.4s ease forwards;
+  }
+
+  .card:nth-child(1) { animation-delay: 0.2s; }
+  .card:nth-child(2) { animation-delay: 0.35s; }
+  .card:nth-child(3) { animation-delay: 0.5s; }
+  .card:nth-child(4) { animation-delay: 0.65s; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card:hover {
+    border-color: rgba(0,255,255,0.35);
+    box-shadow:
+      0 0 20px rgba(0,255,255,0.15),
+      inset 0 0 15px rgba(0,255,255,0.05);
+    transform: scale(1.03);
+  }
+
+  .card:active {
+    transform: scale(0.98);
+  }
+
+  /* ── Card art ── */
+  .card-art {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    background: var(--deep);
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-art canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    transition: filter 0.2s ease;
+  }
+
+  .card:hover .card-art canvas {
+    filter: brightness(1.3);
+  }
+
+  /* ── Card body ── */
+  .card-body {
+    padding: 18px 20px 22px;
+  }
+
+  .card-title {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  /* Color per card */
+  .card[data-accent="cyan"] .card-title {
+    color: var(--cyan);
+    text-shadow: 0 0 6px rgba(0,255,255,0.4);
+  }
+  .card[data-accent="magenta"] .card-title {
+    color: var(--magenta);
+    text-shadow: 0 0 6px rgba(255,0,255,0.4);
+  }
+
+  .card-desc {
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 1px;
+    color: var(--text-mid);
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+
+  .card-tag {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 3px;
+  }
+
+  .card[data-accent="cyan"] .card-tag {
+    color: var(--cyan);
+    border: 1px solid rgba(0,255,255,0.25);
+    background: rgba(0,255,255,0.06);
+  }
+
+  .card[data-accent="magenta"] .card-tag {
+    color: var(--magenta);
+    border: 1px solid rgba(255,0,255,0.25);
+    background: rgba(255,0,255,0.06);
+  }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 56px;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-ghost);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .title { font-size: 38px; letter-spacing: 4px; }
+    .subtitle { font-size: 14px; letter-spacing: 6px; margin-bottom: 32px; }
+    .page { padding: 40px 16px 32px; }
+    .games { gap: 18px; }
+    .card-body { padding: 14px 16px 18px; }
+  }
+</style>
 </head>
 <body>
 
-    <!-- ═══ Menu Overlay ═══ -->
-    <div id="menuOverlay" class="overlay">
-        <div class="scanlines"></div>
-        <div class="menu-content">
-            <h1 class="menu-title">NEON<br>DEFENSE</h1>
-            <div class="menu-subtitle">INFINITE SURVIVAL</div>
-            <div class="menu-divider"></div>
-            <button id="btnStart" class="menu-btn pulse-btn">▶ START GAME</button>
-            <button id="btnHowToPlay" class="menu-btn menu-btn-help">? HOW TO PLAY</button>
-            <div class="menu-keys">
-                <div>1–6 Select Tower &nbsp;|&nbsp; LMB Place &nbsp;|&nbsp; RMB Cancel</div>
-                <div>SPACE Send Early &nbsp;|&nbsp; F Fast Forward &nbsp;|&nbsp; ESC Pause</div>
-            </div>
-            <div class="menu-divider"></div>
-            <div class="menu-section-title">GLOBAL LEADERBOARD</div>
-            <div id="menuLeaderboard" class="leaderboard-table">
-                <div class="lb-loading">Loading scores...</div>
-            </div>
-        </div>
-    </div>
+<canvas id="bg-canvas"></canvas>
+<div class="vignette"></div>
 
-    <!-- ═══ How To Play Overlay ═══ -->
-    <div id="howToPlayOverlay" class="overlay hidden">
-        <div class="scanlines"></div>
-        <div class="htp-content">
-            <div class="htp-header">
-                <h2 class="htp-title">HOW TO PLAY</h2>
-                <button id="btnHtpClose" class="htp-close-btn">✕</button>
-            </div>
-            <div class="htp-scroll">
+<div class="page">
 
-                <div class="htp-section">
-                    <div class="htp-section-title">OBJECTIVE</div>
-                    <p>Three enemy paths converge from the left side of the map. Build towers to destroy enemies before they reach the exit on the right. You start with <span class="htp-hl-gold">1,000 gold</span> and <span class="htp-hl-green">30 lives</span>. Lose all lives and it's game over. Survive as many waves as you can.</p>
-                </div>
+  <div class="title">NEON ARCADE</div>
+  <div class="subtitle">SELECT GAME</div>
+  <div class="divider"></div>
 
-                <div class="htp-section">
-                    <div class="htp-section-title">CONTROLS</div>
-                    <div class="htp-controls-grid">
-                        <span class="htp-key">1–6</span><span>Select tower type</span>
-                        <span class="htp-key">LMB</span><span>Place tower / Select tower</span>
-                        <span class="htp-key">RMB</span><span>Cancel placement</span>
-                        <span class="htp-key">SPACE</span><span>Send next wave early (+bonus gold)</span>
-                        <span class="htp-key">F</span><span>Fast forward (2× speed)</span>
-                        <span class="htp-key">ESC</span><span>Pause / Resume</span>
-                        <span class="htp-key">Q</span><span>Quit to menu (while paused)</span>
-                    </div>
-                </div>
+  <div class="games">
 
-                <div class="htp-section">
-                    <div class="htp-section-title">TOWERS</div>
-                    <p>Each tower can be upgraded twice (Lv1 → Lv2 → Lv3), then specialized into one of two unique branches. Towers take time to build (5–10s), so plan placements ahead of incoming waves. Towers have HP and can be damaged by Sappers — click a placed tower to see its stats, repair, upgrade, sell, or (after branching) buy a shield.</p>
-                    <p><span class="htp-hl-gold">Power:</span> All combat towers require power to operate. Build Power Plants to provide power to nearby towers. Unpowered towers cannot target or fire. Plan your Power Plant coverage to keep your defenses online!</p>
-                    <div class="htp-tower-list">
-                        <div class="htp-tower" style="--tw-c: rgb(255, 200, 50);">
-                            <div class="htp-tw-name">POWER <span class="htp-tw-cost">100g</span></div>
-                            <div class="htp-tw-desc">Support structure. Powers nearby towers within its radius. Does not attack.</div>
-                            <div class="htp-tw-branches">⤷ Grid Hub (30 cap, 160px radius) · Relay Core (20 cap, 280px radius)</div>
-                        </div>
-                        <div class="htp-tower" style="--tw-c: var(--cyan);">
-                            <div class="htp-tw-name">PULSE <span class="htp-tw-cost">100g</span></div>
-                            <div class="htp-tw-desc">Rapid-fire energy bolts. Cheap, fast, bread-and-butter DPS.</div>
-                            <div class="htp-tw-branches">⤷ Overclock (fire rate) · Heavy Bolts (splash)</div>
-                        </div>
-                        <div class="htp-tower" style="--tw-c: var(--magenta);">
-                            <div class="htp-tw-name">RAIL <span class="htp-tw-cost">150g</span></div>
-                            <div class="htp-tw-desc">Fixed-aim piercing beam. Hits multiple enemies in a line. Click once to place, again to set direction.</div>
-                            <div class="htp-tw-branches">⤷ Longline (range + pierce) · Capacitor (massive single hit)</div>
-                        </div>
-                        <div class="htp-tower" style="--tw-c: var(--blue);">
-                            <div class="htp-tw-name">TESLA <span class="htp-tw-cost">180g</span></div>
-                            <div class="htp-tw-desc">Chain lightning arcing between nearby enemies. Strong vs clusters.</div>
-                            <div class="htp-tw-branches">⤷ Arc Web (many chains) · Burn (chains apply DoT)</div>
-                        </div>
-                        <div class="htp-tower" style="--tw-c: var(--ice);">
-                            <div class="htp-tw-name">CRYO <span class="htp-tw-cost">160g</span></div>
-                            <div class="htp-tw-desc">Area slow. Low damage but gives your DPS towers more time.</div>
-                            <div class="htp-tw-branches">⤷ Deep Freeze (strong slow) · Brittle (slowed enemies take +50% dmg)</div>
-                        </div>
-                        <div class="htp-tower" style="--tw-c: var(--pink);">
-                            <div class="htp-tw-name">NOVA <span class="htp-tw-cost">300g</span></div>
-                            <div class="htp-tw-desc">Periodic radial burst. Expensive but hits everything in range.</div>
-                            <div class="htp-tw-branches">⤷ Shockwave (huge radius) · Focused Core (small but devastating)</div>
-                        </div>
-                    </div>
-                </div>
+    <a class="card" href="/game.html" data-accent="cyan">
+      <div class="card-art"><canvas id="art-nd4"></canvas></div>
+      <div class="card-body">
+        <div class="card-title">NEON DEFENSE 4</div>
+        <div class="card-desc">Strategic tower defense. Build, research, and hold the line against incoming waves.</div>
+        <span class="card-tag">TOWER DEFENSE</span>
+      </div>
+    </a>
 
-                <div class="htp-section">
-                    <div class="htp-section-title">ENEMIES</div>
-                    <div class="htp-enemy-list">
-                        <div class="htp-enemy"><span class="htp-en-name" style="color:var(--green)">Drone</span> <span class="htp-en-wave">W1</span> — Basic. Moderate HP and speed.</div>
-                        <div class="htp-enemy"><span class="htp-en-name" style="color:#ffff3c">Swarm</span> <span class="htp-en-wave">W3</span> — Fast, numerous, low HP. Overwhelm with quantity.</div>
-                        <div class="htp-enemy"><span class="htp-en-name" style="color:var(--red)">Tank</span> <span class="htp-en-wave">W5</span> — High HP, slow. Costs 3 lives.</div>
-                        <div class="htp-enemy"><span class="htp-en-name" style="color:var(--red)">Sapper</span> <span class="htp-en-wave">W6</span> — Shoots and damages your towers while walking. Costs 2 lives.</div>
-                        <div class="htp-enemy"><span class="htp-en-name" style="color:#00c8b4">Sprinter</span> <span class="htp-en-wave">W7</span> — Periodic bursts of very high speed.</div>
-                        <div class="htp-enemy"><span class="htp-en-name" style="color:#b4b4c8">Armored</span> <span class="htp-en-wave">W8</span> — Armor reduces damage per hit. Costs 2 lives.</div>
-                        <div class="htp-enemy"><span class="htp-en-name" style="color:var(--green)">Healer</span> <span class="htp-en-wave">W11</span> — Heals nearby enemies. Priority target! Costs 2 lives.</div>
-                        <div class="htp-enemy"><span class="htp-en-name" style="color:#b464ff">Phase</span> <span class="htp-en-wave">W12</span> — Phases in/out, taking reduced damage while phased. Costs 2 lives.</div>
-                        <div class="htp-enemy"><span class="htp-en-name" style="color:var(--orange)">Splitter</span> <span class="htp-en-wave">W14</span> — Splits into 3 shards on death.</div>
-                        <div class="htp-enemy"><span class="htp-en-name" style="color:#c832ff">Boss</span> <span class="htp-en-wave">W5,10,15…</span> — 4,000 HP, armored, costs 8 lives.</div>
-                        <div class="htp-enemy"><span class="htp-en-name" style="color:var(--red)">Overlord</span> <span class="htp-en-wave">W28+</span> — Mega-boss. 6,500 HP, heavy armor, costs 15 lives.</div>
-                    </div>
-                    <p class="htp-note">After wave 12, enemies can spawn as <span class="htp-hl-cyan">elites</span> with boosted stats and rewards.</p>
-                </div>
+    <a class="card" href="/neon-tanks/" data-accent="magenta">
+      <div class="card-art"><canvas id="art-nt"></canvas></div>
+      <div class="card-body">
+        <div class="card-title">NEON TANKS</div>
+        <div class="card-desc">Armored battle royale on a neon battlefield. Upgrade, outmaneuver, eliminate.</div>
+        <span class="card-tag">BATTLE ROYALE</span>
+      </div>
+    </a>
 
-                <div class="htp-section">
-                    <div class="htp-section-title">RESEARCH</div>
-                    <p>Four global research tracks in the sidebar. Each has a branching structure: two linear tiers, then a branch choice (A or B) which unlocks two final sub-specializations. You can reach 4 nodes per track. Research takes time and costs scale steeply — plan these as long-term investments.</p>
-                    <div class="htp-research-list">
-                        <div class="htp-research"><span class="htp-res-icon">⚡</span> <strong>Damage</strong> — +8% dmg per tier → <em>Precision</em> (armor pierce / crits) or <em>Overload</em> (control synergy / fire rate)</div>
-                        <div class="htp-research"><span class="htp-res-icon">◎</span> <strong>Range</strong> — +6% range per tier → <em>Long Optics</em> (phase counter / long-range dmg) or <em>Wide Spectrum</em> (AoE boost / proximity dmg)</div>
-                        <div class="htp-research"><span class="htp-res-icon">❄</span> <strong>Control</strong> — +10% slow/vuln/DoT per tier → <em>Permafrost</em> (longer slows / execute dmg) or <em>Corruption</em> (DoT spread / sapper suppression)</div>
-                        <div class="htp-research"><span class="htp-res-icon">🛡</span> <strong>Fortify</strong> — +12% tower HP per tier → <em>Hardened</em> (sapper resist / auto-heal) or <em>Efficiency</em> (rebuild refund / active construction)</div>
-                    </div>
-                </div>
+    <!--
+    ── ADD MORE GAMES ──
+    Copy a card block. Set data-accent to "cyan", "magenta", or add
+    new accent styles. Add a canvas draw function in the script below.
+    -->
 
-                <div class="htp-section">
-                    <div class="htp-section-title">SHIELDS</div>
-                    <p>After specializing (branching) a tower, you can purchase a <span class="htp-hl-cyan">consumable shield</span> for it. Shields absorb incoming damage before the tower's HP is touched. If the shield is partially damaged, you can <span class="htp-hl-cyan">recharge</span> it for a prorated cost — you only pay for the missing portion.</p>
-                    <div class="htp-shield-stats">
-                        <span>Shield HP: 240% of tower max HP</span>
-                        <span>Full cost: 50% of gold invested in tower</span>
-                        <span>Recharge cost: proportional to missing shield HP</span>
-                        <span>Deploy time: 6 seconds (faster for recharge)</span>
-                    </div>
-                </div>
+  </div>
 
-                <div class="htp-section">
-                    <div class="htp-section-title">OVERCHARGE</div>
-                    <p>After specializing a tower, you can <span class="htp-hl-gold">overcharge</span> it for a temporary <span class="htp-hl-gold">+25% damage boost</span> lasting 60 seconds. Overcharge costs 30% of the tower's invested gold (scaled by wave inflation), making it a significant late-game gold sink that rewards active management. You can re-apply it once it expires.</p>
-                </div>
+  <div class="footer">ROB COWDEN &middot; 2026</div>
 
-                <div class="htp-section">
-                    <div class="htp-section-title">ECONOMY &amp; STRATEGY</div>
-                    <p>Gold comes from kills and wave-clear bonuses. Kill rewards decay slightly each wave (down to 50% minimum), and tower costs inflate by 2% per wave. Selling towers refunds 60% of their cost — don't be afraid to reposition. Research can improve sell rates.</p>
-                    <p>Cryo towers at path convergence points are extremely valuable since they slow enemies from all three paths. Pair with Tesla or Nova for area coverage, and use Rail towers on long straight segments. Prioritize killing Healers and watch for Sappers chewing through undefended towers. Once towers are branched, invest in shields on your most exposed positions — they're consumable but can save a critical tower from Sapper fire.</p>
-                </div>
+</div>
 
-            </div>
-            <div class="htp-footer">
-                <button id="btnHtpBack" class="menu-btn">← BACK TO MENU</button>
-            </div>
-        </div>
-    </div>
+<!-- Three.js r128 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-    <!-- ═══ Pause Overlay ═══ -->
-    <div id="pauseOverlay" class="overlay overlay-dim hidden">
-        <div class="pause-box">
-            <div class="pause-title">⏸ PAUSED</div>
-            <div class="pause-keys">
-                <button id="btnResume" class="menu-btn">RESUME (ESC)</button>
-                <button id="btnQuit" class="menu-btn menu-btn-quit">QUIT TO MENU (Q)</button>
-            </div>
-        </div>
-    </div>
+<script>
+// ════════════════════════════════════════════════
+//  3D BACKGROUND — Neon grid with pillars
+// ════════════════════════════════════════════════
 
-    <!-- ═══ Game Over Overlay ═══ -->
-    <div id="gameOverOverlay" class="overlay overlay-dim hidden">
-        <div class="gameover-box">
-            <div class="gameover-title">SYSTEM FAILURE</div>
-            <div class="gameover-stats">
-                <div class="go-stat"><span class="go-label">Waves</span><span id="goWaves" class="go-val">0</span></div>
-                <div class="go-stat"><span class="go-label">Kills</span><span id="goKills" class="go-val">0</span></div>
-                <div class="go-stat"><span class="go-label">Towers Built</span><span id="goTowers" class="go-val">0</span></div>
-                <div class="go-stat"><span class="go-label">Towers Lost</span><span id="goLost" class="go-val">0</span></div>
-                <div class="go-stat"><span class="go-label">Time</span><span id="goTime" class="go-val">0:00</span></div>
-            </div>
-            <div class="gameover-submit">
-                <label class="go-name-label">Enter name for leaderboard:</label>
-                <div class="go-name-row">
-                    <input id="goNameInput" type="text" class="go-name-input" maxlength="20" placeholder="PLAYER" autocomplete="off">
-                    <button id="btnSubmitScore" class="menu-btn">SUBMIT</button>
-                </div>
-                <div id="goSubmitStatus" class="go-submit-status"></div>
-            </div>
-            <div class="menu-divider"></div>
-            <button id="btnPlayAgain" class="menu-btn pulse-btn">PLAY AGAIN</button>
-        </div>
-    </div>
+(function initBackground() {
+  const canvas = document.getElementById('bg-canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.4;
 
-    <!-- ═══ Game Container ═══ -->
-    <div id="gameContainer" class="game-container hidden">
-        <div id="canvasWrap" class="canvas-wrap">
-            <div id="renderTarget"></div>
-            <!-- Mobile floating controls -->
-            <div id="mobileControls" class="mobile-controls">
-                <button id="btnMobileCancel" class="mobile-btn mobile-btn-cancel" title="Cancel / Deselect">✕</button>
-                <button id="btnMobileSpeed" class="mobile-btn mobile-btn-speed" title="Toggle Speed">▶▶</button>
-                <button id="btnMobilePause" class="mobile-btn mobile-btn-pause" title="Pause">⏸</button>
-            </div>
-        </div>
-        <div id="drawerToggle" class="drawer-toggle">
-            <span id="drawerArrow" class="drawer-arrow">▲</span>
-            <span class="drawer-label">TOWERS &amp; INFO</span>
-            <span id="drawerRes" class="drawer-res"></span>
-        </div>
-        <div id="sidebar" class="sidebar"></div>
-    </div>
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x040410);
+  scene.fog = new THREE.FogExp2(0x040410, 0.012);
 
+  const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 500);
+  camera.position.set(0, 28, 45);
+  camera.lookAt(0, 0, 0);
+
+  // ── Lighting (from style guide) ──
+  scene.add(new THREE.AmbientLight(0x2a2a4e, 0.6));
+  const dirLight = new THREE.DirectionalLight(0xd0d8ff, 0.4);
+  dirLight.position.set(10, 20, 8);
+  scene.add(dirLight);
+  const fillLight = new THREE.DirectionalLight(0x8888cc, 0.2);
+  fillLight.position.set(-8, -4, -6);
+  scene.add(fillLight);
+
+  // ── Ground plane ──
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(200, 200),
+    new THREE.MeshStandardMaterial({ color: 0x0c0c28, emissive: 0x060618, roughness: 0.85, metalness: 0.3 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.1;
+  scene.add(ground);
+
+  // ── Grid lines ──
+  const gridGroup = new THREE.Group();
+  scene.add(gridGroup);
+  const gridSize = 100, gridStep = 4;
+  const lineMat = new THREE.LineBasicMaterial({ color: 0x2a5588, transparent: true, opacity: 0.45 });
+
+  for (let i = -gridSize; i <= gridSize; i += gridStep) {
+    const gX = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-gridSize, 0, i), new THREE.Vector3(gridSize, 0, i)
+    ]);
+    gridGroup.add(new THREE.Line(gX, lineMat));
+    const gZ = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(i, 0, -gridSize), new THREE.Vector3(i, 0, gridSize)
+    ]);
+    gridGroup.add(new THREE.Line(gZ, lineMat));
+  }
+
+  // ── Intersection dots ──
+  const dotPos = [];
+  for (let x = -gridSize; x <= gridSize; x += gridStep)
+    for (let z = -gridSize; z <= gridSize; z += gridStep)
+      dotPos.push(x, 0.02, z);
+  const dotGeo = new THREE.BufferGeometry();
+  dotGeo.setAttribute('position', new THREE.Float32BufferAttribute(dotPos, 3));
+  gridGroup.add(new THREE.Points(dotGeo,
+    new THREE.PointsMaterial({ color: 0x4488bb, size: 0.15, transparent: true, opacity: 0.5 })
+  ));
+
+  // ── Neon pillars ──
+  const pillars = [
+    { x: -18, z: -12, h: 6, c: 0x00ffff },
+    { x: 10,  z: -20, h: 8, c: 0xff00ff },
+    { x: -8,  z: 14,  h: 5, c: 0x00ffff },
+    { x: 22,  z: 8,   h: 7, c: 0xff00ff },
+    { x: -26, z: 4,   h: 4.5, c: 0xffd700 },
+    { x: 0,   z: -28, h: 5.5, c: 0x00ffff },
+    { x: 30,  z: -6,  h: 6.5, c: 0xff00ff },
+    { x: -14, z: -26, h: 4, c: 0xffd700 },
+  ];
+  const hullMat = new THREE.MeshStandardMaterial({ color: 0x141438, emissive: 0x1a1a44, roughness: 0.7, metalness: 0.5 });
+
+  pillars.forEach(p => {
+    const base = new THREE.Mesh(new THREE.BoxGeometry(1.2, p.h, 1.2), hullMat);
+    base.position.set(p.x, p.h / 2, p.z);
+    scene.add(base);
+
+    // Top ring
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(1, 0.08, 8, 24),
+      new THREE.MeshBasicMaterial({ color: p.c, transparent: true, opacity: 0.8 })
+    );
+    ring.position.set(p.x, p.h + 0.3, p.z);
+    ring.rotation.x = Math.PI / 2;
+    ring.userData.baseY = p.h + 0.3;
+    scene.add(ring);
+
+    // Neon edge lines
+    const eMat = new THREE.LineBasicMaterial({ color: p.c, transparent: true, opacity: 0.5 });
+    [[-0.6,-0.6],[0.6,-0.6],[-0.6,0.6],[0.6,0.6]].forEach(([dx,dz]) => {
+      const geo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(p.x+dx, 0, p.z+dz),
+        new THREE.Vector3(p.x+dx, p.h, p.z+dz)
+      ]);
+      scene.add(new THREE.Line(geo, eMat));
+    });
+  });
+
+  // ── Floating particles ──
+  const pCount = 120;
+  const pArr = new Float32Array(pCount * 3);
+  for (let i = 0; i < pCount; i++) {
+    pArr[i*3]   = (Math.random()-0.5)*120;
+    pArr[i*3+1] = Math.random()*30 + 1;
+    pArr[i*3+2] = (Math.random()-0.5)*120;
+  }
+  const pGeo = new THREE.BufferGeometry();
+  pGeo.setAttribute('position', new THREE.Float32BufferAttribute(pArr, 3));
+  const particles = new THREE.Points(pGeo,
+    new THREE.PointsMaterial({ color: 0x00ffff, size: 0.12, transparent: true, opacity: 0.35 })
+  );
+  scene.add(particles);
+
+  // ── Animate ──
+  const clock = new THREE.Clock();
+  const rings = scene.children.filter(c => c.geometry && c.geometry.type === 'TorusGeometry');
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+
+    // Slow orbit
+    camera.position.x = Math.sin(t * 0.06) * 12;
+    camera.position.z = 40 + Math.cos(t * 0.04) * 8;
+    camera.lookAt(0, 2, 0);
+
+    // Rings bob
+    rings.forEach(r => {
+      r.position.y = r.userData.baseY + Math.sin(t * 1.2 + r.position.x * 0.3) * 0.3;
+      r.rotation.z = Math.sin(t * 0.8 + r.position.x) * 0.15;
+    });
+
+    // Particles drift
+    const pa = particles.geometry.attributes.position.array;
+    for (let i = 0; i < pCount; i++) {
+      pa[i*3+1] += 0.008;
+      if (pa[i*3+1] > 32) pa[i*3+1] = 0.5;
+    }
+    particles.geometry.attributes.position.needsUpdate = true;
+
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+
+
+// ════════════════════════════════════════════════
+//  CARD ART — Neon icons
+// ════════════════════════════════════════════════
+
+function drawIcon(canvas, drawFn, color) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width = canvas.offsetWidth * 2;
+  const H = canvas.height = canvas.offsetHeight * 2;
+  ctx.fillStyle = '#040410';
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle grid
+  ctx.strokeStyle = 'rgba(42,85,136,0.1)';
+  ctx.lineWidth = 0.6;
+  const step = 28;
+  for (let x = 0; x < W; x += step) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = 0; y < H; y += step) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  // Center glow
+  const cr = color === '#00ffff' ? '0,255,255' : '255,0,255';
+  const bg = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, W * 0.35);
+  bg.addColorStop(0, `rgba(${cr},0.06)`);
+  bg.addColorStop(1, 'transparent');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Draw the icon centered
+  ctx.save();
+  ctx.translate(W / 2, H / 2);
+  drawFn(ctx, Math.min(W, H) * 0.32, color);
+  ctx.restore();
+}
+
+function drawTowerIcon(ctx, s, color) {
+  const cr = color === '#00ffff' ? '0,255,255' : '255,0,255';
+
+  // Base platform
+  ctx.beginPath();
+  ctx.ellipse(0, s * 0.7, s * 0.5, s * 0.15, 0, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(${cr},0.08)`;
+  ctx.fill();
+  ctx.strokeStyle = `rgba(${cr},0.3)`;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Stem
+  ctx.fillStyle = '#141438';
+  ctx.fillRect(-s * 0.06, -s * 0.2, s * 0.12, s * 0.9);
+  ctx.strokeStyle = `rgba(${cr},0.35)`;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(-s * 0.06, -s * 0.2, s * 0.12, s * 0.9);
+
+  // Disc (the mushroom top)
+  ctx.beginPath();
+  ctx.ellipse(0, -s * 0.2, s * 0.55, s * 0.18, 0, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(${cr},0.12)`;
+  ctx.fill();
+  ctx.strokeStyle = `rgba(${cr},0.7)`;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Second inner disc ring
+  ctx.beginPath();
+  ctx.ellipse(0, -s * 0.2, s * 0.35, s * 0.11, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = `rgba(${cr},0.35)`;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Top orb
+  ctx.beginPath();
+  ctx.arc(0, -s * 0.38, s * 0.12, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 25;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Orb inner highlight
+  ctx.beginPath();
+  ctx.arc(-s * 0.03, -s * 0.41, s * 0.04, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.fill();
+
+  // Range ring (dashed circle around tower)
+  ctx.setLineDash([4, 6]);
+  ctx.beginPath();
+  ctx.arc(0, s * 0.15, s * 0.85, 0, Math.PI * 2);
+  ctx.strokeStyle = `rgba(${cr},0.15)`;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function drawTankIcon(ctx, s, color) {
+  const cr = color === '#ff00ff' ? '255,0,255' : '0,255,255';
+
+  // Ground shadow
+  ctx.beginPath();
+  ctx.ellipse(0, s * 0.65, s * 0.55, s * 0.1, 0, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(${cr},0.06)`;
+  ctx.fill();
+
+  // Treads (left)
+  ctx.fillStyle = '#0a0a1e';
+  ctx.fillRect(-s * 0.48, -s * 0.1, s * 0.13, s * 0.7);
+  ctx.strokeStyle = `rgba(${cr},0.25)`;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(-s * 0.48, -s * 0.1, s * 0.13, s * 0.7);
+  // Tread detail lines
+  ctx.strokeStyle = `rgba(${cr},0.1)`;
+  for (let i = 1; i < 5; i++) {
+    const ty = -s * 0.1 + i * (s * 0.7 / 5);
+    ctx.beginPath();
+    ctx.moveTo(-s * 0.48, ty);
+    ctx.lineTo(-s * 0.35, ty);
+    ctx.stroke();
+  }
+
+  // Treads (right)
+  ctx.fillStyle = '#0a0a1e';
+  ctx.fillRect(s * 0.35, -s * 0.1, s * 0.13, s * 0.7);
+  ctx.strokeStyle = `rgba(${cr},0.25)`;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(s * 0.35, -s * 0.1, s * 0.13, s * 0.7);
+  ctx.strokeStyle = `rgba(${cr},0.1)`;
+  for (let i = 1; i < 5; i++) {
+    const ty = -s * 0.1 + i * (s * 0.7 / 5);
+    ctx.beginPath();
+    ctx.moveTo(s * 0.35, ty);
+    ctx.lineTo(s * 0.48, ty);
+    ctx.stroke();
+  }
+
+  // Hull body
+  ctx.fillStyle = '#141438';
+  ctx.fillRect(-s * 0.35, -s * 0.05, s * 0.7, s * 0.6);
+  ctx.strokeStyle = `rgba(${cr},0.45)`;
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(-s * 0.35, -s * 0.05, s * 0.7, s * 0.6);
+
+  // Hull top plate
+  ctx.fillStyle = '#181848';
+  ctx.fillRect(-s * 0.28, 0, s * 0.56, s * 0.18);
+  ctx.strokeStyle = `rgba(${cr},0.2)`;
+  ctx.lineWidth = 0.8;
+  ctx.strokeRect(-s * 0.28, 0, s * 0.56, s * 0.18);
+
+  // Turret base
+  ctx.beginPath();
+  ctx.arc(0, s * 0.18, s * 0.2, 0, Math.PI * 2);
+  ctx.fillStyle = '#141438';
+  ctx.fill();
+  ctx.strokeStyle = `rgba(${cr},0.55)`;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Turret inner ring
+  ctx.beginPath();
+  ctx.arc(0, s * 0.18, s * 0.12, 0, Math.PI * 2);
+  ctx.strokeStyle = `rgba(${cr},0.3)`;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Turret center glow
+  ctx.beginPath();
+  ctx.arc(0, s * 0.18, s * 0.06, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 14;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Barrel
+  ctx.fillStyle = '#141438';
+  ctx.fillRect(-s * 0.05, -s * 0.6, s * 0.1, s * 0.7);
+  ctx.strokeStyle = `rgba(${cr},0.45)`;
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(-s * 0.05, -s * 0.6, s * 0.1, s * 0.7);
+
+  // Muzzle brake
+  ctx.fillStyle = '#0a0a1e';
+  ctx.fillRect(-s * 0.08, -s * 0.65, s * 0.16, s * 0.08);
+  ctx.strokeStyle = `rgba(${cr},0.4)`;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(-s * 0.08, -s * 0.65, s * 0.16, s * 0.08);
+
+  // Muzzle glow
+  ctx.beginPath();
+  ctx.arc(0, -s * 0.65, s * 0.06, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(${cr},0.3)`;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 10;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  drawIcon(document.getElementById('art-nd4'), drawTowerIcon, '#00ffff');
+  drawIcon(document.getElementById('art-nt'), drawTankIcon, '#ff00ff');
+  let t;
+  window.addEventListener('resize', () => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      drawIcon(document.getElementById('art-nd4'), drawTowerIcon, '#00ffff');
+      drawIcon(document.getElementById('art-nt'), drawTankIcon, '#ff00ff');
+    }, 200);
+  });
+});
+</script>
 </body>
-<script type="module" src="js/main.js"></script>
 </html>
