@@ -7,7 +7,8 @@
       "Bash(mkdir:*)",
       "Bash(npx vite:*)",
       "Bash(curl:*)",
-      "Bash(start:*)"
+      "Bash(start:*)",
+      "Bash(cp:*)"
     ]
   }
 }
