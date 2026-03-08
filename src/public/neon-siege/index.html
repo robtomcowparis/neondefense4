@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEON SIEGE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    .difficulty-selector {
+      display: flex; gap: 10px; justify-content: center; margin-bottom: 8px;
+      position: relative; z-index: 10;
+    }
+    .btn-difficulty {
+      padding: 10px 24px; font-size: 13px; letter-spacing: 2px;
+      opacity: 0.4; transition: all 0.15s;
+      border-color: #445566; color: #88aacc; background: transparent;
+      cursor: pointer; position: relative; z-index: 10;
+    }
+    .btn-difficulty:hover { opacity: 0.7; }
+    .btn-difficulty.selected {
+      opacity: 1; color: #00ffff; border-color: #00ffff;
+      background: rgba(0,255,255,0.12);
+      box-shadow: 0 0 16px rgba(0,255,255,0.4), inset 0 0 8px rgba(0,255,255,0.1);
+      text-shadow: 0 0 8px rgba(0,255,255,0.6);
+    }
+  </style>
+  <script type="module" crossorigin src="/neon-siege/assets/game-BtQ20BnT.js"></script>
+  <link rel="stylesheet" crossorigin href="/neon-siege/assets/game-B1wgiKRD.css">
+</head>
+<body>
+  <div id="game-container">
+    <div id="render-target"></div>
+    <div id="sidebar"></div>
+  </div>
+
+  <!-- Menu Overlay -->
+  <div id="menu-overlay" class="overlay scanlines">
+    <h1 class="title">NEON SIEGE</h1>
+    <p class="subtitle">BASE VS BASE</p>
+    <div class="difficulty-selector">
+      <button type="button" class="btn btn-difficulty" data-diff="easy" id="btn-diff-easy">EASY</button>
+      <button type="button" class="btn btn-difficulty selected" data-diff="normal" id="btn-diff-normal">NORMAL</button>
+      <button type="button" class="btn btn-difficulty" data-diff="hard" id="btn-diff-hard">HARD</button>
+    </div>
+    <button class="btn btn-primary" id="btn-start">START GAME</button>
+  </div>
+
+  <!-- Pause Overlay -->
+  <div id="pause-overlay" class="overlay hidden scanlines">
+    <h2 class="title">PAUSED</h2>
+    <button class="btn btn-primary" id="btn-resume">RESUME</button>
+    <button class="btn btn-secondary" id="btn-quit">QUIT TO MENU</button>
+  </div>
+
+  <!-- Victory Overlay -->
+  <div id="victory-overlay" class="overlay hidden scanlines">
+    <h2 class="title victory-title">VICTORY</h2>
+    <p class="subtitle">ENEMY BASE DESTROYED</p>
+    <button class="btn btn-primary" id="btn-restart-win">PLAY AGAIN</button>
+  </div>
+
+  <!-- Defeat Overlay -->
+  <div id="defeat-overlay" class="overlay hidden scanlines">
+    <h2 class="title defeat-title">DEFEAT</h2>
+    <p class="subtitle">YOUR BASE WAS DESTROYED</p>
+    <button class="btn btn-primary" id="btn-restart-lose">TRY AGAIN</button>
+  </div>
+
+  <!-- Catch and display any JS errors visually -->
+  <script>
+    window.addEventListener('error', function(e) {
+      var d = document.createElement('div');
+      d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:red;color:white;padding:12px;z-index:9999;font-size:14px;font-family:monospace;white-space:pre-wrap';
+      d.textContent = 'JS ERROR: ' + e.message + '\n' + (e.filename || '') + ':' + (e.lineno || '');
+      document.body.appendChild(d);
+    });
+  </script>
+  <!-- Difficulty selection handled here, independent of module loading -->
+  <script>
+    window._selectedDifficulty = 'normal';
+    document.querySelectorAll('.btn-difficulty').forEach(function(btn) {
+      ['pointerdown', 'mousedown', 'click'].forEach(function(evt) {
+        btn.addEventListener(evt, function(e) {
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          var diff = btn.getAttribute('data-diff');
+          if (!diff) return;
+          window._selectedDifficulty = diff;
+          document.querySelectorAll('.btn-difficulty').forEach(function(b) {
+            b.classList.remove('selected');
+          });
+          btn.classList.add('selected');
+        });
+      });
+    });
+  </script>
+</body>
+</html>

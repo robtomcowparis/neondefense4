@@ -1,0 +1,1279 @@
+// ============================================================
+// waves.js — Enemy AI decision loop + Player rally coordination
+// ============================================================
+
+import {
+  TEAM_PLAYER, TEAM_ENEMY,
+  BTYPE_CORE, BTYPE_BARRACKS, BTYPE_TURRET, BTYPE_FACTORY, BTYPE_GENERATOR, BTYPE_HELIPAD, BTYPE_WALL,
+  BUILDING_STATS, TILE_SIZE,
+  GRID_COLS, GRID_ROWS,
+  ENEMY_BUILD_ROW_MIN, ENEMY_BUILD_ROW_MAX,
+  SHARED_BUILD_ROW_MIN, SHARED_BUILD_ROW_MAX,
+  ENEMY_BASE_COL, ENEMY_BASE_ROW,
+  AI_TICK_INTERVAL,
+  AI_ENERGY_RESERVE,
+  AI_LIMITS,
+  AI_TIMING,
+  AI_THREAT_RADIUS,
+  AI_THREAT_OUTER_RADIUS,
+  AI_THREAT_HIGH_THRESHOLD,
+  AI_THREAT_LOW_THRESHOLD,
+  AI_PUSH,
+  AI_PROFILES,
+  AI_BUILD_ORDER,
+  AI_TEMPO,
+  DIFFICULTY,
+  AI_MAX_ACTIONS_PER_TICK,
+  AI_WAVE_POWER,
+  AI_HELI_POWER_WEIGHT,
+  AI_WALL_REPAIR_THRESHOLD,
+  UTYPE_HELICOPTER,
+  STANCE_ADVANCE,
+  STANCE_DEFEND,
+  TARGET_ANY, TARGET_UNITS,
+  TARGET_BUILDINGS,
+  TILE_EMPTY, TILE_OBSTACLE, TILE_BUILDING,
+  TILE_WALL,
+  AI_INTEL_UPDATE_INTERVAL,
+  AI_HELICOPTER_CLUSTER_RADIUS,
+  AI_HELI_RALLY_COMMIT_TIME,
+  AI_HELI_RALLY_REVAL_DISTANCE,
+  AI_WALL_ZONE_MIN_ROW,
+  AI_WALL_ZONE_MAX_ROW,
+  AI_TURRET_IDEAL_DISTANCE,
+  AI_MAX_WALL_REPAIRS_PER_TICK,
+  PLAYER_RALLY_ROW,
+  PLAYER_PUSH_SIZE,
+  PLAYER_MAX_RALLY_TIME,
+} from './config.js';
+import { randomInt, gridToWorld, dist } from './utils.js';
+import { getTile } from './map.js';
+
+// ============================================================
+// Intel — army power + unit counts
+// ============================================================
+
+function freshIntel() {
+  return {
+    lastUpdate: 0,
+    playerBarracks: 0,
+    playerTurrets: 0,
+    playerFactories: 0,
+    playerGenerators: 0,
+    playerWalls: 0,
+    playerTotalUnits: 0,
+    playerHelicopters: 0,
+    playerArmyPower: 0,
+    aiArmyPower: 0,
+  };
+}
+
+let aiState = {
+  lastTick: 0,
+  rallyStartTime: 0,
+  pushActive: false,
+  profile: null,
+  profileKey: null,
+  difficulty: 'normal',
+  diffSettings: null,
+  tempo: null,
+  intel: freshIntel(),
+  // Build order tracking
+  buildOrderIndex: 0,
+  lastBuildTime: 0,
+  lastUpgradeTime: 0,
+  // Push tracking
+  lastPushUnitCount: 0,
+  dynamicPushBonus: 0,
+  consecutiveFailures: 0,
+  pushStartTime: 0,
+  pushCooldownUntil: 0,
+  _pushMarkedSuccess: false,
+  _lastRallyUpdateTime: 0,
+  // Helicopter rally commitment
+  heliRallyX: 0, heliRallyZ: 0, heliRallyCommitUntil: 0,
+};
+
+let playerRallyState = {
+  rallyStartTime: 0,
+  pushActive: false,
+};
+
+// Module-level state for rally exports
+let _matchTime = 0;
+let _getUnitsRef = null;
+
+// ============================================================
+// Initialization
+// ============================================================
+
+export function initAI(difficulty) {
+  const diff = difficulty || 'normal';
+  const diffSettings = DIFFICULTY[diff] || DIFFICULTY.normal;
+  const tempo = AI_TEMPO[diff] || AI_TEMPO.normal;
+
+  // Randomly pick a strategy profile
+  const profileKeys = Object.keys(AI_PROFILES);
+  const profileKey = profileKeys[Math.floor(Math.random() * profileKeys.length)];
+  const profile = AI_PROFILES[profileKey];
+
+  aiState = {
+    lastTick: 0,
+    rallyStartTime: 0,
+    pushActive: false,
+    profile,
+    profileKey,
+    difficulty: diff,
+    diffSettings,
+    tempo,
+    intel: freshIntel(),
+    buildOrderIndex: 0,
+    lastBuildTime: 0,
+    lastUpgradeTime: 0,
+    lastPushUnitCount: 0,
+    dynamicPushBonus: 0,
+    consecutiveFailures: 0,
+    pushStartTime: 0,
+    pushCooldownUntil: 0,
+    _pushMarkedSuccess: false,
+    _lastRallyUpdateTime: 0,
+    heliRallyX: 0, heliRallyZ: 0, heliRallyCommitUntil: 0,
+  };
+  playerRallyState = { rallyStartTime: 0, pushActive: false };
+}
+
+// ============================================================
+// Main AI Update
+// ============================================================
+
+export function updateAI(dt, matchTime, callbacks) {
+  _matchTime = matchTime;
+
+  // Wave coordination: manage rally and push
+  updateEnemyRally(matchTime, callbacks);
+
+  // Helicopter rally management
+  updateAIHelicopterRallies(callbacks);
+
+  // Ticked decisions (building, upgrading)
+  if (matchTime - aiState.lastTick < AI_TICK_INTERVAL) return;
+  aiState.lastTick = matchTime;
+
+  const allBuildings = callbacks.getBuildings();
+  const allUnits = callbacks.getUnits();
+
+  // Update scouting intel
+  updateIntel(matchTime, allBuildings, allUnits);
+
+  // Assess threat level
+  const aiBuildings = allBuildings.filter(b => b.team === TEAM_ENEMY && b.alive);
+  const threat = assessThreat(aiBuildings, allUnits);
+
+  // AI squad management based on threat
+  updateAISquads(matchTime, threat, callbacks);
+
+  // Emergency rebuilds: critical buildings
+  const barracksCount = aiBuildings.filter(b => b.type === BTYPE_BARRACKS).length;
+  if (barracksCount === 0 && matchTime >= AI_TIMING.build.barracks) {
+    if (tryBuildStrategic(BTYPE_BARRACKS, aiBuildings, callbacks, matchTime)) return;
+  }
+  const factoryCount = aiBuildings.filter(b => b.type === BTYPE_FACTORY).length;
+  if (factoryCount === 0 && matchTime >= AI_TIMING.build.factory * 0.6) {
+    if (tryBuildStrategic(BTYPE_FACTORY, aiBuildings, callbacks, matchTime)) return;
+  }
+  const generatorCount = aiBuildings.filter(b => b.type === BTYPE_GENERATOR).length;
+  if (generatorCount === 0 && matchTime >= 10) {
+    if (tryBuildStrategic(BTYPE_GENERATOR, aiBuildings, callbacks, matchTime)) return;
+  }
+
+  // Multi-action loop
+  for (let actionCount = 0; actionCount < AI_MAX_ACTIONS_PER_TICK; actionCount++) {
+    const energy = callbacks.getEnergy();
+    const currentAIBuildings = callbacks.getBuildings().filter(b => b.team === TEAM_ENEMY && b.alive);
+    const action = pickNextAction(matchTime, energy, currentAIBuildings, callbacks);
+    if (!action) break;
+    const spent = executeAction(action, currentAIBuildings, callbacks, matchTime);
+    if (!spent) break;
+  }
+}
+
+// ============================================================
+// Build-Order Based Action Selection
+// ============================================================
+
+function pickNextAction(matchTime, energy, aiBuildings, callbacks) {
+  const tempo = aiState.tempo;
+
+  // --- Wall repair (always highest priority) ---
+  const damagedWalls = aiBuildings
+    .filter(b => b.type === BTYPE_WALL && b.alive && (b.hp / b.maxHp) < AI_WALL_REPAIR_THRESHOLD && !b.repairing)
+    .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp));
+
+  for (let i = 0; i < Math.min(damagedWalls.length, AI_MAX_WALL_REPAIRS_PER_TICK); i++) {
+    const wall = damagedWalls[i];
+    if (callbacks.canRepairWall && callbacks.canRepairWall(wall)) {
+      const repairCost = callbacks.getRepairCost ? callbacks.getRepairCost(wall) : BUILDING_STATS[BTYPE_WALL].repairCost;
+      if (energy >= repairCost + AI_ENERGY_RESERVE) {
+        return { type: 'repairWall', meta: { target: wall } };
+      }
+    }
+  }
+
+  // --- Upgrades (after upgradeDelay, every upgradeInterval) ---
+  if (matchTime >= tempo.upgradeDelay && matchTime - aiState.lastUpgradeTime >= tempo.upgradeInterval) {
+    const upgradeAction = pickUpgradeAction(matchTime, energy, aiBuildings, callbacks);
+    if (upgradeAction) return upgradeAction;
+  }
+
+  // --- Build order walk ---
+  if (matchTime - aiState.lastBuildTime < tempo.buildInterval) return null;
+
+  const buildOrder = AI_BUILD_ORDER[aiState.profileKey] || AI_BUILD_ORDER.balanced;
+  const limitMap = {
+    barracks: AI_LIMITS.barracks,
+    turret: AI_LIMITS.turrets,
+    factory: AI_LIMITS.factories,
+    generator: AI_LIMITS.generators,
+    helipad: AI_LIMITS.helipads,
+    wall: AI_LIMITS.walls,
+  };
+  const btypeMap = {
+    barracks: BTYPE_BARRACKS,
+    turret: BTYPE_TURRET,
+    factory: BTYPE_FACTORY,
+    generator: BTYPE_GENERATOR,
+    helipad: BTYPE_HELIPAD,
+    wall: BTYPE_WALL,
+  };
+
+  // Walk build order from current index, find next affordable + buildable item
+  for (let scan = 0; scan < buildOrder.length; scan++) {
+    const idx = (aiState.buildOrderIndex + scan) % buildOrder.length;
+    const itemName = buildOrder[idx];
+    const btype = btypeMap[itemName];
+    if (!btype) continue;
+
+    // Check timing gate
+    const timingGate = AI_TIMING.build[itemName] || 0;
+    if (matchTime < timingGate) continue;
+
+    // Check limit
+    const count = aiBuildings.filter(b => b.type === btype).length;
+    const limit = limitMap[itemName] || 4;
+    if (count >= limit) continue;
+
+    // Check cost
+    const cost = BUILDING_STATS[btype].cost;
+    if (energy < cost + AI_ENERGY_RESERVE) continue;
+
+    // Found a buildable item — advance index
+    aiState.buildOrderIndex = (idx + 1) % buildOrder.length;
+    return { type: 'build', meta: { buildType: btype } };
+  }
+
+  // Build order exhausted — no build action
+  return null;
+}
+
+// ============================================================
+// Upgrade Action Selection
+// ============================================================
+
+function pickUpgradeAction(matchTime, energy, aiBuildings, callbacks) {
+  const upgradeTimingMap = {
+    [BTYPE_TURRET]: AI_TIMING.upgrade.turret,
+    [BTYPE_BARRACKS]: AI_TIMING.upgrade.barracks,
+    [BTYPE_FACTORY]: AI_TIMING.upgrade.factory,
+    [BTYPE_GENERATOR]: AI_TIMING.upgrade.generator,
+    [BTYPE_HELIPAD]: AI_TIMING.upgrade.helipad,
+    [BTYPE_WALL]: AI_TIMING.upgrade.wall,
+  };
+
+  // Try turret upgrades first
+  if (matchTime >= upgradeTimingMap[BTYPE_TURRET]) {
+    const turrets = aiBuildings
+      .filter(b => b.type === BTYPE_TURRET && b.alive)
+      .sort((a, b) => (b.totalDamage || 0) - (a.totalDamage || 0));
+
+    for (const t of turrets) {
+      if (callbacks.canUpgradeTurret && callbacks.canUpgradeTurret(t)) {
+        const cost = callbacks.getUpgradeCost(t);
+        if (energy >= cost + AI_ENERGY_RESERVE) {
+          return { type: 'upgradeTurret', meta: { target: t } };
+        }
+      }
+      if (callbacks.canBranchTurret && callbacks.canBranchTurret(t)) {
+        const branch = pickTurretBranch(aiState.intel, aiBuildings);
+        const cost = callbacks.getBranchCost(t, branch);
+        if (energy >= cost + AI_ENERGY_RESERVE) {
+          return { type: 'branchTurret', meta: { target: t, branch } };
+        }
+      }
+    }
+  }
+
+  // Production building upgrades
+  for (const btype of [BTYPE_BARRACKS, BTYPE_FACTORY, BTYPE_GENERATOR, BTYPE_HELIPAD]) {
+    const minTime = upgradeTimingMap[btype] || 0;
+    if (matchTime < minTime) continue;
+
+    const targets = aiBuildings
+      .filter(b => b.type === btype && b.alive)
+      .sort((a, b) => a.level - b.level);
+
+    for (const t of targets) {
+      if (callbacks.canUpgradeBuilding && callbacks.canUpgradeBuilding(t)) {
+        const cost = callbacks.getUpgradeCost(t);
+        if (energy >= cost + AI_ENERGY_RESERVE) {
+          return { type: 'upgradeProduction', meta: { target: t } };
+        }
+      }
+      if (callbacks.canBranchBuilding && callbacks.canBranchBuilding(t)) {
+        const branch = pickProductionBranch(btype, aiState.intel, aiBuildings, matchTime);
+        const cost = callbacks.getBranchCost(t, branch);
+        if (energy >= cost + AI_ENERGY_RESERVE) {
+          return { type: 'branchProduction', meta: { target: t, branch } };
+        }
+      }
+    }
+  }
+
+  // Wall upgrades
+  if (matchTime >= upgradeTimingMap[BTYPE_WALL]) {
+    const walls = aiBuildings
+      .filter(b => b.type === BTYPE_WALL && b.alive)
+      .sort((a, b) => a.level - b.level);
+
+    for (const wall of walls) {
+      if (callbacks.canUpgradeBuilding && callbacks.canUpgradeBuilding(wall)) {
+        const cost = callbacks.getUpgradeCost(wall);
+        if (energy >= cost + AI_ENERGY_RESERVE) {
+          return { type: 'upgradeWall', meta: { target: wall } };
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+// ============================================================
+// Execute Action — returns true if energy was spent
+// ============================================================
+
+function executeAction(action, aiBuildings, callbacks, matchTime) {
+  switch (action.type) {
+    case 'build': {
+      const result = tryBuildStrategic(action.meta.buildType, aiBuildings, callbacks, matchTime);
+      if (result) aiState.lastBuildTime = matchTime;
+      return result;
+    }
+    case 'upgradeTurret':
+      if (callbacks.canUpgradeTurret(action.meta.target)) {
+        const cost = callbacks.getUpgradeCost(action.meta.target);
+        if (callbacks.spendEnergy(cost)) {
+          callbacks.startTurretUpgrade(action.meta.target);
+          aiState.lastUpgradeTime = matchTime;
+          return true;
+        }
+      }
+      return false;
+    case 'branchTurret':
+      if (callbacks.canBranchTurret(action.meta.target)) {
+        const cost = callbacks.getBranchCost(action.meta.target, action.meta.branch);
+        if (callbacks.spendEnergy(cost)) {
+          callbacks.startTurretBranch(action.meta.target, action.meta.branch);
+          aiState.lastUpgradeTime = matchTime;
+          return true;
+        }
+      }
+      return false;
+    case 'repairWall':
+      if (callbacks.canRepairWall && callbacks.canRepairWall(action.meta.target)) {
+        const repairCost = callbacks.getRepairCost ? callbacks.getRepairCost(action.meta.target) : BUILDING_STATS[BTYPE_WALL].repairCost;
+        if (callbacks.spendEnergy(repairCost)) {
+          callbacks.startWallRepair(action.meta.target);
+          return true;
+        }
+      }
+      return false;
+    case 'upgradeWall':
+    case 'upgradeProduction':
+      if (callbacks.canUpgradeBuilding && callbacks.canUpgradeBuilding(action.meta.target)) {
+        const cost = callbacks.getUpgradeCost(action.meta.target);
+        if (callbacks.spendEnergy(cost)) {
+          callbacks.startUpgrade(action.meta.target);
+          aiState.lastUpgradeTime = matchTime;
+          return true;
+        }
+      }
+      return false;
+    case 'branchProduction':
+      if (callbacks.canBranchBuilding(action.meta.target)) {
+        const cost = callbacks.getBranchCost(action.meta.target, action.meta.branch);
+        if (callbacks.spendEnergy(cost)) {
+          callbacks.startBranch(action.meta.target, action.meta.branch);
+          aiState.lastUpgradeTime = matchTime;
+          return true;
+        }
+      }
+      return false;
+    default:
+      return false;
+  }
+}
+
+// ============================================================
+// Branch Picking Helpers
+// ============================================================
+
+function pickTurretBranch(intel, aiBuildings) {
+  const branchedTurrets = aiBuildings.filter(b => b.type === BTYPE_TURRET && b.branch);
+  if (branchedTurrets.length > 0) {
+    const hasA = branchedTurrets.some(b => b.branch === 'A');
+    const hasB = branchedTurrets.some(b => b.branch === 'B');
+    if (hasA && !hasB) return 'B';
+    if (hasB && !hasA) return 'A';
+  }
+  if (intel.playerTotalUnits > 4 || intel.playerBarracks >= 2) return 'B';
+  if (intel.playerTanks >= 2) return 'A';
+  return 'A';
+}
+
+function pickProductionBranch(btype, intel, aiBuildings, matchTime) {
+  const branchedSameType = aiBuildings.filter(b => b.type === btype && b.branch);
+  if (branchedSameType.length > 0) {
+    const hasA = branchedSameType.some(b => b.branch === 'A');
+    const hasB = branchedSameType.some(b => b.branch === 'B');
+    if (hasA && !hasB) return 'B';
+    if (hasB && !hasA) return 'A';
+  }
+
+  if (btype === BTYPE_BARRACKS) {
+    const hasFactory = aiBuildings.some(b => b.type === BTYPE_FACTORY && b.alive);
+    if (!hasFactory && matchTime > 60) return 'A';
+    if (hasFactory) return 'B';
+    if (intel.playerTanks >= 2) return 'A';
+    return 'B';
+  }
+
+  if (btype === BTYPE_GENERATOR) {
+    const genCount = aiBuildings.filter(b => b.type === BTYPE_GENERATOR && b.alive).length;
+    if (genCount <= 1) return 'A';
+    if (intel.playerGenerators > genCount) return 'A';
+    return 'B';
+  }
+
+  if (btype === BTYPE_HELIPAD) {
+    if (intel.playerTurrets >= 3) return 'B';
+    if (intel.playerTurrets < 2 && intel.playerTotalUnits > 6) return 'A';
+    return 'B';
+  }
+
+  // Factory
+  if (intel.playerTotalUnits > 6 || matchTime > 150) return 'B';
+  if (intel.playerTurrets >= 3) return 'A';
+  return 'A';
+}
+
+// ============================================================
+// Scouting / Intel (simplified — army power + unit counts only)
+// ============================================================
+
+function updateIntel(matchTime, allBuildings, allUnits) {
+  const intelInterval = aiState.difficulty === 'hard' ? 4.0 : AI_INTEL_UPDATE_INTERVAL;
+  if (matchTime - aiState.intel.lastUpdate < intelInterval) return;
+  aiState.intel.lastUpdate = matchTime;
+
+  const intel = aiState.intel;
+  intel.playerBarracks = 0;
+  intel.playerTurrets = 0;
+  intel.playerFactories = 0;
+  intel.playerGenerators = 0;
+  intel.playerWalls = 0;
+  intel.playerTotalUnits = 0;
+  intel.playerHelicopters = 0;
+  intel.playerTanks = 0;
+
+  let playerArmyPower = 0;
+  let aiArmyPower = 0;
+
+  for (let i = 0; i < allBuildings.length; i++) {
+    const b = allBuildings[i];
+    if (b.team !== TEAM_PLAYER || !b.alive) continue;
+    if (b.type === BTYPE_BARRACKS) intel.playerBarracks++;
+    else if (b.type === BTYPE_TURRET) intel.playerTurrets++;
+    else if (b.type === BTYPE_FACTORY) intel.playerFactories++;
+    else if (b.type === BTYPE_GENERATOR) intel.playerGenerators++;
+    else if (b.type === BTYPE_WALL) intel.playerWalls++;
+  }
+
+  for (let i = 0; i < allUnits.length; i++) {
+    const u = allUnits[i];
+    if (!u.alive) continue;
+
+    if (u.team === TEAM_PLAYER) {
+      intel.playerTotalUnits++;
+      if (u.type === 'tank') intel.playerTanks++;
+      else if (u.type === UTYPE_HELICOPTER) intel.playerHelicopters++;
+
+      const unitPower = AI_WAVE_POWER[u.type] || 1.0;
+      const heliMult = u.type === UTYPE_HELICOPTER ? AI_HELI_POWER_WEIGHT : 1.0;
+      playerArmyPower += u.hp * unitPower * heliMult;
+    } else if (u.team === TEAM_ENEMY) {
+      const unitPower = AI_WAVE_POWER[u.type] || 1.0;
+      const heliMult = u.type === UTYPE_HELICOPTER ? AI_HELI_POWER_WEIGHT : 1.0;
+      aiArmyPower += u.hp * unitPower * heliMult;
+    }
+  }
+
+  intel.playerArmyPower = playerArmyPower;
+  intel.aiArmyPower = aiArmyPower;
+}
+
+// ============================================================
+// Player Rally — groups player units before pushing
+// ============================================================
+
+export function updatePlayerRally(matchTime, callbacks) {
+  _matchTime = matchTime;
+  _getUnitsRef = callbacks.getUnits;
+  const allUnits = callbacks.getUnits();
+  const playerUnits = allUnits.filter(u => u.alive && u.team === TEAM_PLAYER && u.type !== UTYPE_HELICOPTER && (u.stance ?? STANCE_ADVANCE) === STANCE_ADVANCE);
+
+  const rallyPos = gridToWorld(Math.floor(GRID_COLS / 2), PLAYER_RALLY_ROW, TILE_SIZE);
+
+  let holdingCount = 0;
+  for (const u of playerUnits) {
+    if (u.rallyHold) holdingCount++;
+  }
+
+  const rallyTimedOut = playerRallyState.rallyStartTime > 0 &&
+    (matchTime - playerRallyState.rallyStartTime) >= PLAYER_MAX_RALLY_TIME;
+
+  if (holdingCount >= PLAYER_PUSH_SIZE || (holdingCount > 0 && rallyTimedOut)) {
+    for (const u of playerUnits) {
+      if (u.rallyHold) {
+        u.rallyHold = false;
+        u.path = null;
+        u.pathIndex = 0;
+      }
+    }
+    playerRallyState.rallyStartTime = 0;
+    playerRallyState.pushActive = true;
+  }
+
+  if (playerRallyState.pushActive) {
+    const advancingCount = playerUnits.filter(u => !u.rallyHold).length;
+    if (advancingCount === 0) {
+      playerRallyState.pushActive = false;
+    }
+  }
+
+  if (!playerRallyState.pushActive) {
+    for (const u of playerUnits) {
+      if (!u.rallyHold && !u._rallyAssigned) {
+        u.rallyHold = true;
+        u.rallyX = rallyPos.x + (Math.random() - 0.5) * 160;
+        u.rallyZ = rallyPos.z + (Math.random() - 0.5) * 120;
+        u._rallyAssigned = true;
+
+        if (playerRallyState.rallyStartTime === 0) {
+          playerRallyState.rallyStartTime = matchTime;
+        }
+      }
+    }
+  }
+}
+
+// ============================================================
+// Threat Assessment
+// ============================================================
+
+function assessThreat(aiBuildings, allUnits) {
+  const basePos = gridToWorld(ENEMY_BASE_COL, ENEMY_BASE_ROW, TILE_SIZE);
+
+  let playerThreatHP = 0;
+  let aiArmyHP = 0;
+
+  for (let i = 0; i < allUnits.length; i++) {
+    const u = allUnits[i];
+    if (!u.alive) continue;
+
+    if (u.team === TEAM_PLAYER) {
+      const d = dist(u.x, u.z, basePos.x, basePos.z);
+      if (d < AI_THREAT_RADIUS) {
+        playerThreatHP += u.hp;
+      } else if (d < AI_THREAT_OUTER_RADIUS) {
+        const t = (d - AI_THREAT_RADIUS) / (AI_THREAT_OUTER_RADIUS - AI_THREAT_RADIUS);
+        playerThreatHP += u.hp * (1.0 - t * 0.7);
+      } else if (u.z < basePos.z + 200) {
+        playerThreatHP += u.hp * 0.15;
+      }
+    } else {
+      if (u.rallyHold) {
+        aiArmyHP += u.hp * 0.3;
+      } else {
+        aiArmyHP += u.hp;
+      }
+    }
+  }
+
+  if (aiArmyHP <= 0 && playerThreatHP > 0) return 1.0;
+  if (playerThreatHP <= 0) return 0.0;
+  return Math.min(1.0, playerThreatHP / (aiArmyHP + playerThreatHP));
+}
+
+// ============================================================
+// Enemy Wave Coordination — simplified push logic
+// ============================================================
+
+function updateEnemyRally(matchTime, callbacks) {
+  const allUnits = callbacks.getUnits();
+  const aiUnits = allUnits.filter(u => u.alive && u.team === TEAM_ENEMY && u.type !== UTYPE_HELICOPTER && (u.stance ?? STANCE_ADVANCE) === STANCE_ADVANCE);
+
+  const rallyPos = gridToWorld(Math.floor(GRID_COLS / 2), AI_PUSH.rallyRow, TILE_SIZE);
+
+  let holdingCount = 0;
+  let waveStrength = 0;
+
+  for (const u of aiUnits) {
+    if (u.rallyHold) {
+      holdingCount++;
+      const power = AI_WAVE_POWER[u.type] || 1.0;
+      waveStrength += u.hp * power;
+    }
+  }
+
+  // Update time tracking
+  aiState._lastRallyUpdateTime = matchTime;
+
+  // --- Player-relative strength gating ---
+  const intel = aiState.intel;
+  const playerDefense = intel.playerArmyPower
+    + intel.playerTurrets * AI_PUSH.turretPower
+    + intel.playerWalls * AI_PUSH.wallPower;
+
+  let requiredStrength = Math.max(
+    AI_PUSH.minWaveStrength,
+    playerDefense * (aiState.profile.pushRatio || 0.9)
+  );
+
+  // Consecutive failure multiplier
+  if (aiState.consecutiveFailures > 0) {
+    requiredStrength *= (1 + aiState.consecutiveFailures * AI_PUSH.failureStrengthMult);
+  }
+
+  const onCooldown = matchTime < aiState.pushCooldownUntil;
+
+  const shouldPush = (
+    holdingCount >= AI_PUSH.minSize &&
+    waveStrength >= requiredStrength &&
+    !onCooldown
+  );
+
+  if (shouldPush) {
+    for (const u of aiUnits) {
+      if (u.rallyHold) {
+        u.rallyHold = false;
+        u.path = null;
+        u.pathIndex = 0;
+      }
+    }
+    aiState.rallyStartTime = 0;
+    aiState.pushActive = true;
+    aiState.pushStartTime = matchTime;
+    aiState._pushMarkedSuccess = false;
+    aiState.lastPushUnitCount = holdingCount;
+  }
+
+  if (aiState.pushActive) {
+    const advancingCount = aiUnits.filter(u => !u.rallyHold).length;
+    const pushDuration = matchTime - aiState.pushStartTime;
+
+    // Push success: units survive 15+ seconds
+    if (!aiState._pushMarkedSuccess && advancingCount > 0 && pushDuration > 15) {
+      aiState._pushMarkedSuccess = true;
+      aiState.dynamicPushBonus = Math.max(0, aiState.dynamicPushBonus - AI_PUSH.sizeShrink);
+      aiState.consecutiveFailures = 0;
+    }
+
+    if (advancingCount === 0) {
+      if (aiState.lastPushUnitCount > 0 && !aiState._pushMarkedSuccess) {
+        aiState.dynamicPushBonus = Math.min(
+          AI_PUSH.maxSize,
+          aiState.dynamicPushBonus + AI_PUSH.sizeGrow
+        );
+        aiState.consecutiveFailures++;
+        aiState.pushCooldownUntil = matchTime + AI_PUSH.cooldownAfterFailure;
+      }
+      aiState.pushActive = false;
+      aiState.lastPushUnitCount = 0;
+      aiState._pushMarkedSuccess = false;
+    }
+  }
+
+  if (!aiState.pushActive) {
+    for (const u of aiUnits) {
+      if (!u.rallyHold && !u._rallyAssigned) {
+        u.rallyHold = true;
+        u.rallyX = rallyPos.x + (Math.random() - 0.5) * 60;
+        u.rallyZ = rallyPos.z + (Math.random() - 0.5) * 60;
+        u._rallyAssigned = true;
+
+        if (aiState.rallyStartTime === 0) {
+          aiState.rallyStartTime = matchTime;
+        }
+      }
+    }
+  }
+}
+
+// ============================================================
+// Immediate rally assignment for newly created enemy units
+// ============================================================
+
+export function assignEnemyUnitRally(u) {
+  if (aiState.pushActive) return;
+  if (u.type === UTYPE_HELICOPTER) return;
+  if ((u.stance ?? STANCE_ADVANCE) !== STANCE_ADVANCE) return;
+
+  const rallyPos = gridToWorld(Math.floor(GRID_COLS / 2), AI_PUSH.rallyRow, TILE_SIZE);
+  u.rallyHold = true;
+  u.rallyX = rallyPos.x + (Math.random() - 0.5) * 60;
+  u.rallyZ = rallyPos.z + (Math.random() - 0.5) * 60;
+  u._rallyAssigned = true;
+
+  if (aiState.rallyStartTime === 0) {
+    aiState.rallyStartTime = _matchTime;
+  }
+}
+
+// ============================================================
+// AI Helicopter Rally — target densest player clusters
+// ============================================================
+
+function updateAIHelicopterRallies(callbacks) {
+  const allUnits = callbacks.getUnits();
+  const aiHelis = [];
+  const playerUnits = [];
+
+  for (let i = 0; i < allUnits.length; i++) {
+    const u = allUnits[i];
+    if (!u.alive) continue;
+    if (u.team === TEAM_ENEMY && u.type === UTYPE_HELICOPTER) {
+      aiHelis.push(u);
+    } else if (u.team === TEAM_PLAYER) {
+      playerUnits.push(u);
+    }
+  }
+
+  if (aiHelis.length === 0) return;
+
+  if (playerUnits.length === 0) {
+    const basePos = gridToWorld(Math.floor(GRID_COLS / 2), PLAYER_RALLY_ROW, TILE_SIZE);
+    _commitHeliRally(basePos.x, basePos.z, aiHelis, callbacks);
+    return;
+  }
+
+  if (_matchTime < aiState.heliRallyCommitUntil) {
+    const bestPos = _findDensestCluster(playerUnits);
+    const shiftDist = dist(bestPos.x, bestPos.z, aiState.heliRallyX, aiState.heliRallyZ);
+    if (shiftDist < AI_HELI_RALLY_REVAL_DISTANCE) {
+      return;
+    }
+  }
+
+  const bestPos = _findDensestCluster(playerUnits);
+  _commitHeliRally(bestPos.x, bestPos.z, aiHelis, callbacks);
+}
+
+function _findDensestCluster(playerUnits) {
+  let bestUnit = playerUnits[0];
+  let bestCount = 0;
+
+  for (let i = 0; i < playerUnits.length; i++) {
+    const pu = playerUnits[i];
+    let nearbyCount = 0;
+    for (let j = 0; j < playerUnits.length; j++) {
+      if (i === j) continue;
+      const d = dist(pu.x, pu.z, playerUnits[j].x, playerUnits[j].z);
+      if (d <= AI_HELICOPTER_CLUSTER_RADIUS) nearbyCount++;
+    }
+    if (nearbyCount > bestCount) {
+      bestCount = nearbyCount;
+      bestUnit = pu;
+    }
+  }
+
+  return { x: bestUnit.x, z: bestUnit.z };
+}
+
+function _commitHeliRally(x, z, aiHelis, callbacks) {
+  aiState.heliRallyX = x;
+  aiState.heliRallyZ = z;
+  aiState.heliRallyCommitUntil = _matchTime + AI_HELI_RALLY_COMMIT_TIME;
+
+  for (const heli of aiHelis) {
+    if (callbacks.setHelicopterRally) {
+      callbacks.setHelicopterRally(heli.id, x, z);
+    }
+  }
+}
+
+// ============================================================
+// Strategic Building Placement
+// ============================================================
+
+function scorePlacement(type, col, row, existingBuildings, matchTime) {
+  const stats = BUILDING_STATS[type];
+  const size = stats.size;
+  const cx = (col + size / 2) * TILE_SIZE;
+  const cz = (row + size / 2) * TILE_SIZE;
+
+  let score = 0;
+
+  if (type === BTYPE_TURRET) {
+    const canGoShared = matchTime >= AI_TIMING.shared.turret;
+
+    if (!canGoShared) {
+      let closestProdDist = Infinity;
+      for (const b of existingBuildings) {
+        if ((b.type === BTYPE_BARRACKS || b.type === BTYPE_FACTORY) && b.alive) {
+          const d = dist(cx, cz, b.x, b.z);
+          if (d < closestProdDist) closestProdDist = d;
+        }
+      }
+      if (closestProdDist < Infinity) {
+        const idealDist = TILE_SIZE * AI_TURRET_IDEAL_DISTANCE;
+        score += Math.max(0, 10 - Math.abs(closestProdDist - idealDist) / TILE_SIZE);
+      }
+
+      const distFromBase = Math.abs(row - ENEMY_BASE_ROW);
+      score += Math.min(distFromBase, 8);
+      score -= Math.max(0, distFromBase - 8) * 2;
+    } else {
+      const frontRow = SHARED_BUILD_ROW_MAX;
+      const rowDist = Math.abs(row - frontRow);
+      score += (10 - rowDist) * 3;
+    }
+
+    let minTurretDist = Infinity;
+    for (const b of existingBuildings) {
+      if (b.type === BTYPE_TURRET && b.alive) {
+        const d = dist(cx, cz, b.x, b.z);
+        if (d < minTurretDist) minTurretDist = d;
+      }
+    }
+    if (minTurretDist < Infinity) {
+      score += Math.min(minTurretDist / TILE_SIZE, 8);
+    }
+
+    const centerDist = Math.abs(col - GRID_COLS / 2);
+    score -= centerDist * 0.5;
+
+  } else if (type === BTYPE_WALL) {
+    const idealRowMin = AI_WALL_ZONE_MIN_ROW;
+    const idealRowMax = AI_WALL_ZONE_MAX_ROW;
+    if (row >= idealRowMin && row <= idealRowMax) {
+      score += 6;
+    } else {
+      const distFromIdeal = Math.min(Math.abs(row - idealRowMin), Math.abs(row - idealRowMax));
+      score -= distFromIdeal * 1.5;
+    }
+
+    // Base perimeter bonus
+    const baseSize = BUILDING_STATS[BTYPE_CORE].size;
+    const baseCenterCol = ENEMY_BASE_COL + Math.floor(baseSize / 2);
+    const baseSouthRow = ENEMY_BASE_ROW + baseSize;
+
+    if (row === baseSouthRow || row === baseSouthRow + 1) {
+      const colDist = Math.abs(col - baseCenterCol);
+      if (colDist <= baseSize + 2) {
+        score += 14 - colDist;
+      }
+    }
+    if ((col === ENEMY_BASE_COL - 1 || col === ENEMY_BASE_COL + baseSize) &&
+        row >= ENEMY_BASE_ROW && row <= baseSouthRow) {
+      score += 10;
+    }
+
+    // Don't wall in own production buildings
+    let adjacentToOwnBuilding = false;
+    for (const b of existingBuildings) {
+      if (b.type === BTYPE_WALL || b.type === BTYPE_CORE) continue;
+      const bCol = Math.round((b.x - TILE_SIZE / 2) / TILE_SIZE);
+      const bRow = Math.round((b.z - TILE_SIZE / 2) / TILE_SIZE);
+      const bSize = BUILDING_STATS[b.type] ? BUILDING_STATS[b.type].size : 1;
+      if (col >= bCol - 1 && col <= bCol + bSize &&
+          row >= bRow - 1 && row <= bRow + bSize) {
+        adjacentToOwnBuilding = true;
+        break;
+      }
+    }
+    if (adjacentToOwnBuilding) score -= 6;
+
+    // Wall adjacency and continuity
+    let adjacentToWall = false;
+    let wallInSameRowVeryClose = false;
+    let wallInSameRowClose = false;
+    let wallInSameCol = false;
+    for (const b of existingBuildings) {
+      if (b.type !== BTYPE_WALL) continue;
+      const wCol = Math.round((b.x - TILE_SIZE / 2) / TILE_SIZE);
+      const wRow = Math.round((b.z - TILE_SIZE / 2) / TILE_SIZE);
+      const d = Math.abs(col - wCol) + Math.abs(row - wRow);
+      if (d === 1) adjacentToWall = true;
+      if (wRow === row) {
+        const colDist = Math.abs(col - wCol);
+        if (colDist <= 2) wallInSameRowClose = true;
+        if (colDist === 1) wallInSameRowVeryClose = true;
+      }
+      if (wCol === col && Math.abs(row - wRow) === 1) wallInSameCol = true;
+    }
+    if (adjacentToWall) score += 5;
+    if (wallInSameRowVeryClose) score += 8;
+    else if (wallInSameRowClose) score += 6;
+    if (wallInSameCol) score += 4;
+
+    // Horizontal gap detection
+    {
+      let gapStart = -1;
+      let inGap = false;
+      let bestGapScore = 0;
+      for (let c = 0; c <= GRID_COLS; c++) {
+        const tile = c < GRID_COLS ? getTile(c, row) : TILE_OBSTACLE;
+        if (tile === TILE_OBSTACLE || tile === TILE_BUILDING) {
+          if (inGap) {
+            const gapWidth = c - gapStart;
+            if (gapWidth >= 1 && gapWidth <= 8 && col >= gapStart && col < c) {
+              const gs = Math.max(5, 18 - gapWidth * 2);
+              bestGapScore = Math.max(bestGapScore, gs);
+            }
+            inGap = false;
+          }
+        } else {
+          if (!inGap) { gapStart = c; inGap = true; }
+        }
+      }
+      score += bestGapScore;
+    }
+
+    // Vertical gap detection
+    {
+      let nearestNorth = -1;
+      let nearestSouth = -1;
+      for (let r = row - 1; r >= Math.max(0, row - 6); r--) {
+        if (getTile(col, r) === TILE_OBSTACLE) { nearestNorth = r; break; }
+      }
+      for (let r = row + 1; r <= Math.min(GRID_ROWS - 1, row + 6); r++) {
+        if (getTile(col, r) === TILE_OBSTACLE) { nearestSouth = r; break; }
+      }
+      if (nearestNorth >= 0 && nearestSouth >= 0) {
+        const vGap = nearestSouth - nearestNorth - 1;
+        if (vGap >= 1 && vGap <= 6) {
+          score += Math.max(3, 12 - vGap * 2);
+        }
+      }
+    }
+
+    // Line completion
+    {
+      let connectsLeft = false;
+      let connectsRight = false;
+      if (col > 0) {
+        const leftTile = getTile(col - 1, row);
+        if (leftTile === TILE_OBSTACLE || leftTile === TILE_WALL) connectsLeft = true;
+      }
+      if (col < GRID_COLS - 1) {
+        const rightTile = getTile(col + 1, row);
+        if (rightTile === TILE_OBSTACLE || rightTile === TILE_WALL) connectsRight = true;
+      }
+      if (connectsLeft && connectsRight) score += 10;
+    }
+
+    // Center approach path blocking
+    const centerCol = Math.floor(GRID_COLS / 2);
+    const distFromCenter = Math.abs(col - centerCol);
+    if (distFromCenter <= 8) {
+      score += Math.max(0, 5 - distFromCenter * 0.5);
+    }
+
+    score += Math.random() * 3;
+
+  } else if (type === BTYPE_GENERATOR) {
+    const baseDistBonus = Math.max(0, 8 - Math.abs(row - ENEMY_BASE_ROW));
+    score += baseDistBonus * 1.5;
+
+    if (row >= SHARED_BUILD_ROW_MIN && row <= SHARED_BUILD_ROW_MAX) {
+      score += 8;
+    }
+
+    let minGenDist = Infinity;
+    for (const b of existingBuildings) {
+      if (b.type === BTYPE_GENERATOR && b.alive) {
+        const d = dist(cx, cz, b.x, b.z);
+        if (d < minGenDist) minGenDist = d;
+      }
+    }
+    if (minGenDist < Infinity) {
+      score += Math.min(minGenDist / TILE_SIZE, 5);
+    }
+
+    const centerDist = Math.abs(col - GRID_COLS / 2);
+    score -= centerDist * 0.3;
+
+  } else {
+    const safeRow = Math.floor((ENEMY_BUILD_ROW_MIN + ENEMY_BUILD_ROW_MAX) / 2);
+    const rowDist = Math.abs(row - safeRow);
+    score += (10 - rowDist) * 2;
+
+    const baseDistBonus = Math.max(0, 8 - Math.abs(row - ENEMY_BASE_ROW));
+    score += baseDistBonus * 0.5;
+
+    let minSameDist = Infinity;
+    for (const b of existingBuildings) {
+      if (b.type === type && b.alive) {
+        const d = dist(cx, cz, b.x, b.z);
+        if (d < minSameDist) minSameDist = d;
+      }
+    }
+    if (minSameDist < Infinity) {
+      score += Math.min(minSameDist / TILE_SIZE, 6);
+    }
+
+    const centerDist = Math.abs(col - GRID_COLS / 2);
+    score -= centerDist * 0.3;
+  }
+
+  score += Math.random() * 2;
+
+  return score;
+}
+
+function tryBuildStrategic(type, existingBuildings, callbacks, matchTime) {
+  const stats = BUILDING_STATS[type];
+  const size = stats.size;
+
+  let rowMax;
+  if (type === BTYPE_TURRET && matchTime >= AI_TIMING.shared.turret) {
+    rowMax = SHARED_BUILD_ROW_MAX;
+  } else if (type === BTYPE_GENERATOR && matchTime >= AI_TIMING.shared.generator) {
+    rowMax = SHARED_BUILD_ROW_MAX;
+  } else if (type === BTYPE_WALL && matchTime >= AI_TIMING.shared.wall) {
+    rowMax = SHARED_BUILD_ROW_MAX;
+  } else {
+    rowMax = ENEMY_BUILD_ROW_MAX;
+  }
+
+  const candidates = [];
+  const attempts = type === BTYPE_WALL ? 50 : 30;
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    const col = randomInt(2, GRID_COLS - 3 - size + 1);
+    const row = randomInt(ENEMY_BUILD_ROW_MIN, rowMax - size + 1);
+
+    if (callbacks.isBuildable(col, row, size)) {
+      const score = scorePlacement(type, col, row, existingBuildings, matchTime);
+      candidates.push({ col, row, score });
+    }
+  }
+
+  // For walls: add targeted high-value positions
+  if (type === BTYPE_WALL) {
+    const seen = new Set(candidates.map(c => `${c.col},${c.row}`));
+    const tryAdd = (c, r) => {
+      const key = `${c},${r}`;
+      if (seen.has(key)) return;
+      if (r < ENEMY_BUILD_ROW_MIN || r > rowMax) return;
+      if (c < 1 || c >= GRID_COLS - 1) return;
+      if (!callbacks.isBuildable(c, r, 1)) return;
+      seen.add(key);
+      candidates.push({ col: c, row: r, score: scorePlacement(type, c, r, existingBuildings, matchTime) });
+    };
+
+    // Base perimeter positions
+    const baseSize = BUILDING_STATS[BTYPE_CORE].size;
+    const perimRow = ENEMY_BASE_ROW + baseSize;
+    for (let c = ENEMY_BASE_COL - 2; c <= ENEMY_BASE_COL + baseSize + 1; c++) {
+      for (let r = ENEMY_BASE_ROW; r <= perimRow + 1; r++) {
+        tryAdd(c, r);
+      }
+    }
+
+    // Adjacent to existing walls
+    for (const b of existingBuildings) {
+      if (b.type !== BTYPE_WALL) continue;
+      const wCol = Math.round((b.x - TILE_SIZE / 2) / TILE_SIZE);
+      const wRow = Math.round((b.z - TILE_SIZE / 2) / TILE_SIZE);
+      for (const [dc, dr] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+        tryAdd(wCol + dc, wRow + dr);
+      }
+    }
+
+    // Gap-fill positions between obstacles
+    for (let r = AI_WALL_ZONE_MIN_ROW; r <= Math.min(AI_WALL_ZONE_MAX_ROW, rowMax); r++) {
+      let gapStart = -1;
+      let inGap = false;
+      for (let c = 0; c <= GRID_COLS; c++) {
+        const tile = c < GRID_COLS ? getTile(c, r) : TILE_OBSTACLE;
+        if (tile === TILE_OBSTACLE || tile === TILE_BUILDING) {
+          if (inGap && c - gapStart <= 8) {
+            for (let gc = gapStart; gc < c; gc++) tryAdd(gc, r);
+          }
+          inGap = false;
+        } else if (tile === TILE_EMPTY) {
+          if (!inGap) { gapStart = c; inGap = true; }
+        }
+      }
+    }
+  }
+
+  if (candidates.length === 0) return false;
+
+  candidates.sort((a, b) => b.score - a.score);
+  const best = candidates[0];
+
+  if (callbacks.spendEnergy(stats.cost)) {
+    callbacks.createBuilding(type, best.col, best.row);
+    return true;
+  }
+  return false;
+}
+
+// ============================================================
+// AI Squad Management — simplified
+// ============================================================
+
+function updateAISquads(matchTime, threat, callbacks) {
+  const squads = callbacks.getSquads?.(TEAM_ENEMY);
+  if (!squads || squads.length === 0) return;
+
+  // Simple rule: if enemy units near AI base → 50% squads DEFEND; else all ADVANCE
+  let defendTarget;
+  if (threat > AI_THREAT_HIGH_THRESHOLD) {
+    defendTarget = squads.length; // all defend
+  } else if (threat > AI_THREAT_LOW_THRESHOLD) {
+    defendTarget = Math.max(1, Math.ceil(squads.length * 0.5));
+  } else {
+    defendTarget = squads.length > 1 ? 1 : 0; // 1 home guard
+  }
+
+  // Emergency rally release: release rally-held units when base threatened
+  if (threat > AI_THREAT_LOW_THRESHOLD && !aiState.pushActive) {
+    const allUnits = callbacks.getUnits?.();
+    if (allUnits) {
+      for (let i = 0; i < allUnits.length; i++) {
+        const u = allUnits[i];
+        if (!u.alive || u.team !== TEAM_ENEMY || u.isAir) continue;
+        if (u.rallyHold) {
+          u.rallyHold = false;
+          u._rallyAssigned = false;
+          u.path = null;
+          u.pathIndex = 0;
+        }
+      }
+      aiState.rallyStartTime = 0;
+    }
+  }
+
+  // Sort: barracks first (best for defend), then factory, then helipad
+  const sorted = [...squads].sort((a, b) => {
+    const order = (t) => t === BTYPE_BARRACKS ? 0 : t === BTYPE_FACTORY ? 1 : 2;
+    return order(a.buildingType) - order(b.buildingType);
+  });
+
+  for (let i = 0; i < sorted.length; i++) {
+    const squad = sorted[i];
+
+    if (i < defendTarget) {
+      if (squad.stance !== STANCE_DEFEND) {
+        callbacks.setSquadStance?.(squad.id, STANCE_DEFEND);
+      }
+      if (squad.targetPriority !== TARGET_UNITS) {
+        callbacks.setSquadTargetPriority?.(squad.id, TARGET_UNITS);
+      }
+    } else {
+      if (squad.stance !== STANCE_ADVANCE) {
+        callbacks.setSquadStance?.(squad.id, STANCE_ADVANCE);
+      }
+      // During push: factory squads focus buildings
+      const wantPriority = (aiState.pushActive && squad.buildingType === BTYPE_FACTORY)
+        ? TARGET_BUILDINGS : TARGET_ANY;
+      if (squad.targetPriority !== wantPriority) {
+        callbacks.setSquadTargetPriority?.(squad.id, wantPriority);
+      }
+    }
+  }
+}
+
+// ============================================================
+// Player Rally State Query + Manual Push
+// ============================================================
+
+export function getPlayerRallyState() {
+  let holdingCount = 0;
+  if (_getUnitsRef) {
+    const allUnits = _getUnitsRef();
+    for (let i = 0; i < allUnits.length; i++) {
+      const u = allUnits[i];
+      if (u.alive && u.team === TEAM_PLAYER && u.rallyHold && (u.stance ?? STANCE_ADVANCE) === STANCE_ADVANCE) {
+        holdingCount++;
+      }
+    }
+  }
+
+  const timeElapsed = playerRallyState.rallyStartTime > 0
+    ? _matchTime - playerRallyState.rallyStartTime
+    : 0;
+
+  return {
+    holdingCount,
+    pushSize: PLAYER_PUSH_SIZE,
+    rallyActive: !playerRallyState.pushActive,
+    timeRemaining: Math.max(0, PLAYER_MAX_RALLY_TIME - timeElapsed),
+  };
+}
+
+export function forcePlayerPush() {
+  if (!_getUnitsRef) return;
+
+  const allUnits = _getUnitsRef();
+  for (let i = 0; i < allUnits.length; i++) {
+    const u = allUnits[i];
+    if (u.alive && u.team === TEAM_PLAYER && u.rallyHold && (u.stance ?? STANCE_ADVANCE) === STANCE_ADVANCE) {
+      u.rallyHold = false;
+      u.path = null;
+      u.pathIndex = 0;
+    }
+  }
+  playerRallyState.rallyStartTime = 0;
+  playerRallyState.pushActive = true;
+}
+
+export function resetAI() {
+  aiState = {
+    lastTick: 0,
+    rallyStartTime: 0,
+    pushActive: false,
+    profile: null,
+    profileKey: null,
+    difficulty: 'normal',
+    diffSettings: null,
+    tempo: null,
+    intel: freshIntel(),
+    buildOrderIndex: 0,
+    lastBuildTime: 0,
+    lastUpgradeTime: 0,
+    lastPushUnitCount: 0,
+    dynamicPushBonus: 0,
+    consecutiveFailures: 0,
+    pushStartTime: 0,
+    pushCooldownUntil: 0,
+    _pushMarkedSuccess: false,
+    _lastRallyUpdateTime: 0,
+    heliRallyX: 0, heliRallyZ: 0, heliRallyCommitUntil: 0,
+  };
+  playerRallyState = { rallyStartTime: 0, pushActive: false };
+  _matchTime = 0;
+  _getUnitsRef = null;
+}

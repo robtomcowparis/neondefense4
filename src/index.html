@@ -245,6 +245,16 @@
     background: rgba(255,0,255,0.06);
   }
 
+  .card[data-accent="gold"] .card-title {
+    color: var(--gold);
+    text-shadow: 0 0 6px rgba(255,215,0,0.4);
+  }
+  .card[data-accent="gold"] .card-tag {
+    color: var(--gold);
+    border: 1px solid rgba(255,215,0,0.25);
+    background: rgba(255,215,0,0.06);
+  }
+
   /* ── Footer ── */
   .footer {
     margin-top: 56px;
@@ -293,6 +303,15 @@
         <div class="card-title">NEON TANKS</div>
         <div class="card-desc">Armored battle royale on a neon battlefield. Upgrade, outmaneuver, eliminate.</div>
         <span class="card-tag">BATTLE ROYALE</span>
+      </div>
+    </a>
+
+    <a class="card" href="/neon-siege/" data-accent="gold">
+      <div class="card-art"><canvas id="art-ns"></canvas></div>
+      <div class="card-body">
+        <div class="card-title">NEON SIEGE</div>
+        <div class="card-desc">Base vs base battlefield. Build, produce units, and siege the enemy core to rubble.</div>
+        <span class="card-tag">RTS SIEGE</span>
       </div>
     </a>
 
@@ -494,7 +513,7 @@ function drawIcon(canvas, drawFn, color) {
   }
 
   // Center glow
-  const cr = color === '#00ffff' ? '0,255,255' : '255,0,255';
+  const cr = color === '#00ffff' ? '0,255,255' : color === '#ffd700' ? '255,215,0' : '255,0,255';
   const bg = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, W * 0.35);
   bg.addColorStop(0, `rgba(${cr},0.06)`);
   bg.addColorStop(1, 'transparent');
@@ -671,15 +690,132 @@ function drawTankIcon(ctx, s, color) {
   ctx.shadowBlur = 0;
 }
 
+function drawSiegeIcon(ctx, s, color) {
+  const cr = '255,215,0';
+
+  // Ground line
+  ctx.beginPath();
+  ctx.moveTo(-s * 0.9, s * 0.7);
+  ctx.lineTo(s * 0.9, s * 0.7);
+  ctx.strokeStyle = `rgba(${cr},0.15)`;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Left base (player)
+  ctx.fillStyle = '#141438';
+  ctx.fillRect(-s * 0.85, s * 0.1, s * 0.35, s * 0.6);
+  ctx.strokeStyle = `rgba(0,255,255,0.5)`;
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(-s * 0.85, s * 0.1, s * 0.35, s * 0.6);
+
+  // Left base core glow
+  ctx.beginPath();
+  ctx.arc(-s * 0.675, s * 0.4, s * 0.08, 0, Math.PI * 2);
+  ctx.fillStyle = '#00ffff';
+  ctx.shadowColor = '#00ffff';
+  ctx.shadowBlur = 16;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Left base antenna
+  ctx.fillStyle = '#141438';
+  ctx.fillRect(-s * 0.7, -s * 0.2, s * 0.05, s * 0.3);
+  ctx.strokeStyle = `rgba(0,255,255,0.35)`;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(-s * 0.7, -s * 0.2, s * 0.05, s * 0.3);
+
+  // Right base (enemy)
+  ctx.fillStyle = '#141438';
+  ctx.fillRect(s * 0.5, s * 0.1, s * 0.35, s * 0.6);
+  ctx.strokeStyle = `rgba(255,50,50,0.5)`;
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(s * 0.5, s * 0.1, s * 0.35, s * 0.6);
+
+  // Right base core glow
+  ctx.beginPath();
+  ctx.arc(s * 0.675, s * 0.4, s * 0.08, 0, Math.PI * 2);
+  ctx.fillStyle = '#ff3232';
+  ctx.shadowColor = '#ff3232';
+  ctx.shadowBlur = 16;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Right base antenna
+  ctx.fillStyle = '#141438';
+  ctx.fillRect(s * 0.65, -s * 0.2, s * 0.05, s * 0.3);
+  ctx.strokeStyle = `rgba(255,50,50,0.35)`;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(s * 0.65, -s * 0.2, s * 0.05, s * 0.3);
+
+  // Units marching (small triangles in gold)
+  const units = [
+    { x: -s * 0.3, y: s * 0.55 },
+    { x: -s * 0.1, y: s * 0.5 },
+    { x: s * 0.1, y: s * 0.45 },
+    { x: s * 0.25, y: s * 0.5 },
+  ];
+  units.forEach((u, i) => {
+    ctx.beginPath();
+    ctx.moveTo(u.x, u.y - s * 0.06);
+    ctx.lineTo(u.x - s * 0.04, u.y + s * 0.04);
+    ctx.lineTo(u.x + s * 0.04, u.y + s * 0.04);
+    ctx.closePath();
+    ctx.fillStyle = `rgba(${cr},${0.5 + i * 0.12})`;
+    ctx.fill();
+  });
+
+  // Battle flash in center
+  ctx.beginPath();
+  ctx.arc(0, s * 0.3, s * 0.1, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(${cr},0.15)`;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 20;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Crossed swords / clash lines
+  ctx.strokeStyle = `rgba(${cr},0.6)`;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-s * 0.15, s * 0.15);
+  ctx.lineTo(s * 0.15, s * 0.45);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(s * 0.15, s * 0.15);
+  ctx.lineTo(-s * 0.15, s * 0.45);
+  ctx.stroke();
+
+  // "VS" text
+  ctx.font = `bold ${s * 0.14}px Consolas, monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = color;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 12;
+  ctx.fillText('VS', 0, s * 0.3);
+  ctx.shadowBlur = 0;
+
+  // Dashed siege range arc
+  ctx.setLineDash([4, 6]);
+  ctx.beginPath();
+  ctx.arc(0, s * 0.7, s * 0.75, Math.PI, 0);
+  ctx.strokeStyle = `rgba(${cr},0.12)`;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   drawIcon(document.getElementById('art-nd4'), drawTowerIcon, '#00ffff');
   drawIcon(document.getElementById('art-nt'), drawTankIcon, '#ff00ff');
+  drawIcon(document.getElementById('art-ns'), drawSiegeIcon, '#ffd700');
   let t;
   window.addEventListener('resize', () => {
     clearTimeout(t);
     t = setTimeout(() => {
       drawIcon(document.getElementById('art-nd4'), drawTowerIcon, '#00ffff');
       drawIcon(document.getElementById('art-nt'), drawTankIcon, '#ff00ff');
+      drawIcon(document.getElementById('art-ns'), drawSiegeIcon, '#ffd700');
     }, 200);
   });
 });

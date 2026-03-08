@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx vite:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(grep:*)",
+      "Bash(wc:*)",
+      "Bash(tasklist:*)",
+      "Bash(wmic process:*)",
+      "Bash(powershell:*)",
+      "Bash(taskkill:*)"
+    ]
+  }
+}
