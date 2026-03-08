@@ -12,14 +12,19 @@ import {
   UTYPE_HELICOPTER,
   WALL_HORIZONTAL, WALL_VERTICAL, WALL_CORNER_NE, WALL_CORNER_NW, WALL_CORNER_SE, WALL_CORNER_SW,
   TILE_WALL,
+  UNIT_CLICK_RADIUS,
+  STANCE_ADVANCE, STANCE_RALLY,
 } from './config.js';
 import { gridToWorld, dist } from './utils.js';
 import {
   createSquad, removeSquad, getSquadByBuilding, assignUnitToSquad,
-  removeUnitFromSquad, setSquadStance, setSquadTargetPriority,
-  setGlobalStance, setGlobalTargetPriority,
-  setSquadRally, setGlobalRally,
-  getSquads, getSquadUnitCount, cleanSquadMembership, resetSquads,
+  removeUnitFromSquad,
+  setSquadSpawnStance, setSquadSpawnTargetPriority,
+  setUnitStance, setUnitTargetPriority,
+  setUnitsStance, setUnitsTargetPriority, setUnitsRally,
+  setAllUnitsStance, setAllUnitsTargetPriority, setAllUnitsRally,
+  getSquads, getSquadById, getSquadUnitCount, getUnitsBySquad,
+  cleanSquadMembership, resetSquads,
 } from './squads.js';
 
 // --- Renderer imports ---
@@ -48,7 +53,7 @@ import { updateCombat, getCombatUnitHash, getCombatBuildingHash } from './combat
 import { createEconomy, updateEconomy, getEnergy, spendEnergy, addEnergy, getIncomeBreakdown, resetEconomy } from './economy.js';
 import { initAI, updateAI, updatePlayerRally, resetAI, getPlayerRallyState, forcePlayerPush, assignEnemyUnitRally } from './waves.js';
 import { initHUD, updateHUD, clearBuildSelection, selectBuilding, deselectBuilding, getSelectedBuilding, showHelicopterInfo, hideHelicopterInfo, setSquadRallyPending as setHudSquadRallyPending } from './hud.js';
-import { initInput, getHoveredTile, setPlacementMode, getPlacementMode, setClickCallback, setSelectCallback, setCameraSnapCallback, setHelicopterRallyCallback, setGetHelicoptersCallback, getSelectedHelicopter, setSelectedHelicopter, setDragPlaceCallback, getDragTiles, isDragActive, setSquadRallyCallback, setSquadRallyPending as setInputSquadRallyPending } from './input.js';
+import { initInput, getHoveredTile, setPlacementMode, getPlacementMode, setClickCallback, setSelectCallback, setBoxSelectCallback, setCameraSnapCallback, setHelicopterRallyCallback, setGetHelicoptersCallback, getSelectedHelicopter, setSelectedHelicopter, setDragPlaceCallback, getDragTiles, isDragActive, setSquadRallyCallback, setSquadRallyPending as setInputSquadRallyPending, getSelectionBoxScreenCoords } from './input.js';
 import { initParticles, updateParticles, getParticles, spawnParticle, resetParticles } from './particles.js';
 import { playSound } from './sound.js';
 
@@ -59,6 +64,9 @@ let matchTime = 0;
 // Difficulty is managed by the inline script in game.html via window._selectedDifficulty
 let _lastBaseAlert = false;
 let _cachedObstacles = null;
+
+// --- Unit selection state ---
+let selectedUnits = [];        // array of unit refs currently selected
 
 // --- DOM refs ---
 const menuOverlay = document.getElementById('menu-overlay');
@@ -101,6 +109,7 @@ function resetAll() {
   resetAI();
   resetSquads();
   resetDragHighlights();
+  selectedUnits = [];
   deselectBuilding();
   hideHelicopterInfo();
   setSelectedHelicopter(null);
@@ -218,16 +227,98 @@ function handleBuildingBranch(building, key) {
   playSound('build');
 }
 
-// --- Squad rally handler ---
-function handleSquadRallySet(squadIdOrAll, worldX, worldZ) {
-  if (squadIdOrAll === 'all') {
-    setGlobalRally(TEAM_PLAYER, worldX, worldZ, getUnits);
+// --- Rally handler (for selection-based rally or global rally) ---
+function handleRallySet(target, worldX, worldZ) {
+  if (target === 'all') {
+    setAllUnitsRally(TEAM_PLAYER, worldX, worldZ, getUnits);
+  } else if (target === 'selection') {
+    setUnitsRally(selectedUnits, worldX, worldZ);
   } else {
-    setSquadRally(Number(squadIdOrAll), worldX, worldZ, getUnits);
+    // target is a squad ID — rally all units in that squad
+    const units = getUnitsBySquad(Number(target), getUnits);
+    setUnitsRally(units, worldX, worldZ);
   }
   setHudSquadRallyPending(null);
   setInputSquadRallyPending(null);
   playSound('heli_rally');
+}
+
+// --- Unit selection helpers ---
+function clearUnitSelection() {
+  for (let i = 0; i < selectedUnits.length; i++) {
+    selectedUnits[i].selected = false;
+  }
+  // Clear all squad highlights
+  const allUnits = getUnits();
+  for (let i = 0; i < allUnits.length; i++) {
+    allUnits[i].squadHighlight = false;
+  }
+  selectedUnits = [];
+}
+
+function selectUnit(unit) {
+  clearUnitSelection();
+  if (!unit || !unit.alive || unit.team !== TEAM_PLAYER) return;
+  unit.selected = true;
+  selectedUnits = [unit];
+  // Highlight squadmates
+  if (unit.squadId != null) {
+    const squadmates = getUnitsBySquad(unit.squadId, getUnits);
+    for (let i = 0; i < squadmates.length; i++) {
+      if (squadmates[i].id !== unit.id) {
+        squadmates[i].squadHighlight = true;
+      }
+    }
+    // Show parent building info in sidebar
+    const squad = getSquadById(unit.squadId);
+    if (squad) {
+      const buildings = getBuildings();
+      const parentBuilding = buildings.find(b => b.id === squad.buildingId && b.alive);
+      if (parentBuilding) selectBuilding(parentBuilding);
+    }
+  }
+}
+
+function selectUnitsInBox(x1, z1, x2, z2) {
+  clearUnitSelection();
+  const minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+  const minZ = Math.min(z1, z2), maxZ = Math.max(z1, z2);
+  const allUnits = getUnits();
+  const selected = [];
+  for (let i = 0; i < allUnits.length; i++) {
+    const u = allUnits[i];
+    if (!u.alive || u.team !== TEAM_PLAYER || u.isAir) continue;
+    if (u.x >= minX && u.x <= maxX && u.z >= minZ && u.z <= maxZ) {
+      u.selected = true;
+      selected.push(u);
+    }
+  }
+  selectedUnits = selected;
+}
+
+function selectSquadUnits(squadId) {
+  clearUnitSelection();
+  const units = getUnitsBySquad(squadId, getUnits);
+  for (let i = 0; i < units.length; i++) {
+    units[i].selected = true;
+  }
+  selectedUnits = units;
+}
+
+function findUnitAtWorldPos(worldX, worldZ) {
+  const allUnits = getUnits();
+  let best = null;
+  let bestDist = UNIT_CLICK_RADIUS;
+  for (let i = 0; i < allUnits.length; i++) {
+    const u = allUnits[i];
+    if (!u.alive || u.team !== TEAM_PLAYER || u.isAir) continue;
+    const d = dist(worldX, worldZ, u.x, u.z);
+    if (d < bestDist) {
+      bestDist = d;
+      best = u;
+    }
+  }
+  return best;
 }
 
 // --- Wall auto-orientation ---
@@ -350,10 +441,13 @@ function gameLoop(timestamp) {
       canRepairWall,
       startWallRepair,
       getRepairCost,
-      // Squad management callbacks for AI
+      // Squad management callbacks for AI — now sets stances directly on units
       getSquads: (team) => getSquads(team),
-      setSquadStance: (squadId, stance) => setSquadStance(squadId, stance, getUnits),
-      setSquadTargetPriority: (squadId, priority) => setSquadTargetPriority(squadId, priority, getUnits),
+      getUnitsBySquad: (squadId) => getUnitsBySquad(squadId, getUnits),
+      setUnitStance,
+      setUnitTargetPriority,
+      setUnitsStance,
+      setUnitsTargetPriority,
     });
 
     // Update player unit rally/grouping
@@ -501,6 +595,12 @@ function gameLoop(timestamp) {
       cleanSquadMembership(getUnits);
     }
 
+    // Clean stale selected units (dead ones)
+    selectedUnits = selectedUnits.filter(u => u.alive);
+    for (let i = 0; i < selectedUnits.length; i++) {
+      if (!selectedUnits[i].alive) selectedUnits[i].selected = false;
+    }
+
     // Build squad data for HUD — only include squads with alive buildings
     const playerSquads = getSquads(TEAM_PLAYER);
     const allBuildingsForSquads = getBuildings();
@@ -518,8 +618,8 @@ function gameLoop(timestamp) {
         buildingId: s.buildingId,
         label: s.label,
         buildingType: s.buildingType,
-        stance: s.stance,
-        targetPriority: s.targetPriority,
+        spawnStance: s.spawnStance,
+        spawnTargetPriority: s.spawnTargetPriority,
         unitCount: getSquadUnitCount(s, getUnits),
         buildingAlive: true,
         rallyX: s.rallyX,
@@ -574,6 +674,8 @@ function gameLoop(timestamp) {
       selectedHelicopter,
       selectedHelicopterId: selectedHeliId,
       squads: squadData,
+      selectedUnitCount: selectedUnits.length,
+      selectionBoxScreen: getSelectionBoxScreenCoords(),
     });
   }
 
@@ -667,8 +769,8 @@ function init() {
     }
   });
 
-  // Wire select callback for building/helicopter selection
-  setSelectCallback((col, row) => {
+  // Wire select callback for building/helicopter/unit selection
+  setSelectCallback((col, row, worldX, worldZ) => {
     if (col === -2 && row === -2) {
       // Helicopter selection signal from input.js
       const heliId = getSelectedHelicopter();
@@ -676,6 +778,7 @@ function init() {
         const helis = getHelicopters();
         const heli = helis.find(h => h.id === heliId);
         if (heli) {
+          clearUnitSelection();
           deselectBuilding();
           showHelicopterInfo(heli);
           playSound('heli_select');
@@ -685,7 +788,36 @@ function init() {
     }
     hideHelicopterInfo();
     setSelectedHelicopter(null);
+
+    // Try building selection first
     handleTileSelect(col, row);
+    if (getSelectedBuilding()) {
+      clearUnitSelection();
+      return;
+    }
+
+    // No building found — try unit selection via world position
+    if (worldX != null && worldZ != null) {
+      const unit = findUnitAtWorldPos(worldX, worldZ);
+      if (unit) {
+        selectUnit(unit);
+        playSound('select');
+        return;
+      }
+    }
+
+    // Nothing found — clear selection
+    clearUnitSelection();
+    deselectBuilding();
+  });
+
+  // Wire box select callback
+  setBoxSelectCallback((x1, z1, x2, z2) => {
+    hideHelicopterInfo();
+    setSelectedHelicopter(null);
+    deselectBuilding();
+    selectUnitsInBox(x1, z1, x2, z2);
+    if (selectedUnits.length > 0) playSound('select');
   });
 
   // Wire helicopter rally callback
@@ -699,8 +831,8 @@ function init() {
   setGetHelicoptersCallback(() => getHelicopters());
 
   // Wire squad rally callback for map clicks
-  setSquadRallyCallback((squadIdOrAll, worldX, worldZ) => {
-    handleSquadRallySet(squadIdOrAll, worldX, worldZ);
+  setSquadRallyCallback((target, worldX, worldZ) => {
+    handleRallySet(target, worldX, worldZ);
   });
 
   // Wire drag-to-place callback for walls
@@ -748,39 +880,70 @@ function init() {
       setSelectedHelicopter(null);
       hideHelicopterInfo();
     },
-    onSquadStance: (squadId, stance) => {
-      setSquadStance(Number(squadId), stance, getUnits);
+    // --- Spawn stance controls (per-building, affects future units only) ---
+    onSpawnStanceChange: (squadId, stance) => {
+      setSquadSpawnStance(Number(squadId), stance);
+      playSound('select');
+    },
+    onSpawnTargetChange: (squadId, priority) => {
+      setSquadSpawnTargetPriority(Number(squadId), priority);
+      playSound('select');
+    },
+    // --- Selection-based commands (from command bar) ---
+    onSelectionStance: (stance) => {
+      if (selectedUnits.length > 0) {
+        setUnitsStance(selectedUnits, stance);
+      }
       setHudSquadRallyPending(null);
       setInputSquadRallyPending(null);
       playSound('select');
     },
-    onSquadTarget: (squadId, priority) => {
-      setSquadTargetPriority(Number(squadId), priority, getUnits);
+    onSelectionTarget: (priority) => {
+      if (selectedUnits.length > 0) {
+        setUnitsTargetPriority(selectedUnits, priority);
+      }
       playSound('select');
     },
-    onGlobalStance: (stance) => {
-      setGlobalStance(TEAM_PLAYER, stance, getUnits);
-      setHudSquadRallyPending(null);
-      setInputSquadRallyPending(null);
-      playSound('select');
+    onSelectionDeselect: () => {
+      clearUnitSelection();
     },
-    onGlobalTarget: (priority) => {
-      setGlobalTargetPriority(TEAM_PLAYER, priority, getUnits);
-      playSound('select');
-    },
-    onSquadRallyClick: (squadIdOrAll) => {
-      // Enter rally placement mode — next map click will set the rally point
-      setHudSquadRallyPending(squadIdOrAll);
-      setInputSquadRallyPending(squadIdOrAll);
-      // Cancel build placement and helicopter selection if active
+    onSelectionRallyClick: () => {
+      // Enter rally placement mode for current selection
+      setHudSquadRallyPending('selection');
+      setInputSquadRallyPending('selection');
       clearBuildSelection();
       setPlacementMode(null);
       setSelectedHelicopter(null);
       hideHelicopterInfo();
       playSound('select');
     },
-    onSquadRallySet: (squadIdOrAll, worldX, worldZ) => {
-      handleSquadRallySet(squadIdOrAll, worldX, worldZ);
+    // --- Squad card click (selects all units in that squad) ---
+    onSquadCardClick: (squadId) => {
+      selectSquadUnits(Number(squadId));
+      playSound('select');
+    },
+    // --- Global commands (all player units) ---
+    onGlobalStance: (stance) => {
+      setAllUnitsStance(TEAM_PLAYER, stance, getUnits);
+      setHudSquadRallyPending(null);
+      setInputSquadRallyPending(null);
+      playSound('select');
+    },
+    onGlobalTarget: (priority) => {
+      setAllUnitsTargetPriority(TEAM_PLAYER, priority, getUnits);
+      playSound('select');
+    },
+    onGlobalRallyClick: () => {
+      setHudSquadRallyPending('all');
+      setInputSquadRallyPending('all');
+      clearBuildSelection();
+      setPlacementMode(null);
+      setSelectedHelicopter(null);
+      hideHelicopterInfo();
+      playSound('select');
+    },
+    onRallySet: (target, worldX, worldZ) => {
+      handleRallySet(target, worldX, worldZ);
     },
     onWallRepair: (building) => {
       if (!building || !canRepairWall(building)) return;

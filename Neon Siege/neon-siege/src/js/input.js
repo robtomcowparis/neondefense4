@@ -3,7 +3,7 @@
 // ============================================================
 
 import * as THREE from 'three';
-import { TILE_SIZE, HELI_FLY_HEIGHT, BTYPE_WALL } from './config.js';
+import { TILE_SIZE, HELI_FLY_HEIGHT, BTYPE_WALL, BOX_SELECT_MIN_DRAG } from './config.js';
 import { worldToGrid, dist } from './utils.js';
 
 let renderer = null;
@@ -35,6 +35,12 @@ let _isDragging = false;
 let dragStartTile = null;       // {col, row}
 let dragCurrentTiles = [];      // array of {col, row}
 let dragPlaceCallback = null;
+
+// --- Box-drag selection state ---
+let boxSelectCallback = null;
+let _boxDragStartScreen = null;  // {x, y} screen pixels
+let _boxDragEndScreen = null;    // {x, y} screen pixels
+let _isBoxDragging = false;
 
 let orbitControls = null;
 
@@ -73,6 +79,17 @@ function onMouseMove(event) {
   if (_isDragging && dragStartTile && hoveredTile) {
     dragCurrentTiles = computeDragLine(dragStartTile, hoveredTile);
   }
+
+  // Track box-drag selection
+  if (_boxDragStartScreen) {
+    _boxDragEndScreen = { x: event.clientX, y: event.clientY };
+    const dx = event.clientX - _boxDragStartScreen.x;
+    const dy = event.clientY - _boxDragStartScreen.y;
+    if (!_isBoxDragging && Math.sqrt(dx * dx + dy * dy) > BOX_SELECT_MIN_DRAG) {
+      _isBoxDragging = true;
+      if (orbitControls) orbitControls.enabled = false;
+    }
+  }
 }
 
 function onMouseDown(event) {
@@ -86,6 +103,13 @@ function onMouseDown(event) {
     dragCurrentTiles = [{ col: hoveredTile.col, row: hoveredTile.row }];
     if (orbitControls) orbitControls.enabled = false;
     return;
+  }
+
+  // Start tracking potential box-drag if NOT in build mode, wall-drag, squad rally, or helicopter mode
+  if (!placementMode && !_isDragging && _squadRallyPending == null && selectedHelicopterId == null) {
+    _boxDragStartScreen = { x: event.clientX, y: event.clientY };
+    _boxDragEndScreen = null;
+    _isBoxDragging = false;
   }
 }
 
@@ -101,6 +125,25 @@ function onMouseUp(event) {
     cancelDrag();
     return;
   }
+
+  // If box-drag selection completed, raycast corners and call boxSelectCallback
+  if (_isBoxDragging && _boxDragStartScreen && _boxDragEndScreen) {
+    const rect = renderer.domElement.getBoundingClientRect();
+    const startWorld = screenToGround(_boxDragStartScreen.x, _boxDragStartScreen.y, rect);
+    const endWorld = screenToGround(_boxDragEndScreen.x, _boxDragEndScreen.y, rect);
+    if (startWorld && endWorld && boxSelectCallback) {
+      const x1 = Math.min(startWorld.x, endWorld.x);
+      const z1 = Math.min(startWorld.z, endWorld.z);
+      const x2 = Math.max(startWorld.x, endWorld.x);
+      const z2 = Math.max(startWorld.z, endWorld.z);
+      boxSelectCallback(x1, z1, x2, z2);
+    }
+    cancelBoxDrag();
+    return;
+  }
+
+  // Clear box-drag tracking (was a click, not a drag)
+  cancelBoxDrag();
 
   // --- Everything below is the original onClick behavior ---
 
@@ -137,7 +180,7 @@ function onMouseUp(event) {
         if (dist(heliIntersection.x, heliIntersection.z, heli.x, heli.z) < 35) {
           selectedHelicopterId = heli.id;
           // Signal helicopter selection to main via selectCallback with special coords
-          if (selectCallback) selectCallback(-2, -2);
+          if (selectCallback) selectCallback(-2, -2, 0, 0);
           return;
         }
       }
@@ -148,8 +191,10 @@ function onMouseUp(event) {
   if (placementMode && hoveredTile && clickCallback) {
     clickCallback(hoveredTile.col, hoveredTile.row, placementMode);
   } else if (!placementMode && hoveredTile && selectCallback) {
-    // Click on a tile while not in build mode — try to select building
-    selectCallback(hoveredTile.col, hoveredTile.row);
+    // Click on a tile while not in build mode — try to select building or unit
+    const worldX = hoveredTile.col * TILE_SIZE + TILE_SIZE / 2;
+    const worldZ = hoveredTile.row * TILE_SIZE + TILE_SIZE / 2;
+    selectCallback(hoveredTile.col, hoveredTile.row, worldX, worldZ);
   }
 }
 
@@ -184,12 +229,39 @@ function cancelDrag() {
   if (orbitControls) orbitControls.enabled = true;
 }
 
+function cancelBoxDrag() {
+  const wasBoxDragging = _isBoxDragging;
+  _boxDragStartScreen = null;
+  _boxDragEndScreen = null;
+  _isBoxDragging = false;
+  if (wasBoxDragging && orbitControls) orbitControls.enabled = true;
+}
+
+// Raycast a screen pixel position to the ground plane, return {x, z} or null
+function screenToGround(screenX, screenY, rect) {
+  const ndc = new THREE.Vector2(
+    ((screenX - rect.left) / rect.width) * 2 - 1,
+    -((screenY - rect.top) / rect.height) * 2 + 1
+  );
+  const rc = new THREE.Raycaster();
+  rc.setFromCamera(ndc, camera);
+  const hit = new THREE.Vector3();
+  if (rc.ray.intersectPlane(groundPlane, hit)) {
+    return { x: hit.x, z: hit.z };
+  }
+  return null;
+}
+
 function onKeyDown(event) {
   if (event.key === 'h' || event.key === 'H' || event.key === 'Home') {
     if (cameraSnapCallback) cameraSnapCallback();
   }
-  // Escape cancels drag, squad rally, or deselects helicopter
+  // Escape cancels drag, box-drag, squad rally, or deselects helicopter
   if (event.key === 'Escape') {
+    if (_isBoxDragging || _boxDragStartScreen) {
+      cancelBoxDrag();
+      return;
+    }
     if (_isDragging) {
       cancelDrag();
       return;
@@ -206,6 +278,12 @@ function onKeyDown(event) {
 
 function onRightClick(event) {
   event.preventDefault();
+
+  // Right click cancels box-drag if active
+  if (_isBoxDragging || _boxDragStartScreen) {
+    cancelBoxDrag();
+    return;
+  }
 
   // Right click cancels wall drag if active
   if (_isDragging) {
@@ -308,4 +386,20 @@ export function getDragTiles() {
 
 export function isDragActive() {
   return _isDragging;
+}
+
+// --- Box-drag selection exports ---
+
+export function setBoxSelectCallback(fn) {
+  boxSelectCallback = fn;
+}
+
+export function getSelectionBoxScreenCoords() {
+  if (!_isBoxDragging || !_boxDragStartScreen || !_boxDragEndScreen) return null;
+  return {
+    x1: Math.min(_boxDragStartScreen.x, _boxDragEndScreen.x),
+    y1: Math.min(_boxDragStartScreen.y, _boxDragEndScreen.y),
+    x2: Math.max(_boxDragStartScreen.x, _boxDragEndScreen.x),
+    y2: Math.max(_boxDragStartScreen.y, _boxDragEndScreen.y),
+  };
 }

@@ -1184,24 +1184,17 @@ function updateAISquads(matchTime, threat, callbacks) {
 
   for (let i = 0; i < sorted.length; i++) {
     const squad = sorted[i];
+    const units = callbacks.getUnitsBySquad?.(squad.id) ?? [];
 
     if (i < defendTarget) {
-      if (squad.stance !== STANCE_DEFEND) {
-        callbacks.setSquadStance?.(squad.id, STANCE_DEFEND);
-      }
-      if (squad.targetPriority !== TARGET_UNITS) {
-        callbacks.setSquadTargetPriority?.(squad.id, TARGET_UNITS);
-      }
+      callbacks.setUnitsStance?.(units, STANCE_DEFEND);
+      callbacks.setUnitsTargetPriority?.(units, TARGET_UNITS);
     } else {
-      if (squad.stance !== STANCE_ADVANCE) {
-        callbacks.setSquadStance?.(squad.id, STANCE_ADVANCE);
-      }
+      callbacks.setUnitsStance?.(units, STANCE_ADVANCE);
       // During push: factory squads focus buildings
       const wantPriority = (aiState.pushActive && squad.buildingType === BTYPE_FACTORY)
         ? TARGET_BUILDINGS : TARGET_ANY;
-      if (squad.targetPriority !== wantPriority) {
-        callbacks.setSquadTargetPriority?.(squad.id, wantPriority);
-      }
+      callbacks.setUnitsTargetPriority?.(units, wantPriority);
     }
   }
 }

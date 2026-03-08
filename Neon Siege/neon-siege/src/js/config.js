@@ -666,6 +666,19 @@ export const TARGET_ANY = 'any';           // default priority scoring
 export const TARGET_UNITS = 'units';       // prioritize enemy units
 export const TARGET_BUILDINGS = 'buildings'; // prioritize enemy structures
 
+// Spawn stance: default orders for newly produced units (decoupled from field orders)
+export const SPAWN_STANCE_DEFAULT = STANCE_DEFEND;
+export const SPAWN_TARGET_DEFAULT = TARGET_ANY;
+
+// --- Unit Selection ---
+// Click detection radius for selecting ground units on the map
+export const UNIT_CLICK_RADIUS = 30;           // world units — click must be within this of a unit center
+// Minimum drag distance (screen pixels) to distinguish box-drag from click
+export const BOX_SELECT_MIN_DRAG = 8;
+// Selection highlight colors (used by unitMeshes.js)
+export const SELECTION_RING_COLOR = 0xFFFFFF;   // bright white ring on selected units (blooms)
+export const SQUAD_HIGHLIGHT_COLOR = 0x00FFFF;  // dimmer cyan ring on squadmates of selected unit
+
 // Defend stance: units return to base area and actively intercept enemies
 export const DEFEND_ROW_OFFSET = 6;        // rows forward from own base row (idle position)
 export const DEFEND_HOLD_RADIUS = 60;      // world units — hold within this radius of defend point when idle

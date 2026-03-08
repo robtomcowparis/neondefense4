@@ -1,15 +1,28 @@
 // ============================================================
-// squads.js — Squad command system
+// squads.js — Squad membership and spawn stance system
 // ============================================================
-// Each production building (Barracks/Factory) has a squad.
-// Units produced by that building join its squad.
-// Commands are set per-squad and propagated to member units.
+// Each production building (Barracks/Factory/Helipad) has a squad.
+// Units produced by that building join its squad (membership tracking).
+//
+// KEY CHANGE: Squads no longer dictate live unit stances.
+// Instead, squads have a "spawnStance" and "spawnTargetPriority"
+// that are copied to units ONE TIME at creation. After that,
+// each unit owns its own stance/targetPriority independently.
+//
+// Commands are now issued to SELECTED UNITS (via input.js box/click
+// selection), not to squads. Squad membership is used for:
+//   - Highlighting squadmates when a unit is clicked
+//   - Squad card click-to-select-all
+//   - Informational display (unit count per building)
+//   - Spawn stance configuration per building
+//
 // Helicopters are excluded — they use their own rally system.
 // ============================================================
 
 import {
   STANCE_ADVANCE, STANCE_DEFEND, STANCE_HOLD, STANCE_RALLY,
   TARGET_ANY, TARGET_UNITS, TARGET_BUILDINGS,
+  SPAWN_STANCE_DEFAULT, SPAWN_TARGET_DEFAULT,
   TEAM_PLAYER, TEAM_ENEMY,
   BTYPE_BARRACKS, BTYPE_FACTORY, BTYPE_HELIPAD,
   UTYPE_HELICOPTER,
@@ -54,9 +67,11 @@ export function createSquad(buildingId, team, buildingType) {
     team,
     buildingType,
     label,
-    stance: STANCE_ADVANCE,
-    targetPriority: TARGET_ANY,
+    // Spawn stance: copied to new units at creation time (one-time copy)
+    spawnStance: SPAWN_STANCE_DEFAULT,
+    spawnTargetPriority: SPAWN_TARGET_DEFAULT,
     unitIds: new Set(),
+    // Rally point (used when units are commanded to rally via selection)
     rallyX: null,
     rallyZ: null,
   };
@@ -72,8 +87,6 @@ export function createSquad(buildingId, team, buildingType) {
 export function removeSquad(squadId, getUnitsCallback) {
   const idx = squads.findIndex(s => s.id === squadId);
   if (idx === -1) return;
-
-  const squad = squads[idx];
 
   // Clear squadId on member units
   if (getUnitsCallback) {
@@ -105,7 +118,8 @@ export function getSquadByBuilding(buildingId) {
 
 /**
  * Add a unit to its parent building's squad.
- * Sets the unit's stance, targetPriority, and squadId fields.
+ * Sets the unit's stance and targetPriority from the squad's SPAWN defaults.
+ * This is a one-time copy — the unit independently owns its stance after this.
  * Skips helicopters.
  */
 export function assignUnitToSquad(unit, buildingId) {
@@ -115,8 +129,9 @@ export function assignUnitToSquad(unit, buildingId) {
   if (!squad) return;
 
   unit.squadId = squad.id;
-  unit.stance = squad.stance;
-  unit.targetPriority = squad.targetPriority;
+  // One-time copy of spawn stance to unit
+  unit.stance = squad.spawnStance;
+  unit.targetPriority = squad.spawnTargetPriority;
   squad.unitIds.add(unit.id);
 }
 
@@ -130,81 +145,131 @@ export function removeUnitFromSquad(unit) {
 }
 
 // ============================================================
-// Commands
+// Spawn stance commands (affect FUTURE units only)
 // ============================================================
 
 /**
- * Set the stance for a squad. Propagates to all living member units.
+ * Set the spawn stance for a squad. Only affects units produced AFTER this call.
  */
-export function setSquadStance(squadId, stance, getUnitsCallback) {
+export function setSquadSpawnStance(squadId, stance) {
   const squad = getSquadById(squadId);
   if (!squad) return;
-  squad.stance = stance;
-  propagateToMembers(squad, getUnitsCallback);
+  squad.spawnStance = stance;
 }
 
 /**
- * Set the target priority for a squad. Propagates to all living member units.
+ * Set the spawn target priority for a squad. Only affects future units.
  */
-export function setSquadTargetPriority(squadId, priority, getUnitsCallback) {
+export function setSquadSpawnTargetPriority(squadId, priority) {
   const squad = getSquadById(squadId);
   if (!squad) return;
-  squad.targetPriority = priority;
-  propagateToMembers(squad, getUnitsCallback);
+  squad.spawnTargetPriority = priority;
 }
 
+// ============================================================
+// Direct unit commands (for selections — replaces old propagation)
+// ============================================================
+
 /**
- * Global stance command: set stance for ALL squads of a given building type
- * (or all squads if buildingType is null) for a team.
+ * Set stance on a single unit and clear its movement state so it reacts immediately.
  */
-export function setGlobalStance(team, stance, getUnitsCallback, buildingType) {
-  for (let i = 0; i < squads.length; i++) {
-    const s = squads[i];
-    if (s.team !== team) continue;
-    if (buildingType && s.buildingType !== buildingType) continue;
-    s.stance = stance;
-    propagateToMembers(s, getUnitsCallback);
+export function setUnitStance(unit, stance) {
+  if (!unit || !unit.alive) return;
+  const changed = unit.stance !== stance;
+  unit.stance = stance;
+  if (changed) {
+    unit.path = null;
+    unit.pathIndex = 0;
+    unit._defendTargetId = null;
+    unit._wallTarget = null;
+    if (stance !== STANCE_ADVANCE) {
+      unit.rallyHold = false;
+      unit._rallyAssigned = false;
+    }
   }
 }
 
 /**
- * Set a squad to RALLY stance with a specific rally point.
- * If the squad is already in RALLY stance, just updates the rally coordinates.
+ * Set target priority on a single unit.
  */
-export function setSquadRally(squadId, worldX, worldZ, getUnitsCallback) {
-  const squad = getSquadById(squadId);
-  if (!squad) return;
-  squad.rallyX = worldX;
-  squad.rallyZ = worldZ;
-  squad.stance = STANCE_RALLY;
-  propagateToMembers(squad, getUnitsCallback);
+export function setUnitTargetPriority(unit, priority) {
+  if (!unit || !unit.alive) return;
+  unit.targetPriority = priority;
 }
 
 /**
- * Set ALL squads for a team to RALLY stance with a specific rally point.
+ * Set stance on an array of units (batch — for box/click selections).
  */
-export function setGlobalRally(team, worldX, worldZ, getUnitsCallback) {
-  for (let i = 0; i < squads.length; i++) {
-    const s = squads[i];
-    if (s.team !== team) continue;
-    s.rallyX = worldX;
-    s.rallyZ = worldZ;
-    s.stance = STANCE_RALLY;
-    propagateToMembers(s, getUnitsCallback);
+export function setUnitsStance(units, stance) {
+  for (let i = 0; i < units.length; i++) {
+    setUnitStance(units[i], stance);
   }
 }
 
 /**
- * Global target priority command: set priority for ALL squads of a given
- * building type (or all squads if buildingType is null) for a team.
+ * Set target priority on an array of units (batch).
  */
-export function setGlobalTargetPriority(team, priority, getUnitsCallback, buildingType) {
-  for (let i = 0; i < squads.length; i++) {
-    const s = squads[i];
-    if (s.team !== team) continue;
-    if (buildingType && s.buildingType !== buildingType) continue;
-    s.targetPriority = priority;
-    propagateToMembers(s, getUnitsCallback);
+export function setUnitsTargetPriority(units, priority) {
+  for (let i = 0; i < units.length; i++) {
+    setUnitTargetPriority(units[i], priority);
+  }
+}
+
+/**
+ * Set rally point on an array of units. Sets stance to RALLY and
+ * stores the rally coordinates on each unit.
+ */
+export function setUnitsRally(units, worldX, worldZ) {
+  for (let i = 0; i < units.length; i++) {
+    const u = units[i];
+    if (!u || !u.alive) continue;
+    u.squadRallyX = worldX;
+    u.squadRallyZ = worldZ;
+    setUnitStance(u, STANCE_RALLY);
+  }
+}
+
+/**
+ * Set ALL player units to a given stance (global command).
+ */
+export function setAllUnitsStance(team, stance, getUnitsCallback) {
+  if (!getUnitsCallback) return;
+  const allUnits = getUnitsCallback();
+  for (let i = 0; i < allUnits.length; i++) {
+    const u = allUnits[i];
+    if (u.alive && u.team === team && u.type !== UTYPE_HELICOPTER) {
+      setUnitStance(u, stance);
+    }
+  }
+}
+
+/**
+ * Set ALL player units to a given target priority (global command).
+ */
+export function setAllUnitsTargetPriority(team, priority, getUnitsCallback) {
+  if (!getUnitsCallback) return;
+  const allUnits = getUnitsCallback();
+  for (let i = 0; i < allUnits.length; i++) {
+    const u = allUnits[i];
+    if (u.alive && u.team === team && u.type !== UTYPE_HELICOPTER) {
+      setUnitTargetPriority(u, priority);
+    }
+  }
+}
+
+/**
+ * Set ALL player units to RALLY at a given world position (global rally).
+ */
+export function setAllUnitsRally(team, worldX, worldZ, getUnitsCallback) {
+  if (!getUnitsCallback) return;
+  const allUnits = getUnitsCallback();
+  for (let i = 0; i < allUnits.length; i++) {
+    const u = allUnits[i];
+    if (u.alive && u.team === team && u.type !== UTYPE_HELICOPTER) {
+      u.squadRallyX = worldX;
+      u.squadRallyZ = worldZ;
+      setUnitStance(u, STANCE_RALLY);
+    }
   }
 }
 
@@ -236,6 +301,19 @@ export function getSquadUnitCount(squad, getUnitsCallback) {
   return count;
 }
 
+/** Get all alive units belonging to a squad. */
+export function getUnitsBySquad(squadId, getUnitsCallback) {
+  if (!getUnitsCallback) return [];
+  const result = [];
+  const units = getUnitsCallback();
+  for (let i = 0; i < units.length; i++) {
+    if (units[i].alive && units[i].squadId === squadId) {
+      result.push(units[i]);
+    }
+  }
+  return result;
+}
+
 /** Clean up dead unit IDs from all squad membership sets. */
 export function cleanSquadMembership(getUnitsCallback) {
   const alive = getUnitsCallback();
@@ -261,48 +339,4 @@ export function resetSquads() {
     [TEAM_PLAYER]: { barracks: 0, factory: 0, helipad: 0 },
     [TEAM_ENEMY]:  { barracks: 0, factory: 0, helipad: 0 },
   };
-}
-
-// ============================================================
-// Internal helpers
-// ============================================================
-
-function propagateToMembers(squad, getUnitsCallback) {
-  if (!getUnitsCallback) return;
-  const allUnits = getUnitsCallback();
-  for (let i = 0; i < allUnits.length; i++) {
-    const u = allUnits[i];
-    if (u.alive && u.squadId === squad.id) {
-      const stanceChanged = u.stance !== squad.stance;
-      u.stance = squad.stance;
-      u.targetPriority = squad.targetPriority;
-
-      // Propagate rally coordinates for RALLY stance
-      if (squad.stance === STANCE_RALLY && squad.rallyX != null) {
-        const coordsChanged = u.squadRallyX !== squad.rallyX || u.squadRallyZ !== squad.rallyZ;
-        u.squadRallyX = squad.rallyX;
-        u.squadRallyZ = squad.rallyZ;
-        // When rally point moves, clear movement state so units repath immediately
-        if (coordsChanged) {
-          u.path = null;
-          u.pathIndex = 0;
-          u._defendTargetId = null;
-          u._wallTarget = null;
-        }
-      }
-
-      if (stanceChanged) {
-        // Clear movement state so units react immediately to new stance
-        u.path = null;
-        u.pathIndex = 0;
-        u._defendTargetId = null;
-        u._wallTarget = null;
-        // Release rally hold when switching away from advance
-        if (squad.stance !== STANCE_ADVANCE) {
-          u.rallyHold = false;
-          u._rallyAssigned = false;
-        }
-      }
-    }
-  }
 }

@@ -13,6 +13,7 @@ import {
   TARGET_ANY, TARGET_UNITS, TARGET_BUILDINGS,
   WALL_HORIZONTAL, WALL_VERTICAL, WALL_CORNER_NE, WALL_CORNER_NW, WALL_CORNER_SE, WALL_CORNER_SW,
   WALL_DEMOLISH_REFUND_RATIO,
+  SPAWN_STANCE_DEFAULT, SPAWN_TARGET_DEFAULT,
 } from './config.js';
 import {
   getTurretStats, getProductionStats, getGeneratorStats,
@@ -196,6 +197,50 @@ export function initHUD(sidebarContainer, cbs) {
   elements.playerUnitCount = unitCountContainer.querySelector('#player-unit-count');
   elements.enemyUnitCount = unitCountContainer.querySelector('#enemy-unit-count');
 
+  // --- Selection Command Bar (hidden by default, shows when units are selected) ---
+  const selCmdSection = document.createElement('div');
+  selCmdSection.className = 'sidebar-section selection-command-bar hidden';
+  selCmdSection.innerHTML = `
+    <div class="sidebar-title sel-cmd-title">0 UNITS SELECTED</div>
+    <div class="sel-cmd-row">
+      <span class="sel-cmd-label">CMD</span>
+      <button class="sel-cmd-btn" data-sel="stance" data-val="${STANCE_ADVANCE}">ADV</button>
+      <button class="sel-cmd-btn" data-sel="stance" data-val="${STANCE_DEFEND}">DEF</button>
+      <button class="sel-cmd-btn" data-sel="stance" data-val="${STANCE_HOLD}">HOLD</button>
+      <button class="sel-cmd-btn sel-cmd-btn--rally" data-sel="rally">RALLY</button>
+    </div>
+    <div class="sel-cmd-row">
+      <span class="sel-cmd-label">TGT</span>
+      <button class="sel-cmd-btn sel-cmd-btn--target" data-sel="target" data-val="${TARGET_ANY}">ANY</button>
+      <button class="sel-cmd-btn sel-cmd-btn--target" data-sel="target" data-val="${TARGET_UNITS}">UNIT</button>
+      <button class="sel-cmd-btn sel-cmd-btn--target" data-sel="target" data-val="${TARGET_BUILDINGS}">BLDG</button>
+    </div>
+    <button class="build-btn sel-deselect-btn">DESELECT</button>
+  `;
+  container.appendChild(selCmdSection);
+  elements.selCmdSection = selCmdSection;
+  elements.selCmdTitle = selCmdSection.querySelector('.sel-cmd-title');
+
+  // Wire selection command bar buttons
+  selCmdSection.querySelectorAll('[data-sel="stance"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (callbacks && callbacks.onSelectionStance) callbacks.onSelectionStance(btn.dataset.val);
+    });
+  });
+  selCmdSection.querySelectorAll('[data-sel="rally"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (callbacks && callbacks.onSelectionRallyClick) callbacks.onSelectionRallyClick();
+    });
+  });
+  selCmdSection.querySelectorAll('[data-sel="target"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (callbacks && callbacks.onSelectionTarget) callbacks.onSelectionTarget(btn.dataset.val);
+    });
+  });
+  selCmdSection.querySelector('.sel-deselect-btn').addEventListener('click', () => {
+    if (callbacks && callbacks.onSelectionDeselect) callbacks.onSelectionDeselect();
+  });
+
   // --- Squad Command Section (hidden by default) ---
   const squadSection = document.createElement('div');
   squadSection.className = 'sidebar-section squad-section hidden';
@@ -225,25 +270,25 @@ export function initHUD(sidebarContainer, cbs) {
   // Wire global squad buttons
   squadSection.querySelectorAll('[data-global="stance"]').forEach(btn => {
     btn.addEventListener('click', () => {
-      if (callbacks && callbacks.onGlobalStance) {
-        callbacks.onGlobalStance(btn.dataset.val);
-      }
+      if (callbacks && callbacks.onGlobalStance) callbacks.onGlobalStance(btn.dataset.val);
     });
   });
   squadSection.querySelectorAll('[data-global="target"]').forEach(btn => {
     btn.addEventListener('click', () => {
-      if (callbacks && callbacks.onGlobalTarget) {
-        callbacks.onGlobalTarget(btn.dataset.val);
-      }
+      if (callbacks && callbacks.onGlobalTarget) callbacks.onGlobalTarget(btn.dataset.val);
     });
   });
   squadSection.querySelectorAll('[data-global="rally"]').forEach(btn => {
     btn.addEventListener('click', () => {
-      if (callbacks && callbacks.onSquadRallyClick) {
-        callbacks.onSquadRallyClick('all');
-      }
+      if (callbacks && callbacks.onGlobalRallyClick) callbacks.onGlobalRallyClick();
     });
   });
+
+  // --- Selection Box Overlay (for box-drag selection visual) ---
+  const selBoxOverlay = document.createElement('div');
+  selBoxOverlay.className = 'selection-box hidden';
+  document.body.appendChild(selBoxOverlay);
+  elements.selBoxOverlay = selBoxOverlay;
 
   // --- Rally Section (hidden by default) ---
   const rallySection = document.createElement('div');
@@ -287,8 +332,8 @@ export function initHUD(sidebarContainer, cbs) {
     const worldZ = clickY / MINIMAP_SCALE;
 
     // If squad rally placement is pending, minimap click sets the rally point
-    if (_squadRallyPendingId != null && callbacks && callbacks.onSquadRallySet) {
-      callbacks.onSquadRallySet(_squadRallyPendingId, worldX, worldZ);
+    if (_squadRallyPendingId != null && callbacks && callbacks.onRallySet) {
+      callbacks.onRallySet(_squadRallyPendingId, worldX, worldZ);
       _squadRallyPendingId = null;
       return;
     }
@@ -400,8 +445,14 @@ export function updateHUD(state) {
     elements.enemyUnitCount.textContent = enemyCount;
   }
 
+  // --- Selection Command Bar ---
+  updateSelectionCommandBar(state);
+
   // --- Squad Commands ---
   updateSquadSection(state);
+
+  // --- Selection Box Overlay ---
+  updateSelectionBox(state);
 
   // --- Base Alert (Task 10) ---
   updateBaseAlert(state.baseUnderAttack, state.dt || 0);
@@ -811,76 +862,120 @@ function updateSquadSection(state) {
   elements.squadSection.classList.remove('hidden');
 
   // Build a key to detect changes and avoid unnecessary DOM rebuilds
-  const key = squads.map(s => `${s.id}:${s.stance}:${s.targetPriority}:${s.unitCount}:${s.buildingAlive}`).join('|') + `|rp:${_squadRallyPendingId || ''}`;
+  const key = squads.map(s =>
+    `${s.id}:${s.spawnStance || SPAWN_STANCE_DEFAULT}:${s.spawnTargetPriority || SPAWN_TARGET_DEFAULT}:${s.unitCount}:${s.buildingAlive}`
+  ).join('|') + `|rp:${_squadRallyPendingId || ''}`;
   if (key === _lastSquadKey) return;
   _lastSquadKey = key;
 
-  // Update global buttons to reflect if all squads share the same stance/target
-  const allStance = squads.every(s => s.stance === squads[0].stance) ? squads[0].stance : null;
-  const allTarget = squads.every(s => s.targetPriority === squads[0].targetPriority) ? squads[0].targetPriority : null;
+  // Update global buttons — reflect if all squads share the same spawn stance/target
+  const allSpawnStance = squads.every(s => (s.spawnStance || SPAWN_STANCE_DEFAULT) === (squads[0].spawnStance || SPAWN_STANCE_DEFAULT))
+    ? (squads[0].spawnStance || SPAWN_STANCE_DEFAULT) : null;
+  const allSpawnTarget = squads.every(s => (s.spawnTargetPriority || SPAWN_TARGET_DEFAULT) === (squads[0].spawnTargetPriority || SPAWN_TARGET_DEFAULT))
+    ? (squads[0].spawnTargetPriority || SPAWN_TARGET_DEFAULT) : null;
 
   elements.squadSection.querySelectorAll('[data-global="stance"]').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.val === allStance);
+    btn.classList.toggle('active', btn.dataset.val === allSpawnStance);
   });
   elements.squadSection.querySelectorAll('[data-global="rally"]').forEach(btn => {
-    const isRallyActive = allStance === STANCE_RALLY;
     const isPending = _squadRallyPendingId === 'all';
-    btn.classList.toggle('active', isRallyActive || isPending);
+    btn.classList.toggle('active', isPending);
     btn.classList.toggle('pending', isPending);
   });
   elements.squadSection.querySelectorAll('[data-global="target"]').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.val === allTarget);
+    btn.classList.toggle('active', btn.dataset.val === allSpawnTarget);
   });
 
-  // Rebuild squad cards
+  // Rebuild squad cards — informational with spawn stance/target controls
   let html = '';
   for (const sq of squads) {
     const dimClass = sq.buildingAlive ? '' : ' squad-card--dead';
-    const isRally = sq.stance === STANCE_RALLY;
-    const isPending = _squadRallyPendingId === sq.id;
-    const rallyClass = (isRally || isPending) ? ' active' : '';
-    const pendingClass = isPending ? ' pending' : '';
+    const spawnStance = sq.spawnStance || SPAWN_STANCE_DEFAULT;
+    const spawnTarget = sq.spawnTargetPriority || SPAWN_TARGET_DEFAULT;
     html += `<div class="squad-card${dimClass}" data-squad="${sq.id}">
-      <div class="squad-card-header">
+      <div class="squad-card-header" data-squad-click="${sq.id}">
         <span class="squad-label">${sq.label}</span>
         <span class="squad-count">${sq.unitCount}</span>
       </div>
-      <div class="squad-cmd-row">
-        <button class="squad-cmd-btn${sq.stance === STANCE_ADVANCE ? ' active' : ''}" data-squad-id="${sq.id}" data-cmd="stance" data-val="${STANCE_ADVANCE}">ADV</button>
-        <button class="squad-cmd-btn${sq.stance === STANCE_DEFEND ? ' active' : ''}" data-squad-id="${sq.id}" data-cmd="stance" data-val="${STANCE_DEFEND}">DEF</button>
-        <button class="squad-cmd-btn${sq.stance === STANCE_HOLD ? ' active' : ''}" data-squad-id="${sq.id}" data-cmd="stance" data-val="${STANCE_HOLD}">HOLD</button>
-        <button class="squad-cmd-btn squad-cmd-btn--rally${rallyClass}${pendingClass}" data-squad-id="${sq.id}" data-cmd="rally">RALLY</button>
+      <div class="squad-spawn-row">
+        <span class="squad-spawn-label">SPAWN</span>
+        <button class="squad-spawn-btn${spawnStance === STANCE_ADVANCE ? ' active' : ''}" data-squad-id="${sq.id}" data-spawn="stance" data-val="${STANCE_ADVANCE}">ADV</button>
+        <button class="squad-spawn-btn${spawnStance === STANCE_DEFEND ? ' active' : ''}" data-squad-id="${sq.id}" data-spawn="stance" data-val="${STANCE_DEFEND}">DEF</button>
+        <button class="squad-spawn-btn${spawnStance === STANCE_HOLD ? ' active' : ''}" data-squad-id="${sq.id}" data-spawn="stance" data-val="${STANCE_HOLD}">HOLD</button>
         <span class="squad-cmd-sep"></span>
-        <button class="squad-cmd-btn squad-cmd-btn--target${sq.targetPriority === TARGET_ANY ? ' active' : ''}" data-squad-id="${sq.id}" data-cmd="target" data-val="${TARGET_ANY}">ANY</button>
-        <button class="squad-cmd-btn squad-cmd-btn--target${sq.targetPriority === TARGET_UNITS ? ' active' : ''}" data-squad-id="${sq.id}" data-cmd="target" data-val="${TARGET_UNITS}">UNIT</button>
-        <button class="squad-cmd-btn squad-cmd-btn--target${sq.targetPriority === TARGET_BUILDINGS ? ' active' : ''}" data-squad-id="${sq.id}" data-cmd="target" data-val="${TARGET_BUILDINGS}">BLDG</button>
+        <button class="squad-spawn-btn squad-spawn-btn--target${spawnTarget === TARGET_ANY ? ' active' : ''}" data-squad-id="${sq.id}" data-spawn="target" data-val="${TARGET_ANY}">ANY</button>
+        <button class="squad-spawn-btn squad-spawn-btn--target${spawnTarget === TARGET_UNITS ? ' active' : ''}" data-squad-id="${sq.id}" data-spawn="target" data-val="${TARGET_UNITS}">UNIT</button>
+        <button class="squad-spawn-btn squad-spawn-btn--target${spawnTarget === TARGET_BUILDINGS ? ' active' : ''}" data-squad-id="${sq.id}" data-spawn="target" data-val="${TARGET_BUILDINGS}">BLDG</button>
       </div>
     </div>`;
   }
   elements.squadCards.innerHTML = html;
 
-  // Wire per-squad button events
-  elements.squadCards.querySelectorAll('[data-cmd="stance"]').forEach(btn => {
+  // Wire squad card header clicks — select all units in that squad
+  elements.squadCards.querySelectorAll('[data-squad-click]').forEach(header => {
+    header.addEventListener('click', () => {
+      const squadId = Number(header.dataset.squadClick);
+      if (callbacks && callbacks.onSquadCardClick) callbacks.onSquadCardClick(squadId);
+    });
+  });
+
+  // Wire spawn stance buttons
+  elements.squadCards.querySelectorAll('[data-spawn="stance"]').forEach(btn => {
     btn.addEventListener('click', () => {
-      if (callbacks && callbacks.onSquadStance) {
-        callbacks.onSquadStance(btn.dataset.squadId, btn.dataset.val);
+      if (callbacks && callbacks.onSpawnStanceChange) {
+        callbacks.onSpawnStanceChange(Number(btn.dataset.squadId), btn.dataset.val);
       }
     });
   });
-  elements.squadCards.querySelectorAll('[data-cmd="rally"]').forEach(btn => {
+
+  // Wire spawn target buttons
+  elements.squadCards.querySelectorAll('[data-spawn="target"]').forEach(btn => {
     btn.addEventListener('click', () => {
-      if (callbacks && callbacks.onSquadRallyClick) {
-        callbacks.onSquadRallyClick(Number(btn.dataset.squadId));
+      if (callbacks && callbacks.onSpawnTargetChange) {
+        callbacks.onSpawnTargetChange(Number(btn.dataset.squadId), btn.dataset.val);
       }
     });
   });
-  elements.squadCards.querySelectorAll('[data-cmd="target"]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (callbacks && callbacks.onSquadTarget) {
-        callbacks.onSquadTarget(btn.dataset.squadId, btn.dataset.val);
-      }
-    });
-  });
+}
+
+// ---- Selection Command Bar ----
+
+let _lastSelCmdKey = '';
+
+function updateSelectionCommandBar(state) {
+  const count = state.selectedUnitCount || 0;
+  if (count === 0) {
+    if (elements.selCmdSection && !elements.selCmdSection.classList.contains('hidden')) {
+      elements.selCmdSection.classList.add('hidden');
+    }
+    _lastSelCmdKey = '';
+    return;
+  }
+
+  elements.selCmdSection.classList.remove('hidden');
+
+  const key = `${count}`;
+  if (key !== _lastSelCmdKey) {
+    _lastSelCmdKey = key;
+    elements.selCmdTitle.textContent = `${count} UNIT${count !== 1 ? 'S' : ''} SELECTED`;
+  }
+}
+
+// ---- Selection Box Overlay ----
+
+function updateSelectionBox(state) {
+  const box = state.selectionBoxScreen;
+  if (!box) {
+    if (elements.selBoxOverlay && !elements.selBoxOverlay.classList.contains('hidden')) {
+      elements.selBoxOverlay.classList.add('hidden');
+    }
+    return;
+  }
+  elements.selBoxOverlay.classList.remove('hidden');
+  elements.selBoxOverlay.style.left = box.x1 + 'px';
+  elements.selBoxOverlay.style.top = box.y1 + 'px';
+  elements.selBoxOverlay.style.width = (box.x2 - box.x1) + 'px';
+  elements.selBoxOverlay.style.height = (box.y2 - box.y1) + 'px';
 }
 
 // ---- Base Alert (Task 10) ----

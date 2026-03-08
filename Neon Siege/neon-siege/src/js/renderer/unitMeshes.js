@@ -8,6 +8,7 @@ import {
   UTYPE_RIFLE, UTYPE_ASSAULT, UTYPE_TANK, UTYPE_HELICOPTER,
   COLORS, HELI_FLY_HEIGHT,
   TEAM_PLAYER, TEAM_ENEMY, HIT_FLASH_DURATION,
+  SELECTION_RING_COLOR, SQUAD_HIGHLIGHT_COLOR,
 } from '../config.js';
 
 // ================================================================
@@ -45,6 +46,38 @@ export function createUnitMesh(unit, scene) {
       group.userData.glowParts.push(upgradeRing);
     }
   }
+
+  // --- Selection ring (bright white, blooms) ---
+  const selRadius = { [UTYPE_RIFLE]: 12, [UTYPE_ASSAULT]: 15, [UTYPE_TANK]: 22, [UTYPE_HELICOPTER]: 16 }[unit.type] || 12;
+  const selRingGeo = new THREE.RingGeometry(selRadius - 1.5, selRadius, 32);
+  const selRingMat = new THREE.MeshBasicMaterial({
+    color: SELECTION_RING_COLOR,
+    transparent: true,
+    opacity: 0.9,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+  const selRingMesh = new THREE.Mesh(selRingGeo, selRingMat);
+  selRingMesh.rotation.x = -Math.PI / 2;
+  selRingMesh.visible = false;
+  group.add(selRingMesh);
+  group.userData._selectionRing = selRingMesh;
+
+  // --- Squad highlight ring (dimmer cyan, slightly larger) ---
+  const sqRadius = selRadius + 3;
+  const sqRingGeo = new THREE.RingGeometry(sqRadius - 1.2, sqRadius, 32);
+  const sqRingMat = new THREE.MeshBasicMaterial({
+    color: SQUAD_HIGHLIGHT_COLOR,
+    transparent: true,
+    opacity: 0.5,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+  const sqRingMesh = new THREE.Mesh(sqRingGeo, sqRingMat);
+  sqRingMesh.rotation.x = -Math.PI / 2;
+  sqRingMesh.visible = false;
+  group.add(sqRingMesh);
+  group.userData._squadHighlightRing = sqRingMesh;
 
   const baseY = { [UTYPE_RIFLE]: 3, [UTYPE_ASSAULT]: 3, [UTYPE_TANK]: 2, [UTYPE_HELICOPTER]: HELI_FLY_HEIGHT }[unit.type] || 10;
   group.position.set(unit.x, baseY, unit.z);
@@ -170,6 +203,25 @@ export function updateUnitMeshes(now, units, selectedHeliId) {
       if (hpR < 0.25 && glows) {
         const flick = Math.random() > 0.82 ? 0.35 : 0;
         for (const g of glows) g.material.opacity += flick;
+      }
+    }
+
+    // --- Selection / squad highlight rings ---
+    const selRing = group.userData._selectionRing;
+    const sqRing = group.userData._squadHighlightRing;
+    if (selRing) {
+      selRing.visible = !!u.selected;
+      // Keep ring flat at ground level beneath the unit (don't bob with unit)
+      selRing.position.y = -group.userData.baseY + 0.5;
+      if (selRing.visible) {
+        selRing.material.opacity = 0.7 + 0.2 * Math.sin(now * 5 + offset);
+      }
+    }
+    if (sqRing) {
+      sqRing.visible = !!u.squadHighlight;
+      sqRing.position.y = -group.userData.baseY + 0.3;
+      if (sqRing.visible) {
+        sqRing.material.opacity = 0.35 + 0.15 * Math.sin(now * 3 + offset);
       }
     }
 

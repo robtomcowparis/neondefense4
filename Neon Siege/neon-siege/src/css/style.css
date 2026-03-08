@@ -816,6 +816,153 @@ body {
   background: rgba(0,255,255,0.12);
 }
 
+/* --- Selection Command Bar --- */
+.selection-command-bar {
+  border-color: var(--cyan);
+  box-shadow: 0 0 12px rgba(0,255,255,0.25);
+  background: rgba(0,255,255,0.04);
+}
+
+.sel-cmd-title {
+  color: var(--cyan);
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+
+.sel-cmd-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 6px;
+}
+
+.sel-cmd-label {
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  width: 30px;
+  flex-shrink: 0;
+}
+
+.sel-cmd-btn {
+  flex: 1;
+  padding: 5px 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text);
+  background: var(--bg-btn);
+  border: 1px solid var(--border-cyan);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.sel-cmd-btn:hover {
+  color: var(--cyan);
+  background: rgba(0,255,255,0.12);
+  box-shadow: 0 0 8px rgba(0,255,255,0.3);
+}
+
+.sel-cmd-btn--target:hover {
+  color: var(--gold);
+  border-color: var(--gold);
+  background: rgba(255,215,0,0.1);
+  box-shadow: 0 0 8px rgba(255,215,0,0.25);
+}
+
+.sel-cmd-btn--rally:hover {
+  color: var(--green);
+  border-color: var(--green);
+  background: rgba(50,255,100,0.1);
+  box-shadow: 0 0 8px rgba(50,255,100,0.25);
+}
+
+.sel-deselect-btn {
+  justify-content: center;
+  color: var(--text-dim);
+  border-color: var(--border-dim);
+  margin-top: 2px;
+}
+
+.sel-deselect-btn:hover {
+  color: var(--text);
+  border-color: var(--border-cyan);
+}
+
+/* --- Selection Box Overlay (box-drag rectangle) --- */
+.selection-box {
+  position: fixed;
+  border: 1px solid rgba(0,255,255,0.7);
+  background: rgba(0,255,255,0.08);
+  box-shadow: 0 0 6px rgba(0,255,255,0.3);
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* --- Squad Spawn Stance Buttons (dimmer/smaller than command buttons) --- */
+.squad-spawn-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.squad-spawn-label {
+  font-family: var(--font-display);
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+  width: 38px;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.squad-spawn-btn {
+  flex: 1;
+  padding: 2px 0;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--text-dim);
+  background: var(--bg-btn);
+  border: 1px solid var(--border-dim);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  opacity: 0.7;
+}
+
+.squad-spawn-btn:hover {
+  color: var(--text);
+  border-color: var(--border-cyan);
+  opacity: 1;
+}
+
+.squad-spawn-btn.active {
+  color: var(--cyan);
+  border-color: var(--cyan);
+  background: rgba(0,255,255,0.08);
+  opacity: 1;
+}
+
+.squad-spawn-btn--target.active {
+  color: var(--gold);
+  border-color: var(--gold);
+  background: rgba(255,215,0,0.06);
+}
+
+/* Squad card header clickable */
+.squad-card-header {
+  cursor: pointer;
+}
+
+.squad-card-header:hover .squad-label {
+  color: var(--cyan);
+}
+
 /* --- Scrollbar --- */
 #sidebar::-webkit-scrollbar {
   width: 4px;

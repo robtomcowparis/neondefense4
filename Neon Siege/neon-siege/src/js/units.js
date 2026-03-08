@@ -88,6 +88,9 @@ export function createUnit(type, x, z, team, bonuses = null) {
     squadRallyZ: null,
     // Wall targeting
     _wallTarget: null,
+    // Selection render flags (set by main.js, read by unitMeshes.js)
+    selected: false,
+    squadHighlight: false,
   };
 
   // Helicopter air unit fields
