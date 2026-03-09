@@ -46,6 +46,9 @@ export function spawnParticle(x, z, color, type) {
     case 'wallRepair':
       spawnWallRepair(x, z, color);
       break;
+    case 'airStrike':
+      spawnAirStrikeBurst(x, z, color);
+      break;
     default:
       spawnBurst(x, z, color, 4, 6, 50, 0.3, 0.5, 2);
   }
@@ -183,6 +186,72 @@ function spawnWallRepair(x, z, color) {
       maxLife: life,
       size: 2.5 + Math.random() * 1.5,
       type: 'wallRepair',
+    });
+  }
+}
+
+/**
+ * Air strike explosion — massive multi-layer burst.
+ */
+function spawnAirStrikeBurst(x, z, color) {
+  // Inner core — intense bright burst
+  const coreCount = 25 + Math.floor(Math.random() * 10); // 25-34
+  for (let i = 0; i < coreCount; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const s = 60 + Math.random() * 100; // fast outward
+    const life = 0.6 + Math.random() * 0.5; // 0.6-1.1s
+    particles.push({
+      id: nextId++,
+      x: x + (Math.random() - 0.5) * 30,
+      y: 5 + Math.random() * 20,
+      z: z + (Math.random() - 0.5) * 30,
+      vx: Math.cos(angle) * s,
+      vy: 50 + Math.random() * 80,
+      vz: Math.sin(angle) * s,
+      color: 0xFFFFFF,
+      life,
+      maxLife: life,
+      size: 5 + Math.random() * 4,
+      type: 'burst',
+    });
+  }
+  // Outer ring — team-colored debris
+  const outerCount = 30 + Math.floor(Math.random() * 15); // 30-44
+  for (let i = 0; i < outerCount; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const s = 80 + Math.random() * 140;
+    const life = 0.8 + Math.random() * 0.7; // 0.8-1.5s
+    particles.push({
+      id: nextId++,
+      x: x + (Math.random() - 0.5) * 60,
+      y: 10 + Math.random() * 30,
+      z: z + (Math.random() - 0.5) * 60,
+      vx: Math.cos(angle) * s,
+      vy: 30 + Math.random() * 60,
+      vz: Math.sin(angle) * s,
+      color,
+      life,
+      maxLife: life,
+      size: 4 + Math.random() * 3,
+      type: 'wallBreak',
+      rotSpeed: (Math.random() - 0.5) * 12,
+    });
+  }
+  // Central flash column
+  for (let i = 0; i < 5; i++) {
+    particles.push({
+      id: nextId++,
+      x: x + (Math.random() - 0.5) * 10,
+      y: 5 + i * 15,
+      z: z + (Math.random() - 0.5) * 10,
+      vx: 0,
+      vy: 60 + Math.random() * 40,
+      vz: 0,
+      color: 0xFFDD44,
+      life: 0.3 + Math.random() * 0.2,
+      maxLife: 0.5,
+      size: 8 + Math.random() * 4,
+      type: 'flash',
     });
   }
 }

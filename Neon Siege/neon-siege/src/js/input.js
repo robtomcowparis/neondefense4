@@ -30,6 +30,10 @@ let getHelicoptersCallback = null;
 let _squadRallyPending = null;  // squad ID (number), 'all', or null
 let squadRallyCallback = null;
 
+// --- Air strike targeting state ---
+let _airStrikePending = null;   // building ID or null
+let airStrikeCallback = null;
+
 // --- Wall drag-to-place state ---
 let _isDragging = false;
 let dragStartTile = null;       // {col, row}
@@ -105,8 +109,8 @@ function onMouseDown(event) {
     return;
   }
 
-  // Start tracking potential box-drag if NOT in build mode, wall-drag, squad rally, or helicopter mode
-  if (!placementMode && !_isDragging && _squadRallyPending == null && selectedHelicopterId == null) {
+  // Start tracking potential box-drag if NOT in build mode, wall-drag, squad rally, air strike, or helicopter mode
+  if (!placementMode && !_isDragging && _squadRallyPending == null && _airStrikePending == null && selectedHelicopterId == null) {
     _boxDragStartScreen = { x: event.clientX, y: event.clientY };
     _boxDragEndScreen = null;
     _isBoxDragging = false;
@@ -146,6 +150,17 @@ function onMouseUp(event) {
   cancelBoxDrag();
 
   // --- Everything below is the original onClick behavior ---
+
+  // If air strike targeting is pending, click sets the target
+  if (_airStrikePending != null && hoveredTile) {
+    const worldX = hoveredTile.col * TILE_SIZE + TILE_SIZE / 2;
+    const worldZ = hoveredTile.row * TILE_SIZE + TILE_SIZE / 2;
+    if (airStrikeCallback) {
+      airStrikeCallback(_airStrikePending, worldX, worldZ);
+    }
+    _airStrikePending = null;
+    return;
+  }
 
   // If squad rally placement is pending, click sets the rally point
   if (_squadRallyPending != null && hoveredTile) {
@@ -266,6 +281,10 @@ function onKeyDown(event) {
       cancelDrag();
       return;
     }
+    if (_airStrikePending != null) {
+      _airStrikePending = null;
+      return;
+    }
     if (_squadRallyPending != null) {
       _squadRallyPending = null;
       return;
@@ -288,6 +307,12 @@ function onRightClick(event) {
   // Right click cancels wall drag if active
   if (_isDragging) {
     cancelDrag();
+    return;
+  }
+
+  // Right click cancels air strike targeting
+  if (_airStrikePending != null) {
+    _airStrikePending = null;
     return;
   }
 
@@ -372,6 +397,20 @@ export function setSquadRallyPending(squadIdOrAll) {
 
 export function getSquadRallyPending() {
   return _squadRallyPending;
+}
+
+// --- Air strike targeting exports ---
+
+export function setAirStrikeCallback(fn) {
+  airStrikeCallback = fn;
+}
+
+export function setAirStrikePending(buildingId) {
+  _airStrikePending = buildingId;
+}
+
+export function getAirStrikePending() {
+  return _airStrikePending;
 }
 
 // --- Wall drag exports ---

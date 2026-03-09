@@ -4,6 +4,7 @@
 import {
   BUILDING_STATS, TILE_BUILDING, TILE_EMPTY, TILE_SIZE, TILE_WALL,
   TEAM_PLAYER, BTYPE_TURRET, BTYPE_BARRACKS, BTYPE_FACTORY, BTYPE_GENERATOR, BTYPE_HELIPAD, BTYPE_WALL,
+  AIRSTRIKE_COOLDOWN,
   TURRET_UPGRADE_TIME, TURRET_BRANCH_TIME,
   TURRET_HP_PER_LEVEL, TURRET_HP_BRANCH_BONUS,
   BARRACKS_UPGRADE_TIME, BARRACKS_BRANCH_TIME,
@@ -84,6 +85,8 @@ export function createBuilding(type, col, row, team) {
     kills: 0,
     investedCost: stats.cost,
     orientation: type === BTYPE_WALL ? WALL_HORIZONTAL : null,
+    // Air strike cooldown (helipads only)
+    airStrikeCooldownUntil: 0,
   };
 
   // Mark tiles as occupied (walls use TILE_WALL, others use TILE_BUILDING)
@@ -236,6 +239,20 @@ export function demolishBuilding(building) {
   const refund = Math.floor(building.investedCost * WALL_DEMOLISH_REFUND_RATIO);
   removeBuilding(building);
   return refund;
+}
+
+/** Check if a helipad can call an air strike (fully upgraded = has a branch). */
+export function canAirStrike(b, matchTime) {
+  if (!b || !b.alive || b.type !== BTYPE_HELIPAD) return false;
+  if (!b.branch) return false; // must be fully upgraded (branched)
+  if (b.constructionState) return false;
+  if (matchTime < b.airStrikeCooldownUntil) return false;
+  return true;
+}
+
+/** Mark helipad as having used air strike (start cooldown). */
+export function markAirStrikeUsed(b, matchTime) {
+  b.airStrikeCooldownUntil = matchTime + AIRSTRIKE_COOLDOWN;
 }
 
 /** Finish an upgrade — increment level, scale HP. */

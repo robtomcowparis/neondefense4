@@ -91,6 +91,50 @@ export function spawnExplosionRing(x, z, color, radius) {
   });
 }
 
+/**
+ * Spawn a large expanding shockwave ring for air strike impact.
+ */
+export function spawnAirStrikeRing(x, z, color, radius) {
+  const y = 6;
+  const group = new THREE.Group();
+
+  // Inner bright ring
+  const ringGeo = new THREE.TorusGeometry(1, 0.8, 8, 32);
+  const ringMat = makeAccentMaterial(color);
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.rotation.x = Math.PI / 2;
+  group.add(ring);
+
+  // Outer glow ring
+  const glowGeo = new THREE.TorusGeometry(1, 2.5, 8, 32);
+  const glowMat = makeGlowMaterial(color, 0.4);
+  const glow = new THREE.Mesh(glowGeo, glowMat);
+  glow.rotation.x = Math.PI / 2;
+  group.add(glow);
+
+  // Ground flash disc
+  const discGeo = new THREE.CircleGeometry(1, 32);
+  const discMat = makeGlowMaterial(0xFFFFFF, 0.5);
+  const disc = new THREE.Mesh(discGeo, discMat);
+  disc.rotation.x = -Math.PI / 2;
+  disc.position.y = 1;
+  group.add(disc);
+
+  group.position.set(x, y, z);
+  parentScene.add(group);
+
+  activeEffects.push({
+    type: 'airStrikeRing',
+    group,
+    ringMat,
+    glowMat,
+    discMat,
+    targetRadius: radius,
+    life: 1.2,
+    maxLife: 1.2,
+  });
+}
+
 export function updateEffectRenderer(now) {
   const dt = lastNow > 0 ? Math.min(now - lastNow, 0.05) : 0;
   lastNow = now;
@@ -125,6 +169,21 @@ export function updateEffectRenderer(now) {
       fx.group.scale.set(scale, 1, scale);
       const opacity = (1 - t) * (1 - t);
       fx.glowMat.opacity = 0.3 * opacity;
+    }
+
+    if (fx.type === 'airStrikeRing') {
+      // Fast initial expansion that decelerates
+      const easeT = 1 - (1 - t) * (1 - t); // ease-out quadratic
+      const scale = 1 + easeT * (fx.targetRadius - 1);
+      fx.group.scale.set(scale, 1, scale);
+      const opacity = (1 - t) * (1 - t);
+      fx.glowMat.opacity = 0.4 * opacity;
+      if (fx.discMat) {
+        fx.discMat.opacity = 0.5 * opacity * opacity;
+        // Scale disc separately so it fills the ring area
+        const disc = fx.group.children[2];
+        if (disc) disc.scale.set(scale * 0.8, scale * 0.8, 1);
+      }
     }
   }
 }

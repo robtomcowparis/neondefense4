@@ -45,6 +45,10 @@ import {
   PLAYER_RALLY_ROW,
   PLAYER_PUSH_SIZE,
   PLAYER_MAX_RALLY_TIME,
+  AIRSTRIKE_COST,
+  AI_AIRSTRIKE_MIN_TIME,
+  AI_AIRSTRIKE_ENERGY_THRESHOLD,
+  PLAYER_BASE_COL, PLAYER_BASE_ROW,
 } from './config.js';
 import { randomInt, gridToWorld, dist } from './utils.js';
 import { getTile } from './map.js';
@@ -154,6 +158,9 @@ export function updateAI(dt, matchTime, callbacks) {
 
   // Helicopter rally management
   updateAIHelicopterRallies(callbacks);
+
+  // AI Air Strike check (runs every tick, not gated by tick interval)
+  tryAIAirStrike(matchTime, callbacks);
 
   // Ticked decisions (building, upgrading)
   if (matchTime - aiState.lastTick < AI_TICK_INTERVAL) return;
@@ -747,6 +754,108 @@ export function assignEnemyUnitRally(u) {
   if (aiState.rallyStartTime === 0) {
     aiState.rallyStartTime = _matchTime;
   }
+}
+
+// ============================================================
+// AI Air Strike — uses fully-upgraded helipads to call air strikes
+// ============================================================
+
+function tryAIAirStrike(matchTime, callbacks) {
+  // Don't try before minimum time
+  if (matchTime < AI_AIRSTRIKE_MIN_TIME) return;
+
+  const energy = callbacks.getEnergy();
+  if (energy < AI_AIRSTRIKE_ENERGY_THRESHOLD) return;
+  if (energy < AIRSTRIKE_COST + AI_ENERGY_RESERVE) return;
+
+  // Find a fully upgraded helipad that can air strike
+  const allBuildings = callbacks.getBuildings();
+  let strikeHelipad = null;
+  for (let i = 0; i < allBuildings.length; i++) {
+    const b = allBuildings[i];
+    if (b.team !== TEAM_ENEMY || !b.alive || b.type !== BTYPE_HELIPAD) continue;
+    if (callbacks.canAirStrike && callbacks.canAirStrike(b)) {
+      strikeHelipad = b;
+      break;
+    }
+  }
+  if (!strikeHelipad) return;
+
+  // Find the best target: densest cluster of player units/buildings
+  const allUnits = callbacks.getUnits();
+  const playerUnits = allUnits.filter(u => u.alive && u.team === TEAM_PLAYER);
+  const playerBuildings = allBuildings.filter(b => b.alive && b.team === TEAM_PLAYER);
+
+  if (playerUnits.length === 0 && playerBuildings.length === 0) return;
+
+  // Score target locations — use player units and buildings as candidate centers
+  let bestX = 0, bestZ = 0, bestScore = 0;
+
+  // Check player base as a target
+  const basePos = gridToWorld(PLAYER_BASE_COL, PLAYER_BASE_ROW, TILE_SIZE);
+  const baseScore = scoreAirStrikeTarget(basePos.x, basePos.z, playerUnits, playerBuildings);
+  if (baseScore > bestScore) {
+    bestScore = baseScore;
+    bestX = basePos.x;
+    bestZ = basePos.z;
+  }
+
+  // Check densest unit cluster
+  for (let i = 0; i < Math.min(playerUnits.length, 10); i++) {
+    const u = playerUnits[i];
+    const score = scoreAirStrikeTarget(u.x, u.z, playerUnits, playerBuildings);
+    if (score > bestScore) {
+      bestScore = score;
+      bestX = u.x;
+      bestZ = u.z;
+    }
+  }
+
+  // Check building clusters
+  for (let i = 0; i < Math.min(playerBuildings.length, 6); i++) {
+    const b = playerBuildings[i];
+    const score = scoreAirStrikeTarget(b.x, b.z, playerUnits, playerBuildings);
+    if (score > bestScore) {
+      bestScore = score;
+      bestX = b.x;
+      bestZ = b.z;
+    }
+  }
+
+  // Require a minimum score threshold to actually strike
+  // (don't waste air strike on one unit)
+  if (bestScore < 500) return;
+
+  // Execute air strike
+  if (callbacks.spendEnergy(AIRSTRIKE_COST)) {
+    callbacks.markAirStrikeUsed(strikeHelipad);
+    callbacks.initiateAirStrike(TEAM_ENEMY, bestX, bestZ);
+  }
+}
+
+function scoreAirStrikeTarget(tx, tz, playerUnits, playerBuildings) {
+  let score = 0;
+  const blastR = 140; // AIRSTRIKE_BLAST_RADIUS
+
+  for (let i = 0; i < playerUnits.length; i++) {
+    const u = playerUnits[i];
+    const d = dist(u.x, u.z, tx, tz);
+    if (d < blastR) {
+      score += u.hp * (1 - d / blastR);
+    }
+  }
+
+  for (let i = 0; i < playerBuildings.length; i++) {
+    const b = playerBuildings[i];
+    const d = dist(b.x, b.z, tx, tz);
+    if (d < blastR) {
+      // Buildings are higher value targets
+      const value = b.type === BTYPE_CORE ? 5000 : b.hp * 2;
+      score += value * (1 - d / blastR);
+    }
+  }
+
+  return score;
 }
 
 // ============================================================

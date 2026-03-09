@@ -14,11 +14,13 @@ import {
   WALL_HORIZONTAL, WALL_VERTICAL, WALL_CORNER_NE, WALL_CORNER_NW, WALL_CORNER_SE, WALL_CORNER_SW,
   WALL_DEMOLISH_REFUND_RATIO,
   SPAWN_STANCE_DEFAULT, SPAWN_TARGET_DEFAULT,
+  AIRSTRIKE_COST, AIRSTRIKE_COOLDOWN,
 } from './config.js';
 import {
   getTurretStats, getProductionStats, getGeneratorStats,
   canUpgradeBuilding, canBranchBuilding,
   getUpgradeCost, getBranchCost,
+  canAirStrike,
 } from './buildings.js';
 
 let container = null;
@@ -43,6 +45,9 @@ let _selectedHeli = null;
 
 // Squad rally placement state
 let _squadRallyPendingId = null;  // squad ID, 'all', or null
+
+// Air strike targeting state
+let _airStrikePending = false;
 
 export function initHUD(sidebarContainer, cbs) {
   container = sidebarContainer;
@@ -290,6 +295,16 @@ export function initHUD(sidebarContainer, cbs) {
   document.body.appendChild(selBoxOverlay);
   elements.selBoxOverlay = selBoxOverlay;
 
+  // --- Air Strike Targeting Overlay ---
+  const airStrikeOverlay = document.createElement('div');
+  airStrikeOverlay.className = 'airstrike-overlay hidden';
+  airStrikeOverlay.innerHTML = `
+    <div class="airstrike-overlay-text">SELECT AIR STRIKE TARGET</div>
+    <div class="airstrike-overlay-sub">Click on the map to designate target &bull; Right-click or ESC to cancel</div>
+  `;
+  document.body.appendChild(airStrikeOverlay);
+  elements.airStrikeOverlay = airStrikeOverlay;
+
   // --- Rally Section (hidden by default) ---
   const rallySection = document.createElement('div');
   rallySection.className = 'sidebar-section rally-section hidden';
@@ -454,6 +469,17 @@ export function updateHUD(state) {
   // --- Selection Box Overlay ---
   updateSelectionBox(state);
 
+  // --- Air Strike Targeting Overlay ---
+  if (elements.airStrikeOverlay) {
+    const showOverlay = _airStrikePending || state.airStrikePending;
+    elements.airStrikeOverlay.classList.toggle('hidden', !showOverlay);
+    document.body.classList.toggle('airstrike-targeting', !!showOverlay);
+    // Auto-clear internal flag when input clears
+    if (!state.airStrikePending && _airStrikePending) {
+      _airStrikePending = false;
+    }
+  }
+
   // --- Base Alert (Task 10) ---
   updateBaseAlert(state.baseUnderAttack, state.dt || 0);
 
@@ -465,7 +491,7 @@ export function updateHUD(state) {
 
   // Update building selection panel
   if (selectedBuilding) {
-    updateBuildingPanel(selectedBuilding, state.energy, state.squads);
+    updateBuildingPanel(selectedBuilding, state.energy, state.squads, state.matchTime);
   }
 
   // Update helicopter selection panel HP if visible
@@ -536,7 +562,7 @@ export function getSelectedBuilding() {
   return selectedBuilding;
 }
 
-function updateBuildingPanel(b, currentEnergy, squads) {
+function updateBuildingPanel(b, currentEnergy, squads, matchTime) {
   if (!b || !b.alive) {
     deselectBuilding();
     return;
@@ -647,7 +673,7 @@ function updateBuildingPanel(b, currentEnergy, squads) {
       _lastBuildingActionsKey = '';
     } else {
       elements.buildingConstruction.classList.add('hidden');
-      buildBuildingActions(b, currentEnergy);
+      buildBuildingActions(b, currentEnergy, matchTime);
     }
   } else {
     elements.buildingConstruction.classList.add('hidden');
@@ -656,7 +682,7 @@ function updateBuildingPanel(b, currentEnergy, squads) {
   }
 }
 
-function buildBuildingActions(b, currentEnergy) {
+function buildBuildingActions(b, currentEnergy, matchTime) {
   const doUpgrade = canUpgradeBuilding(b);
   const doBranch = b.type !== BTYPE_WALL && canBranchBuilding(b);
   const upgCost = doUpgrade ? getUpgradeCost(b) : 0;
@@ -673,7 +699,12 @@ function buildBuildingActions(b, currentEnergy) {
   const repairCost = isWall ? (BUILDING_STATS[BTYPE_WALL].repairCost || 10) : 0;
   const affordRepair = wallDamaged && currentEnergy >= repairCost;
 
-  const key = `${b.id}:${b.level}:${b.branch}:${doUpgrade}:${doBranch}:${affordUpg}:${affordBrA}:${affordBrB}:${wallDamaged}:${affordRepair}:${Math.ceil(b.hp)}:${b.orientation || ''}`;
+  // Air strike
+  const airStrikeReady = canAirStrike(b, matchTime || 0);
+  const affordAirStrike = airStrikeReady && currentEnergy >= AIRSTRIKE_COST;
+  const airStrikeCooldownLeft = (b.airStrikeCooldownUntil && matchTime) ? Math.max(0, b.airStrikeCooldownUntil - matchTime) : 0;
+
+  const key = `${b.id}:${b.level}:${b.branch}:${doUpgrade}:${doBranch}:${affordUpg}:${affordBrA}:${affordBrB}:${wallDamaged}:${affordRepair}:${Math.ceil(b.hp)}:${b.orientation || ''}:${airStrikeReady}:${affordAirStrike}:${Math.floor(airStrikeCooldownLeft)}`;
   if (key === _lastBuildingActionsKey) return;
   _lastBuildingActionsKey = key;
 
@@ -721,6 +752,19 @@ function buildBuildingActions(b, currentEnergy) {
         <span class="br-key">[${bKey}]</span> <span>${bd.name}</span>
         <span class="br-desc">${bd.desc}</span>
         <span class="cost">${cost} E</span>
+      </button>`;
+    }
+  }
+
+  // Air strike button (fully upgraded helipads only)
+  if (b.type === BTYPE_HELIPAD && b.branch) {
+    if (airStrikeReady) {
+      html += `<button class="build-btn turret-action-btn airstrike-btn ${affordAirStrike ? '' : 'disabled'}" data-action="airstrike">
+        <span>AIR STRIKE</span><span class="cost">${AIRSTRIKE_COST} E</span>
+      </button>`;
+    } else if (airStrikeCooldownLeft > 0) {
+      html += `<button class="build-btn turret-action-btn airstrike-btn disabled" data-action="airstrike">
+        <span>AIR STRIKE</span><span class="cost">COOLDOWN ${Math.ceil(airStrikeCooldownLeft)}s</span>
       </button>`;
     }
   }
@@ -781,6 +825,15 @@ function buildBuildingActions(b, currentEnergy) {
       }
     });
   });
+
+  elements.buildingActions.querySelectorAll('[data-action="airstrike"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('disabled')) return;
+      if (callbacks && callbacks.onAirStrike) {
+        callbacks.onAirStrike(selectedBuilding);
+      }
+    });
+  });
 }
 
 export function getSelectedBuildType() {
@@ -790,6 +843,11 @@ export function getSelectedBuildType() {
 export function setSquadRallyPending(id) {
   _squadRallyPendingId = id;
   _lastSquadKey = ''; // force rebuild to show pending state
+}
+
+export function setAirStrikePending(val) {
+  _airStrikePending = !!val;
+  _lastBuildingActionsKey = ''; // force rebuild to show pending state
 }
 
 export function getSquadRallyPending() {

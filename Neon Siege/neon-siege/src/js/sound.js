@@ -168,5 +168,30 @@ export function playSound(name) {
       playTone(ctx, 120, 0.15, 'sawtooth', 0.3);
       playTone(ctx, 80, 0.25, 'square', 0.2, 0.1);
       break;
+
+    case 'airstrike_incoming':
+      // Distant jet engine approaching — rising pitch
+      playTone(ctx, 80, 0.8, 'sawtooth', 0.15);
+      playTone(ctx, 120, 0.6, 'sawtooth', 0.2, 0.3);
+      playTone(ctx, 180, 0.5, 'sawtooth', 0.25, 0.6);
+      playNoise(ctx, 1.2, 0.2, 600, 'lowpass');
+      break;
+
+    case 'airstrike_explosion':
+      // Massive low-frequency explosion with rumble
+      playNoise(ctx, 1.0, 0.8, 200, 'lowpass');
+      playTone(ctx, 40, 0.8, 'sine', 0.5);
+      playTone(ctx, 60, 0.6, 'sawtooth', 0.3, 0.05);
+      playNoise(ctx, 0.5, 0.5, 400, 'lowpass');
+      playTone(ctx, 30, 1.0, 'sine', 0.3, 0.1);
+      break;
+
+    case 'airstrike_confirm':
+      // Dramatic confirmation — descending authority tone
+      playTone(ctx, 880, 0.08, 'square', 0.3);
+      playTone(ctx, 660, 0.08, 'square', 0.25, 0.1);
+      playTone(ctx, 440, 0.12, 'square', 0.3, 0.2);
+      playNoise(ctx, 0.15, 0.15, 2000, 'bandpass');
+      break;
   }
 }

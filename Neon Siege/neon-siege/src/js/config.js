@@ -234,7 +234,7 @@ export const UTYPE_HELICOPTER = 'helicopter';
 // fireRate = shots per second
 export const UNIT_STATS = {
   [UTYPE_RIFLE]: {
-    hp: 80,
+    hp: 50,
     speed: 35,
     damage: 8,
     range: 120,
@@ -261,7 +261,7 @@ export const UNIT_STATS = {
     label: 'Tank',
   },
   [UTYPE_HELICOPTER]: {
-    hp: 350,
+    hp: 700,
     speed: 60,
     damage: 4,
     range: 130,
@@ -719,3 +719,18 @@ export const WALL_CORNER_SW = 'corner_sw';       // connects south + west
 
 // --- Wall Demolish ---
 export const WALL_DEMOLISH_REFUND_RATIO = 0.5;  // refund 50% of invested cost on voluntary demolish
+
+// --- Air Strike ---
+export const AIRSTRIKE_COST = 20000;             // energy cost to call an air strike
+export const AIRSTRIKE_COOLDOWN = 120;            // seconds between air strikes per helipad
+export const AIRSTRIKE_DELAY = 3.0;               // seconds from click to bomber spawn
+export const AIRSTRIKE_BOMBER_SPEED = 250;        // world units per second
+export const AIRSTRIKE_BOMBER_HEIGHT = 120;       // Y position of bomber
+export const AIRSTRIKE_BLAST_RADIUS = 140;        // world units — full blast area
+export const AIRSTRIKE_CORE_RADIUS = 40;          // world units — inner core (full damage)
+export const AIRSTRIKE_MAX_DAMAGE = 2000;         // damage at center
+export const AIRSTRIKE_MIN_DAMAGE = 80;           // damage at edge
+export const AIRSTRIKE_MAP_MARGIN = 400;          // world units off-map where bomber spawns/despawns
+// AI air strike timing
+export const AI_AIRSTRIKE_MIN_TIME = 180;         // seconds — AI won't consider air strike before this
+export const AI_AIRSTRIKE_ENERGY_THRESHOLD = 25000; // AI needs this much energy to consider air strike

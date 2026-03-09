@@ -14,6 +14,9 @@ import {
   TILE_WALL,
   UNIT_CLICK_RADIUS,
   STANCE_ADVANCE, STANCE_RALLY,
+  AIRSTRIKE_COST, AIRSTRIKE_DELAY, AIRSTRIKE_BOMBER_SPEED, AIRSTRIKE_BOMBER_HEIGHT,
+  AIRSTRIKE_BLAST_RADIUS, AIRSTRIKE_CORE_RADIUS, AIRSTRIKE_MAX_DAMAGE, AIRSTRIKE_MIN_DAMAGE,
+  AIRSTRIKE_MAP_MARGIN,
 } from './config.js';
 import { gridToWorld, dist } from './utils.js';
 import {
@@ -31,10 +34,10 @@ import {
 import { initScene, getScene, getCamera, getComposer, getControls, getRenderer } from './renderer/scene.js';
 import { initGrid, updateGrid, resetDragHighlights } from './renderer/grid.js';
 import { createBuildingMesh, updateBuildingMeshes, removeBuildingMesh, rebuildBuildingMesh, getFirePoint } from './renderer/buildingMeshes.js';
-import { createUnitMesh, updateUnitMeshes, removeUnitMesh } from './renderer/unitMeshes.js';
+import { createUnitMesh, updateUnitMeshes, removeUnitMesh, createBomberMesh, removeBomberMesh } from './renderer/unitMeshes.js';
 import { createProjectileMesh, updateProjectileMeshes, removeProjectileMesh } from './renderer/projectileRenderer.js';
 import { initParticleRenderer, updateParticleRenderer } from './renderer/particleRenderer.js';
-import { initEffectRenderer, updateEffectRenderer } from './renderer/effectRenderer.js';
+import { initEffectRenderer, updateEffectRenderer, spawnAirStrikeRing } from './renderer/effectRenderer.js';
 
 // --- Logic imports ---
 import { createMap, isBuildable, getObstacles, getTile, setSharedZoneUnitCheck } from './map.js';
@@ -46,14 +49,15 @@ import {
   canUpgradeBuilding, canBranchBuilding, startUpgrade, startBranch,
   canRepairWall, getRepairCost, startWallRepair,
   setWallOrientation, demolishBuilding,
+  canAirStrike, markAirStrikeUsed,
 } from './buildings.js';
 import { createUnit, updateUnits, getUnits, removeUnit, resetUnits, setHelicopterRally, getHelicopters } from './units.js';
 import { createProjectile, createHomingProjectile, updateProjectiles, getProjectiles, removeProjectile, resetProjectiles } from './projectiles.js';
 import { updateCombat, getCombatUnitHash, getCombatBuildingHash } from './combat.js';
 import { createEconomy, updateEconomy, getEnergy, spendEnergy, addEnergy, getIncomeBreakdown, resetEconomy } from './economy.js';
 import { initAI, updateAI, updatePlayerRally, resetAI, getPlayerRallyState, forcePlayerPush, assignEnemyUnitRally } from './waves.js';
-import { initHUD, updateHUD, clearBuildSelection, selectBuilding, deselectBuilding, getSelectedBuilding, showHelicopterInfo, hideHelicopterInfo, setSquadRallyPending as setHudSquadRallyPending } from './hud.js';
-import { initInput, getHoveredTile, setPlacementMode, getPlacementMode, setClickCallback, setSelectCallback, setBoxSelectCallback, setCameraSnapCallback, setHelicopterRallyCallback, setGetHelicoptersCallback, getSelectedHelicopter, setSelectedHelicopter, setDragPlaceCallback, getDragTiles, isDragActive, setSquadRallyCallback, setSquadRallyPending as setInputSquadRallyPending, getSelectionBoxScreenCoords } from './input.js';
+import { initHUD, updateHUD, clearBuildSelection, selectBuilding, deselectBuilding, getSelectedBuilding, showHelicopterInfo, hideHelicopterInfo, setSquadRallyPending as setHudSquadRallyPending, setAirStrikePending as setHudAirStrikePending } from './hud.js';
+import { initInput, getHoveredTile, setPlacementMode, getPlacementMode, setClickCallback, setSelectCallback, setBoxSelectCallback, setCameraSnapCallback, setHelicopterRallyCallback, setGetHelicoptersCallback, getSelectedHelicopter, setSelectedHelicopter, setDragPlaceCallback, getDragTiles, isDragActive, setSquadRallyCallback, setSquadRallyPending as setInputSquadRallyPending, getSelectionBoxScreenCoords, setAirStrikeCallback, setAirStrikePending as setInputAirStrikePending, getAirStrikePending } from './input.js';
 import { initParticles, updateParticles, getParticles, spawnParticle, resetParticles } from './particles.js';
 import { playSound } from './sound.js';
 
@@ -67,6 +71,12 @@ let _cachedObstacles = null;
 
 // --- Unit selection state ---
 let selectedUnits = [];        // array of unit refs currently selected
+
+// --- Air strike system ---
+// Pending: waiting for delay timer before bomber spawns
+// Active: bomber is flying across the map toward target
+let airStrikePending = [];   // { team, targetX, targetZ, delayTimer }
+let airStrikeActive = [];    // { team, targetX, targetZ, bomberX, bomberZ, dirX, dirZ, mesh, impacted }
 
 // --- DOM refs ---
 const menuOverlay = document.getElementById('menu-overlay');
@@ -110,6 +120,13 @@ function resetAll() {
   resetSquads();
   resetDragHighlights();
   selectedUnits = [];
+  // Clean up air strike bombers
+  for (const a of airStrikeActive) {
+    if (a.mesh && scene) removeBomberMesh(a.mesh, scene);
+  }
+  airStrikePending = [];
+  airStrikeActive = [];
+  setInputAirStrikePending(null);
   deselectBuilding();
   hideHelicopterInfo();
   setSelectedHelicopter(null);
@@ -384,6 +401,171 @@ function autoOrientWalls(placedTiles) {
   }
 }
 
+// --- Air strike system ---
+
+/** Initiate an air strike: starts delay timer, then spawns bomber. */
+function initiateAirStrike(team, targetX, targetZ) {
+  airStrikePending.push({
+    team,
+    targetX,
+    targetZ,
+    delayTimer: AIRSTRIKE_DELAY,
+  });
+  playSound('airstrike_confirm');
+}
+
+/** Spawn the bomber after delay expires. Flies from map edge toward target. */
+function spawnBomber(team, targetX, targetZ) {
+  // Bomber enters from friendly side
+  const scene = getScene();
+  const enterZ = team === TEAM_PLAYER ? MAP_H + AIRSTRIKE_MAP_MARGIN : -AIRSTRIKE_MAP_MARGIN;
+  const exitZ = team === TEAM_PLAYER ? -AIRSTRIKE_MAP_MARGIN : MAP_H + AIRSTRIKE_MAP_MARGIN;
+  const enterX = targetX + (Math.random() - 0.5) * 200; // slight offset for drama
+
+  // Direction vector from entry to exit (bomber flies straight through)
+  const dx = targetX - enterX;
+  const dz = targetZ - enterZ;
+  const len = Math.sqrt(dx * dx + dz * dz);
+  const dirX = dx / len;
+  const dirZ = dz / len;
+
+  const mesh = createBomberMesh(team, scene);
+  mesh.position.set(enterX, AIRSTRIKE_BOMBER_HEIGHT, enterZ);
+  // Face movement direction
+  mesh.rotation.y = Math.atan2(dirX, dirZ);
+
+  airStrikeActive.push({
+    team,
+    targetX,
+    targetZ,
+    bomberX: enterX,
+    bomberZ: enterZ,
+    exitZ,
+    dirX,
+    dirZ,
+    mesh,
+    impacted: false,
+  });
+
+  playSound('airstrike_incoming');
+}
+
+/** Apply air strike damage in a radius with falloff. */
+function applyAirStrikeDamage(team, targetX, targetZ) {
+  const allUnits = getUnits();
+  const allBuildings = getBuildings();
+
+  // Damage units
+  for (let i = allUnits.length - 1; i >= 0; i--) {
+    const u = allUnits[i];
+    if (!u.alive) continue;
+    const d = dist(u.x, u.z, targetX, targetZ);
+    if (d > AIRSTRIKE_BLAST_RADIUS) continue;
+
+    let damage;
+    if (d <= AIRSTRIKE_CORE_RADIUS) {
+      damage = AIRSTRIKE_MAX_DAMAGE;
+    } else {
+      const t = (d - AIRSTRIKE_CORE_RADIUS) / (AIRSTRIKE_BLAST_RADIUS - AIRSTRIKE_CORE_RADIUS);
+      damage = AIRSTRIKE_MAX_DAMAGE + (AIRSTRIKE_MIN_DAMAGE - AIRSTRIKE_MAX_DAMAGE) * t;
+    }
+
+    u.hp -= damage;
+    if (u.hp <= 0) {
+      // Kill the unit
+      if (u.isAir && getSelectedHelicopter() === u.id) {
+        setSelectedHelicopter(null);
+        hideHelicopterInfo();
+      }
+      removeUnitFromSquad(u);
+      removeUnit(u);
+      removeUnitMesh(u, getScene());
+      spawnParticle(u.x, u.z, u.team === TEAM_PLAYER ? COLORS.CYAN : COLORS.RED, 'explosion');
+    }
+  }
+
+  // Damage buildings
+  for (let i = allBuildings.length - 1; i >= 0; i--) {
+    const b = allBuildings[i];
+    if (!b.alive) continue;
+    const d = dist(b.x, b.z, targetX, targetZ);
+    if (d > AIRSTRIKE_BLAST_RADIUS) continue;
+
+    let damage;
+    if (d <= AIRSTRIKE_CORE_RADIUS) {
+      damage = AIRSTRIKE_MAX_DAMAGE;
+    } else {
+      const t = (d - AIRSTRIKE_CORE_RADIUS) / (AIRSTRIKE_BLAST_RADIUS - AIRSTRIKE_CORE_RADIUS);
+      damage = AIRSTRIKE_MAX_DAMAGE + (AIRSTRIKE_MIN_DAMAGE - AIRSTRIKE_MAX_DAMAGE) * t;
+    }
+
+    b.hp -= damage;
+    if (b.hp <= 0) {
+      const squad = getSquadByBuilding(b.id);
+      if (squad) removeSquad(squad.id, getUnits);
+      removeBuilding(b);
+      removeBuildingMesh(b, getScene());
+      if (b.type === BTYPE_WALL) {
+        spawnParticle(b.x, b.z, b.team === TEAM_PLAYER ? COLORS.CYAN : COLORS.RED, 'wallBreak');
+      } else {
+        spawnParticle(b.x, b.z, b.team === TEAM_PLAYER ? COLORS.CYAN : COLORS.RED, 'bigExplosion');
+      }
+      if (getSelectedBuilding() === b) deselectBuilding();
+    }
+  }
+}
+
+/** Update air strike pending delays and active bombers. */
+function updateAirStrikes(dt) {
+  // Process pending (delay timers)
+  for (let i = airStrikePending.length - 1; i >= 0; i--) {
+    const p = airStrikePending[i];
+    p.delayTimer -= dt;
+    if (p.delayTimer <= 0) {
+      spawnBomber(p.team, p.targetX, p.targetZ);
+      airStrikePending.splice(i, 1);
+    }
+  }
+
+  // Process active bombers
+  for (let i = airStrikeActive.length - 1; i >= 0; i--) {
+    const a = airStrikeActive[i];
+    const moveStep = AIRSTRIKE_BOMBER_SPEED * dt;
+    a.bomberX += a.dirX * moveStep;
+    a.bomberZ += a.dirZ * moveStep;
+
+    // Update mesh position
+    if (a.mesh) {
+      a.mesh.position.x = a.bomberX;
+      a.mesh.position.z = a.bomberZ;
+      // Gentle altitude bob
+      a.mesh.position.y = AIRSTRIKE_BOMBER_HEIGHT + Math.sin(Date.now() * 0.002) * 3;
+    }
+
+    // Check if bomber has reached the target (crossed the target Z)
+    if (!a.impacted) {
+      const dToTarget = dist(a.bomberX, a.bomberZ, a.targetX, a.targetZ);
+      if (dToTarget < AIRSTRIKE_BOMBER_SPEED * dt * 2) {
+        a.impacted = true;
+        // IMPACT!
+        const impactColor = a.team === TEAM_PLAYER ? COLORS.CYAN : COLORS.RED;
+        applyAirStrikeDamage(a.team, a.targetX, a.targetZ);
+        spawnParticle(a.targetX, a.targetZ, impactColor, 'airStrike');
+        spawnAirStrikeRing(a.targetX, a.targetZ, impactColor, AIRSTRIKE_BLAST_RADIUS / 10);
+        playSound('airstrike_explosion');
+      }
+    }
+
+    // Remove bomber when it exits the map
+    const exitedPlayer = a.team === TEAM_PLAYER && a.bomberZ < -AIRSTRIKE_MAP_MARGIN;
+    const exitedEnemy = a.team === TEAM_ENEMY && a.bomberZ > MAP_H + AIRSTRIKE_MAP_MARGIN;
+    if (exitedPlayer || exitedEnemy) {
+      if (a.mesh) removeBomberMesh(a.mesh, getScene());
+      airStrikeActive.splice(i, 1);
+    }
+  }
+}
+
 // --- Game loop ---
 function gameLoop(timestamp) {
   requestAnimationFrame(gameLoop);
@@ -441,6 +623,11 @@ function gameLoop(timestamp) {
       canRepairWall,
       startWallRepair,
       getRepairCost,
+      // Air strike callback for AI
+      canAirStrike: (b) => canAirStrike(b, matchTime),
+      initiateAirStrike: (team, targetX, targetZ) => initiateAirStrike(team, targetX, targetZ),
+      markAirStrikeUsed: (b) => markAirStrikeUsed(b, matchTime),
+      getMatchTime: () => matchTime,
       // Squad management callbacks for AI — now sets stances directly on units
       getSquads: (team) => getSquads(team),
       getUnitsBySquad: (squadId) => getUnitsBySquad(squadId, getUnits),
@@ -555,6 +742,9 @@ function gameLoop(timestamp) {
 
     // Update particles
     updateParticles(dt);
+
+    // Update air strikes (pending delays + active bombers)
+    updateAirStrikes(dt);
 
     // Check win/loss
     const buildings = getBuildings();
@@ -676,6 +866,7 @@ function gameLoop(timestamp) {
       squads: squadData,
       selectedUnitCount: selectedUnits.length,
       selectionBoxScreen: getSelectionBoxScreenCoords(),
+      airStrikePending: getAirStrikePending() != null,
     });
   }
 
@@ -835,6 +1026,23 @@ function init() {
     handleRallySet(target, worldX, worldZ);
   });
 
+  // Wire air strike targeting callback
+  setAirStrikeCallback((buildingId, worldX, worldZ) => {
+    // Find the helipad building that initiated this
+    const buildings = getBuildings();
+    const helipad = buildings.find(b => b.id === buildingId && b.alive);
+    if (!helipad || !canAirStrike(helipad, matchTime)) {
+      playSound('denied');
+      return;
+    }
+    if (!spendEnergy(TEAM_PLAYER, AIRSTRIKE_COST)) {
+      playSound('denied');
+      return;
+    }
+    markAirStrikeUsed(helipad, matchTime);
+    initiateAirStrike(TEAM_PLAYER, worldX, worldZ);
+  });
+
   // Wire drag-to-place callback for walls
   setDragPlaceCallback((tiles) => {
     const placed = [];
@@ -944,6 +1152,23 @@ function init() {
     },
     onRallySet: (target, worldX, worldZ) => {
       handleRallySet(target, worldX, worldZ);
+    },
+    onAirStrike: (building) => {
+      if (!building || !canAirStrike(building, matchTime)) return;
+      if (getEnergy(TEAM_PLAYER) < AIRSTRIKE_COST) {
+        playSound('denied');
+        return;
+      }
+      // Enter air strike targeting mode
+      setInputAirStrikePending(building.id);
+      setHudAirStrikePending(true);
+      clearBuildSelection();
+      setPlacementMode(null);
+      setSelectedHelicopter(null);
+      hideHelicopterInfo();
+      setHudSquadRallyPending(null);
+      setInputSquadRallyPending(null);
+      playSound('airstrike_confirm');
     },
     onWallRepair: (building) => {
       if (!building || !canRepairWall(building)) return;

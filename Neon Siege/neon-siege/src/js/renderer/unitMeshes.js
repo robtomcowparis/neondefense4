@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { makeStructuralMaterial, makeAccentMaterial, makeGlowMaterial } from './scene.js';
 import {
   UTYPE_RIFLE, UTYPE_ASSAULT, UTYPE_TANK, UTYPE_HELICOPTER,
-  COLORS, HELI_FLY_HEIGHT,
+  COLORS, HELI_FLY_HEIGHT, AIRSTRIKE_BOMBER_HEIGHT,
   TEAM_PLAYER, TEAM_ENEMY, HIT_FLASH_DURATION,
   SELECTION_RING_COLOR, SQUAD_HIGHLIGHT_COLOR,
 } from '../config.js';
@@ -1208,6 +1208,106 @@ function animHelicopter(group, u, now, offset, moved) {
 // ================================================================
 // HELPERS
 // ================================================================
+
+// ================================================================
+// BOMBER — temporary air strike visual unit
+// ================================================================
+
+/**
+ * Create a bomber mesh group and add it to the scene.
+ * Returns the group (caller manages position/removal).
+ */
+export function createBomberMesh(team, scene) {
+  const teamColor = team === TEAM_PLAYER ? COLORS.UNIT_PLAYER : COLORS.UNIT_ENEMY;
+  const group = new THREE.Group();
+  buildBomberMesh(group, teamColor, team === TEAM_ENEMY);
+  group.scale.setScalar(2.5);
+  group.position.y = AIRSTRIKE_BOMBER_HEIGHT;
+  scene.add(group);
+  return group;
+}
+
+/**
+ * Remove a bomber mesh from the scene and dispose resources.
+ */
+export function removeBomberMesh(mesh, scene) {
+  if (!mesh) return;
+  scene.remove(mesh);
+  mesh.traverse((child) => {
+    if (child.isMesh) {
+      child.geometry.dispose();
+      if (child.material.dispose) child.material.dispose();
+    }
+  });
+}
+
+function buildBomberMesh(group, color, isEnemy) {
+  const S = makeStructuralMaterial(color);
+  const A = makeAccentMaterial(color);
+
+  // --- FUSELAGE (long bomber body) ---
+  _m(group, new THREE.BoxGeometry(6, 4, 28), S, 0, 0, 0);
+
+  // Top ridge
+  _m(group, new THREE.BoxGeometry(3, 2, 22), S, 0, 3, -2);
+
+  // Bottom bomb bay
+  _m(group, new THREE.BoxGeometry(7, 1.5, 16), S, 0, -2.5, 0);
+
+  // --- COCKPIT ---
+  const cockpit = _m(group, new THREE.BoxGeometry(5, 3.5, 6), S, 0, 1, 15);
+  cockpit.rotation.x = -0.15;
+  // Canopy visor
+  _m(group, new THREE.BoxGeometry(4, 1.5, 0.6), A, 0, 2.5, 17.5);
+  _m(group, new THREE.BoxGeometry(4.5, 1.8, 0.4), makeGlowMaterial(color, 0.25), 0, 2.5, 17.8);
+
+  // Nose cone
+  _m(group, new THREE.BoxGeometry(3.5, 2.5, 4), S, 0, 0, 18);
+
+  // --- WINGS (wide swept) ---
+  // Left wing
+  _m(group, new THREE.BoxGeometry(18, 0.8, 8), S, -12, 0, -2);
+  _m(group, new THREE.BoxGeometry(16, 0.3, 6), A, -12, 0.6, -2);
+  // Wing tip accent
+  const lWingTip = _m(group, new THREE.SphereGeometry(0.6, 6, 4), A, -21, 0, -2);
+
+  // Right wing
+  _m(group, new THREE.BoxGeometry(18, 0.8, 8), S, 12, 0, -2);
+  _m(group, new THREE.BoxGeometry(16, 0.3, 6), A, 12, 0.6, -2);
+  const rWingTip = _m(group, new THREE.SphereGeometry(0.6, 6, 4), A, 21, 0, -2);
+
+  // --- ENGINES (under wings) ---
+  // Left engine nacelle
+  _m(group, new THREE.BoxGeometry(3, 3, 8), S, -8, -2, -1);
+  const lExhaust = _m(group, new THREE.SphereGeometry(1.2, 6, 4), A, -8, -2, -5.5);
+  _m(group, new THREE.SphereGeometry(2, 6, 4), makeGlowMaterial(color, 0.2), -8, -2, -5.5);
+
+  // Right engine nacelle
+  _m(group, new THREE.BoxGeometry(3, 3, 8), S, 8, -2, -1);
+  const rExhaust = _m(group, new THREE.SphereGeometry(1.2, 6, 4), A, 8, -2, -5.5);
+  _m(group, new THREE.SphereGeometry(2, 6, 4), makeGlowMaterial(color, 0.2), 8, -2, -5.5);
+
+  // --- TAIL ---
+  _m(group, new THREE.BoxGeometry(2, 2, 8), S, 0, 1, -18);
+  // Vertical stabilizer
+  _m(group, new THREE.BoxGeometry(0.6, 6, 4), S, 0, 5, -20);
+  _m(group, new THREE.BoxGeometry(0.3, 5, 0.4), A, 0, 5, -18.5);
+  // Tail tip
+  _m(group, new THREE.SphereGeometry(0.5, 6, 4), A, 0, 8.5, -20);
+
+  // Horizontal stabilizers
+  _m(group, new THREE.BoxGeometry(8, 0.5, 3), S, 0, 2, -20);
+  _m(group, new THREE.BoxGeometry(7, 0.3, 2.5), A, 0, 2.5, -20);
+
+  // --- BOMB BAY GLOW (menacing under-belly glow) ---
+  _m(group, new THREE.BoxGeometry(5, 0.3, 10), makeGlowMaterial(0xFFDD44, 0.15), 0, -3.5, 0);
+
+  // --- CONTRAIL GLOW (behind engines) ---
+  _m(group, new THREE.CylinderGeometry(0.8, 0.3, 12, 6), makeGlowMaterial(color, 0.1), -8, -2, -12);
+  _m(group, new THREE.CylinderGeometry(0.8, 0.3, 12, 6), makeGlowMaterial(color, 0.1), 8, -2, -12);
+
+  group.userData.unitType = 'bomber';
+}
 
 /** Shorthand: create mesh, position it, add to parent, return it. */
 function _m(parent, geo, mat, x, y, z) {

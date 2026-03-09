@@ -545,6 +545,74 @@ body {
   box-shadow: 0 0 8px rgba(255,215,0,0.2);
 }
 
+/* --- Air Strike Button --- */
+.airstrike-btn {
+  border-color: #ff6600 !important;
+  color: #ff6600 !important;
+  text-transform: uppercase;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.airstrike-btn:hover:not(.disabled) {
+  border-color: #ff8800 !important;
+  background: rgba(255,102,0,0.15);
+  box-shadow: 0 0 14px rgba(255,102,0,0.4), inset 0 0 8px rgba(255,102,0,0.1);
+}
+
+.airstrike-btn.disabled {
+  border-color: #553300 !important;
+  color: #664400 !important;
+}
+
+/* --- Air Strike Targeting Overlay --- */
+.airstrike-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 60px;
+}
+
+.airstrike-overlay.hidden {
+  display: none;
+}
+
+.airstrike-overlay-text {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  color: #ff6600;
+  text-transform: uppercase;
+  letter-spacing: 6px;
+  text-shadow: 0 0 20px rgba(255,102,0,0.8), 0 0 40px rgba(255,102,0,0.4), 0 0 80px rgba(255,102,0,0.2);
+  animation: airstrike-pulse 1.0s ease-in-out infinite;
+}
+
+.airstrike-overlay-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 14px;
+  color: #cc8844;
+  margin-top: 10px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(255,102,0,0.4);
+}
+
+@keyframes airstrike-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.03); }
+}
+
+body.airstrike-targeting,
+body.airstrike-targeting canvas {
+  cursor: crosshair !important;
+}
+
 /* --- Helicopter Selection Panel --- */
 .helicopter-section {
   border-color: var(--green);
