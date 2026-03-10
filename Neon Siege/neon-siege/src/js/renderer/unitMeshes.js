@@ -202,8 +202,17 @@ export function updateUnitMeshes(now, units, selectedHeliId) {
       });
       if (hpR < 0.25 && glows) {
         const flick = Math.random() > 0.82 ? 0.35 : 0;
-        for (const g of glows) g.material.opacity += flick;
+        for (const g of glows) {
+          const base = g.material.userData?.baseOp ?? g.material.opacity;
+          g.material.opacity = base + flick;
+        }
       }
+    } else {
+      group.traverse(ch => {
+        if (ch.isMesh && ch.material.emissive) {
+          ch.material.emissiveIntensity = 1.0;
+        }
+      });
     }
 
     // --- Selection / squad highlight rings ---

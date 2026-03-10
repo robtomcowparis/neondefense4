@@ -264,7 +264,7 @@ export const UNIT_STATS = {
     hp: 700,
     speed: 60,
     damage: 4,
-    range: 130,
+    range: 180,
     fireRate: 8.0,
     size: 10,
     label: 'Helicopter',

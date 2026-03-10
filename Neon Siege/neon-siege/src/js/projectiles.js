@@ -1,7 +1,7 @@
 // ============================================================
 // projectiles.js — Projectile logic (NO rendering code)
 // ============================================================
-import { PROJECTILE_SPEED, PROJECTILE_LIFETIME, TURRET_PROJECTILE_SPEED } from './config.js';
+import { PROJECTILE_SPEED, PROJECTILE_LIFETIME, TURRET_PROJECTILE_SPEED, HIT_FLASH_DURATION } from './config.js';
 import { nextId, dist } from './utils.js';
 
 let projectiles = [];
@@ -126,7 +126,7 @@ function updateHomingProjectile(p, dt) {
   }
 
   // Store trail
-  p.trail.push([p.x, p.z]);
+  p.trail.push([p.x, p.y, p.z]);
   if (p.trail.length > 6) p.trail.shift();
 
   // Move toward target
@@ -137,6 +137,7 @@ function updateHomingProjectile(p, dt) {
   if (d < p.speed * dt + 5) {
     // HIT
     p.target.hp -= p.damage;
+    p.target.hitFlashTimer = HIT_FLASH_DURATION;
     if (p.sourceBuilding) {
       p.sourceBuilding.totalDamage += p.damage;
       if (p.target.hp <= 0) p.sourceBuilding.kills += 1;

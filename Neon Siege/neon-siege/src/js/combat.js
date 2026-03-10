@@ -10,6 +10,7 @@ import {
   STANCE_RALLY,
   UTYPE_RIFLE, UTYPE_ASSAULT, UTYPE_TANK, UTYPE_HELICOPTER,
   COMBAT_SPATIAL_CELL_SIZE,
+  HIT_FLASH_DURATION,
 } from './config.js';
 import { dist, SpatialHash } from './utils.js';
 import { getTurretStats } from './buildings.js';
@@ -92,21 +93,18 @@ export function updateCombat(dt, callbacks) {
       }
     }
 
-    // Score enemy buildings (helicopters skip — they only target units)
-    const isAirUnit = UNIT_STATS[u.type] && UNIT_STATS[u.type].isAir;
-    if (!isAirUnit) {
-      const nearbyBuildings = _buildingHash.queryNear(u.x, u.z);
-      for (let j = 0; j < nearbyBuildings.length; j++) {
-        const b = nearbyBuildings[j];
-        if (!b.alive || b.team !== enemyTeam) continue;
-        const d = dist(u.x, u.z, b.x, b.z);
-        if (d > u.range) continue;
+    // Score enemy buildings
+    const nearbyBuildings = _buildingHash.queryNear(u.x, u.z);
+    for (let j = 0; j < nearbyBuildings.length; j++) {
+      const b = nearbyBuildings[j];
+      if (!b.alive || b.team !== enemyTeam) continue;
+      const d = dist(u.x, u.z, b.x, b.z);
+      if (d > u.range) continue;
 
-        const score = targetScore(u, b, d);
-        if (score > bestScore) {
-          bestScore = score;
-          target = b;
-        }
+      const score = targetScore(u, b, d);
+      if (score > bestScore) {
+        bestScore = score;
+        target = b;
       }
     }
 
@@ -192,6 +190,7 @@ export function updateCombat(dt, callbacks) {
       const d = dist(p.x, p.z, u.x, u.z);
       if (d < 15) {
         u.hp -= p.damage;
+        u.hitFlashTimer = HIT_FLASH_DURATION;
         if (u.hp <= 0) {
           callbacks.removeUnit(u);
         }
@@ -211,6 +210,7 @@ export function updateCombat(dt, callbacks) {
       const d = dist(p.x, p.z, b.x, b.z);
       if (d < 15) {
         b.hp -= p.damage;
+        b.hitFlashTimer = HIT_FLASH_DURATION;
         if (b.hp <= 0) {
           callbacks.removeBuilding(b);
         }
@@ -239,6 +239,7 @@ export function updateCombat(dt, callbacks) {
         const d = dist(p.splashX, p.splashZ, u.x, u.z);
         if (d <= p.splashRadius) {
           u.hp -= p.splashDamage;
+          u.hitFlashTimer = HIT_FLASH_DURATION;
           if (p.sourceBuilding) p.sourceBuilding.totalDamage += p.splashDamage;
           if (u.hp <= 0) {
             callbacks.removeUnit(u);

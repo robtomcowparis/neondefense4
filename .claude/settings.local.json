@@ -8,7 +8,8 @@
       "Bash(npx vite:*)",
       "Bash(curl:*)",
       "Bash(start:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(rm -rf \"C:/Users/rober/Desktop/neondefense4/src/public/neon-siege/\"* && cp -r \"C:/Users/rober/Desktop/neondefense4/Neon Siege/neon-siege/dist/\"* \"C:/Users/rober/Desktop/neondefense4/src/public/neon-siege/\" 2>&1)"
     ]
   }
 }

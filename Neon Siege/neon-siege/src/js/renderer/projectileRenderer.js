@@ -205,8 +205,8 @@ export function updateProjectileMeshes(now, projectiles) {
             // Trail positions are in world coords; convert to local
             trails[j].position.set(
               p.trail[idx][0] - p.x,
-              0,
-              p.trail[idx][1] - p.z
+              p.trail[idx][1] - p.y,
+              p.trail[idx][2] - p.z
             );
           }
         }
