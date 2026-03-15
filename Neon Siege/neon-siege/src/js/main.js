@@ -9,7 +9,8 @@ import {
   BTYPE_CORE, BTYPE_TURRET, BTYPE_BARRACKS, BTYPE_FACTORY, BTYPE_GENERATOR, BTYPE_HELIPAD, BTYPE_WALL, BUILDING_STATS, PLAYER_BUILDABLE,
   COLORS, BASE_DEFENSE_RADIUS,
   SHARED_ZONE_UNIT_RADIUS, SHARED_BUILD_ROW_MIN, SHARED_BUILD_ROW_MAX,
-  UTYPE_HELICOPTER,
+  UTYPE_HELICOPTER, UTYPE_MEDIC, UTYPE_ENGINEER,
+  MEDIC_SPAWN_COST, ENGINEER_SPAWN_COST,
   WALL_HORIZONTAL, WALL_VERTICAL, WALL_CORNER_NE, WALL_CORNER_NW, WALL_CORNER_SE, WALL_CORNER_SW,
   TILE_WALL,
   UNIT_CLICK_RADIUS,
@@ -48,8 +49,12 @@ import {
   startTurretUpgrade, startTurretBranch,
   canUpgradeBuilding, canBranchBuilding, startUpgrade, startBranch,
   canRepairWall, getRepairCost, startWallRepair,
+  canRepairBuilding, getRepairCostForBuilding, startBuildingRepair,
   setWallOrientation, demolishBuilding,
   canAirStrike, markAirStrikeUsed,
+  canSpawnMedic, markMedicSpawned,
+  canSpawnEngineer, markEngineerSpawned,
+  clearActiveSupportUnit,
 } from './buildings.js';
 import { createUnit, updateUnits, getUnits, removeUnit, resetUnits, setHelicopterRally, getHelicopters } from './units.js';
 import { createProjectile, createHomingProjectile, updateProjectiles, getProjectiles, removeProjectile, resetProjectiles } from './projectiles.js';
@@ -477,6 +482,10 @@ function applyAirStrikeDamage(team, targetX, targetZ) {
         setSelectedHelicopter(null);
         hideHelicopterInfo();
       }
+      if (u.isSupport && u._parentBuildingId != null) {
+        const parentBuilding = getBuildings().find(b => b.id === u._parentBuildingId && b.alive);
+        if (parentBuilding) clearActiveSupportUnit(parentBuilding);
+      }
       removeUnitFromSquad(u);
       removeUnit(u);
       removeUnitMesh(u, getScene());
@@ -623,6 +632,9 @@ function gameLoop(timestamp) {
       canRepairWall,
       startWallRepair,
       getRepairCost,
+      canRepairBuilding,
+      getRepairCostForBuilding,
+      startBuildingRepair,
       // Air strike callback for AI
       canAirStrike: (b) => canAirStrike(b, matchTime),
       initiateAirStrike: (team, targetX, targetZ) => initiateAirStrike(team, targetX, targetZ),
@@ -635,6 +647,21 @@ function gameLoop(timestamp) {
       setUnitTargetPriority,
       setUnitsStance,
       setUnitsTargetPriority,
+      // Support unit spawn callbacks for AI
+      canSpawnMedic: (b) => canSpawnMedic(b, matchTime),
+      canSpawnEngineer: (b) => canSpawnEngineer(b, matchTime),
+      spawnSupportUnit: (type, building) => {
+        const spawnOffset = building.team === TEAM_PLAYER ? -40 : 40;
+        const u = createUnit(type, building.x, building.z + spawnOffset, building.team);
+        u._parentBuildingId = building.id;
+        createUnitMesh(u, getScene());
+        if (type === UTYPE_MEDIC) {
+          markMedicSpawned(building, matchTime, u.id);
+        } else if (type === UTYPE_ENGINEER) {
+          markEngineerSpawned(building, matchTime, u.id);
+        }
+        return u;
+      },
     });
 
     // Update player unit rally/grouping
@@ -660,12 +687,12 @@ function gameLoop(timestamp) {
 
     // Rebuild meshes for buildings that just finished upgrading/branching/repairing
     for (const b of justFinished) {
-      rebuildBuildingMesh(b, getScene());
-      if (b.type === BTYPE_WALL && b._justRepaired) {
+      if (b._justRepaired) {
         spawnParticle(b.x, b.z, b.team === TEAM_PLAYER ? COLORS.CYAN : COLORS.RED, 'wallRepair');
         playSound('wall_repair');
         b._justRepaired = false;
       } else {
+        rebuildBuildingMesh(b, getScene());
         playSound('upgrade');
       }
     }
@@ -692,6 +719,14 @@ function gameLoop(timestamp) {
         if (u.isAir && getSelectedHelicopter() === u.id) {
           setSelectedHelicopter(null);
           hideHelicopterInfo();
+        }
+
+        // Support unit death: clear parent building's active support unit
+        if (u.isSupport && u._parentBuildingId != null) {
+          const parentBuilding = getBuildings().find(b => b.id === u._parentBuildingId && b.alive);
+          if (parentBuilding) {
+            clearActiveSupportUnit(parentBuilding);
+          }
         }
 
         // Remove from squad membership
@@ -1170,14 +1205,50 @@ function init() {
       setInputSquadRallyPending(null);
       playSound('airstrike_confirm');
     },
+    onSpawnMedic: (building) => {
+      if (!building || !canSpawnMedic(building, matchTime)) return;
+      if (!spendEnergy(TEAM_PLAYER, MEDIC_SPAWN_COST)) {
+        playSound('denied');
+        return;
+      }
+      const spawnOffset = building.team === TEAM_PLAYER ? -40 : 40;
+      const u = createUnit(UTYPE_MEDIC, building.x, building.z + spawnOffset, building.team);
+      u._parentBuildingId = building.id;
+      createUnitMesh(u, getScene());
+      markMedicSpawned(building, matchTime, u.id);
+      playSound('select');
+    },
+    onSpawnEngineer: (building) => {
+      if (!building || !canSpawnEngineer(building, matchTime)) return;
+      if (!spendEnergy(TEAM_PLAYER, ENGINEER_SPAWN_COST)) {
+        playSound('denied');
+        return;
+      }
+      const spawnOffset = building.team === TEAM_PLAYER ? -40 : 40;
+      const u = createUnit(UTYPE_ENGINEER, building.x, building.z + spawnOffset, building.team);
+      u._parentBuildingId = building.id;
+      createUnitMesh(u, getScene());
+      markEngineerSpawned(building, matchTime, u.id);
+      playSound('select');
+    },
     onWallRepair: (building) => {
-      if (!building || !canRepairWall(building)) return;
-      const cost = getRepairCost(building);
+      if (!building || !canRepairBuilding(building)) return;
+      const cost = getRepairCostForBuilding(building);
       if (!spendEnergy(TEAM_PLAYER, cost)) {
         playSound('denied');
         return;
       }
-      startWallRepair(building);
+      startBuildingRepair(building);
+      playSound('wall_repair');
+    },
+    onBuildingRepair: (building) => {
+      if (!building || !canRepairBuilding(building)) return;
+      const cost = getRepairCostForBuilding(building);
+      if (!spendEnergy(TEAM_PLAYER, cost)) {
+        playSound('denied');
+        return;
+      }
+      startBuildingRepair(building);
       playSound('wall_repair');
     },
     onWallDemolish: (building) => {

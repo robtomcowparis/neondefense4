@@ -3,8 +3,10 @@
 // ============================================================
 import {
   BUILDING_STATS, TILE_BUILDING, TILE_EMPTY, TILE_SIZE, TILE_WALL,
-  TEAM_PLAYER, BTYPE_TURRET, BTYPE_BARRACKS, BTYPE_FACTORY, BTYPE_GENERATOR, BTYPE_HELIPAD, BTYPE_WALL,
+  TEAM_PLAYER, BTYPE_TURRET, BTYPE_BARRACKS, BTYPE_FACTORY, BTYPE_GENERATOR, BTYPE_HELIPAD, BTYPE_WALL, BTYPE_CORE,
   AIRSTRIKE_COOLDOWN,
+  MEDIC_SPAWN_COOLDOWN, ENGINEER_SPAWN_COOLDOWN,
+  REPAIR_COST_PER_HP, REPAIR_BASE_TIME, REPAIR_MIN_COST,
   TURRET_UPGRADE_TIME, TURRET_BRANCH_TIME,
   TURRET_HP_PER_LEVEL, TURRET_HP_BRANCH_BONUS,
   BARRACKS_UPGRADE_TIME, BARRACKS_BRANCH_TIME,
@@ -87,6 +89,9 @@ export function createBuilding(type, col, row, team) {
     orientation: type === BTYPE_WALL ? WALL_HORIZONTAL : null,
     // Air strike cooldown (helipads only)
     airStrikeCooldownUntil: 0,
+    // Support unit tracking (barracks: medic, factory: engineer)
+    supportCooldownUntil: 0,
+    _activeSupportUnitId: null,
   };
 
   // Mark tiles as occupied (walls use TILE_WALL, others use TILE_BUILDING)
@@ -149,7 +154,7 @@ export function canUpgradeBuilding(b) {
   if (!UPGRADEABLE_TYPES.includes(b.type)) return false;
   const data = BUILDING_STATS[b.type];
   if (!data.levels) return false;
-  return b.level < data.levels.length - 1 && b.branch === null && !b.constructionState;
+  return b.level < data.levels.length - 1 && b.branch === null && !b.constructionState && !b._repairing;
 }
 
 // Keep turret-specific aliases for backward compatibility
@@ -163,7 +168,7 @@ export function canBranchBuilding(b) {
   if (b.type === BTYPE_WALL) return false; // walls have no branches
   const data = BUILDING_STATS[b.type];
   if (!data.levels || !data.branches) return false;
-  return b.level >= data.levels.length - 1 && b.branch === null && !b.constructionState;
+  return b.level >= data.levels.length - 1 && b.branch === null && !b.constructionState && !b._repairing;
 }
 
 export function canBranchTurret(b) {
@@ -209,21 +214,46 @@ export function startBranch(b, key) {
 // Turret-specific alias
 export function startTurretBranch(b, key) { startBranch(b, key); }
 
-/** Can this wall be repaired? */
+/** Can this wall be repaired? (legacy — prefer canRepairBuilding) */
 export function canRepairWall(b) {
-  return b.type === BTYPE_WALL && b.alive && b.hp < b.maxHp && !b.constructionState;
+  return canRepairBuilding(b);
 }
 
-/** Get the energy cost to repair a wall. */
+/** Get the energy cost to repair a wall. (legacy — prefer getRepairCostForBuilding) */
 export function getRepairCost(b) {
-  return BUILDING_STATS[BTYPE_WALL].repairCost;
+  return getRepairCostForBuilding(b);
 }
 
-/** Start repairing a wall (puts it into 'repairing' construction state). */
+/** Start repairing a wall (legacy — prefer startBuildingRepair). */
 export function startWallRepair(b) {
-  b.constructionState = 'repairing';
-  b.constructionTimer = 0;
-  b.constructionDuration = BUILDING_STATS[BTYPE_WALL].repairTime;
+  startBuildingRepair(b);
+}
+
+/** Can this building be repaired? Works for all types except Core. */
+export function canRepairBuilding(b) {
+  if (!b || !b.alive) return false;
+  if (b.type === BTYPE_CORE) return false;
+  if (b.hp >= b.maxHp) return false;
+  if (b.constructionState) return false;
+  if (b._repairing) return false;
+  return true;
+}
+
+/** Get the energy cost to repair a building (scales with missing HP). */
+export function getRepairCostForBuilding(b) {
+  if (!b) return 0;
+  const missing = b.maxHp - b.hp;
+  if (missing <= 0) return 0;
+  return Math.max(REPAIR_MIN_COST, Math.ceil(REPAIR_COST_PER_HP * missing));
+}
+
+/** Start repairing a building (does NOT block production/firing). */
+export function startBuildingRepair(b) {
+  b._repairing = true;
+  b._repairTimer = 0;
+  b._repairDuration = REPAIR_BASE_TIME;
+  b._repairStartHp = b.hp;
+  b._repairTargetHp = b.maxHp;
 }
 
 /** Set wall orientation (flags mesh for rebuild). */
@@ -253,6 +283,43 @@ export function canAirStrike(b, matchTime) {
 /** Mark helipad as having used air strike (start cooldown). */
 export function markAirStrikeUsed(b, matchTime) {
   b.airStrikeCooldownUntil = matchTime + AIRSTRIKE_COOLDOWN;
+}
+
+/** Can this barracks spawn a medic? Must be branched, no active medic, off cooldown. */
+export function canSpawnMedic(b, matchTime) {
+  if (!b || !b.alive || b.type !== BTYPE_BARRACKS) return false;
+  if (!b.branch) return false;
+  if (b.constructionState) return false;
+  if (b._activeSupportUnitId != null) return false;
+  if (matchTime < b.supportCooldownUntil) return false;
+  return true;
+}
+
+/** Mark barracks as having spawned a medic. */
+export function markMedicSpawned(b, matchTime, unitId) {
+  b._activeSupportUnitId = unitId;
+  b.supportCooldownUntil = matchTime + MEDIC_SPAWN_COOLDOWN;
+}
+
+/** Can this factory spawn an engineer? Must be branched, no active engineer, off cooldown. */
+export function canSpawnEngineer(b, matchTime) {
+  if (!b || !b.alive || b.type !== BTYPE_FACTORY) return false;
+  if (!b.branch) return false;
+  if (b.constructionState) return false;
+  if (b._activeSupportUnitId != null) return false;
+  if (matchTime < b.supportCooldownUntil) return false;
+  return true;
+}
+
+/** Mark factory as having spawned an engineer. */
+export function markEngineerSpawned(b, matchTime, unitId) {
+  b._activeSupportUnitId = unitId;
+  b.supportCooldownUntil = matchTime + ENGINEER_SPAWN_COOLDOWN;
+}
+
+/** Clear active support unit from parent building (called when unit dies). */
+export function clearActiveSupportUnit(b) {
+  if (b) b._activeSupportUnitId = null;
 }
 
 /** Finish an upgrade — increment level, scale HP. */
@@ -320,6 +387,19 @@ export function updateBuildings(dt, matchTime, callbacks) {
       b.buildProgress += dt;
       if (b.buildProgress > b.buildTime) b.buildProgress = b.buildTime;
       continue; // still building, don't produce yet
+    }
+
+    // --- Repair tick (does NOT block production/firing) ---
+    if (b._repairing) {
+      b._repairTimer += dt;
+      const t = Math.min(b._repairTimer / b._repairDuration, 1.0);
+      b.hp = b._repairStartHp + (b._repairTargetHp - b._repairStartHp) * t;
+      if (t >= 1.0) {
+        b.hp = b._repairTargetHp;
+        b._repairing = false;
+        b._justRepaired = true;
+        justFinished.push(b);
+      }
     }
 
     // Unit production

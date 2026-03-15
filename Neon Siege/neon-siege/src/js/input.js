@@ -91,7 +91,6 @@ function onMouseMove(event) {
     const dy = event.clientY - _boxDragStartScreen.y;
     if (!_isBoxDragging && Math.sqrt(dx * dx + dy * dy) > BOX_SELECT_MIN_DRAG) {
       _isBoxDragging = true;
-      if (orbitControls) orbitControls.enabled = false;
     }
   }
 }
@@ -109,11 +108,13 @@ function onMouseDown(event) {
     return;
   }
 
-  // Start tracking potential box-drag if NOT in build mode, wall-drag, squad rally, air strike, or helicopter mode
-  if (!placementMode && !_isDragging && _squadRallyPending == null && _airStrikePending == null && selectedHelicopterId == null) {
+  // Start tracking potential box-drag if Shift is held and NOT in build mode, wall-drag, squad rally, air strike, or helicopter mode
+  if (event.shiftKey && !placementMode && !_isDragging && _squadRallyPending == null && _airStrikePending == null && selectedHelicopterId == null) {
     _boxDragStartScreen = { x: event.clientX, y: event.clientY };
     _boxDragEndScreen = null;
     _isBoxDragging = false;
+    // Disable orbit controls immediately so shift-drag doesn't also rotate
+    if (orbitControls) orbitControls.enabled = false;
   }
 }
 
@@ -245,11 +246,11 @@ function cancelDrag() {
 }
 
 function cancelBoxDrag() {
-  const wasBoxDragging = _isBoxDragging;
+  const wasTracking = _boxDragStartScreen != null;
   _boxDragStartScreen = null;
   _boxDragEndScreen = null;
   _isBoxDragging = false;
-  if (wasBoxDragging && orbitControls) orbitControls.enabled = true;
+  if (wasTracking && orbitControls) orbitControls.enabled = true;
 }
 
 // Raycast a screen pixel position to the ground plane, return {x, z} or null

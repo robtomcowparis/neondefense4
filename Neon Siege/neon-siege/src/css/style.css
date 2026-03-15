@@ -460,6 +460,24 @@ body {
   background: rgba(100,255,150,0.08);
 }
 
+/* --- Repair Progress (inline, non-blocking) --- */
+.repair-progress-row {
+  margin-top: 6px;
+}
+
+.repair-progress-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: #64ff96;
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 3px;
+}
+
+.repair-track {
+  height: 6px;
+}
+
 /* --- Wall Orientation Buttons --- */
 .wall-orient-row {
   display: flex;
@@ -543,6 +561,46 @@ body {
 .branch-btn:hover {
   border-color: var(--gold);
   box-shadow: 0 0 8px rgba(255,215,0,0.2);
+}
+
+/* --- Medic Button --- */
+.medic-btn {
+  border-color: #32ff64 !important;
+  color: #32ff64 !important;
+  text-transform: uppercase;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.medic-btn:hover:not(.disabled) {
+  border-color: #50ff80 !important;
+  background: rgba(50,255,100,0.15);
+  box-shadow: 0 0 14px rgba(50,255,100,0.4), inset 0 0 8px rgba(50,255,100,0.1);
+}
+
+.medic-btn.disabled {
+  border-color: #1a6630 !important;
+  color: #2a8844 !important;
+}
+
+/* --- Engineer Button --- */
+.engineer-btn {
+  border-color: #ffd700 !important;
+  color: #ffd700 !important;
+  text-transform: uppercase;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.engineer-btn:hover:not(.disabled) {
+  border-color: #ffe040 !important;
+  background: rgba(255,215,0,0.15);
+  box-shadow: 0 0 14px rgba(255,215,0,0.4), inset 0 0 8px rgba(255,215,0,0.1);
+}
+
+.engineer-btn.disabled {
+  border-color: #665500 !important;
+  color: #886600 !important;
 }
 
 /* --- Air Strike Button --- */

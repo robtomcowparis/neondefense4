@@ -27,7 +27,17 @@ import {
   AI_WAVE_POWER,
   AI_HELI_POWER_WEIGHT,
   AI_WALL_REPAIR_THRESHOLD,
+  AI_MAX_REPAIRS_PER_TICK,
+  AI_REPAIR_HP_THRESHOLD,
+  AI_REPAIR_MAX_ATTEMPTS,
+  AI_REPAIR_ATTEMPT_WINDOW,
+  AI_REPAIR_ENERGY_RESERVE_MULT,
   UTYPE_HELICOPTER,
+  UTYPE_RIFLE, UTYPE_TANK,
+  UTYPE_MEDIC, UTYPE_ENGINEER,
+  MEDIC_SPAWN_COST, ENGINEER_SPAWN_COST,
+  AI_MEDIC_MIN_TIME, AI_MEDIC_INJURED_THRESHOLD,
+  AI_ENGINEER_MIN_TIME, AI_ENGINEER_INJURED_THRESHOLD,
   STANCE_ADVANCE,
   STANCE_DEFEND,
   TARGET_ANY, TARGET_UNITS,
@@ -49,6 +59,19 @@ import {
   AI_AIRSTRIKE_MIN_TIME,
   AI_AIRSTRIKE_ENERGY_THRESHOLD,
   PLAYER_BASE_COL, PLAYER_BASE_ROW,
+  AI_REACTIVE_ARMY_RATIO,
+  AI_REACTIVE_TURRET_THRESHOLD,
+  AI_REACTIVE_RUSH_BARRACKS,
+  AI_REACTIVE_OVERWHELM_RATIO,
+  AI_COUNTER_QUEUE_MAX,
+  AI_FLANK_SCAN_INTERVAL,
+  AI_FLANK_MAX_OFFSET,
+  AI_HARASS_MIN_GENERATORS,
+  AI_HARASS_UNIT_COUNT,
+  AI_HARASS_MIN_TIME,
+  AI_FORWARD_BUILD_ENABLED,
+  AI_FORWARD_BUILD_TYPES,
+  AI_FORWARD_BUILD_MIN_TIME,
 } from './config.js';
 import { randomInt, gridToWorld, dist } from './utils.js';
 import { getTile } from './map.js';
@@ -96,6 +119,16 @@ let aiState = {
   _lastRallyUpdateTime: 0,
   // Helicopter rally commitment
   heliRallyX: 0, heliRallyZ: 0, heliRallyCommitUntil: 0,
+  // Counter-building queue
+  _urgentBuildQueue: [],
+  // Flank-aware push
+  _lastFlankScanTime: 0,
+  _flankOffsetX: 0,
+  // Forward building
+  _attemptForwardBuild: false,
+  _forwardBuildAttempted: false,
+  // Building repair tracking: { [buildingId]: { count, firstTime } }
+  _repairAttempts: {},
 };
 
 let playerRallyState = {
@@ -142,6 +175,12 @@ export function initAI(difficulty) {
     _pushMarkedSuccess: false,
     _lastRallyUpdateTime: 0,
     heliRallyX: 0, heliRallyZ: 0, heliRallyCommitUntil: 0,
+    _urgentBuildQueue: [],
+    _lastFlankScanTime: 0,
+    _flankOffsetX: 0,
+    _attemptForwardBuild: false,
+    _forwardBuildAttempted: false,
+    _repairAttempts: {},
   };
   playerRallyState = { rallyStartTime: 0, pushActive: false };
 }
@@ -161,6 +200,9 @@ export function updateAI(dt, matchTime, callbacks) {
 
   // AI Air Strike check (runs every tick, not gated by tick interval)
   tryAIAirStrike(matchTime, callbacks);
+
+  // AI Support unit spawn check
+  tryAISupportSpawn(matchTime, callbacks);
 
   // Ticked decisions (building, upgrading)
   if (matchTime - aiState.lastTick < AI_TICK_INTERVAL) return;
@@ -193,6 +235,9 @@ export function updateAI(dt, matchTime, callbacks) {
     if (tryBuildStrategic(BTYPE_GENERATOR, aiBuildings, callbacks, matchTime)) return;
   }
 
+  // Forward building after successful push
+  tryForwardBuild(matchTime, aiBuildings, callbacks);
+
   // Multi-action loop
   for (let actionCount = 0; actionCount < AI_MAX_ACTIONS_PER_TICK; actionCount++) {
     const energy = callbacks.getEnergy();
@@ -211,17 +256,52 @@ export function updateAI(dt, matchTime, callbacks) {
 function pickNextAction(matchTime, energy, aiBuildings, callbacks) {
   const tempo = aiState.tempo;
 
-  // --- Wall repair (always highest priority) ---
-  const damagedWalls = aiBuildings
-    .filter(b => b.type === BTYPE_WALL && b.alive && (b.hp / b.maxHp) < AI_WALL_REPAIR_THRESHOLD && !b.repairing)
-    .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp));
+  // --- Building repair (all types, throttled) ---
+  // Expire old repair attempt records
+  for (const id in aiState._repairAttempts) {
+    if (matchTime - aiState._repairAttempts[id].firstTime > AI_REPAIR_ATTEMPT_WINDOW) {
+      delete aiState._repairAttempts[id];
+    }
+  }
 
-  for (let i = 0; i < Math.min(damagedWalls.length, AI_MAX_WALL_REPAIRS_PER_TICK); i++) {
-    const wall = damagedWalls[i];
-    if (callbacks.canRepairWall && callbacks.canRepairWall(wall)) {
-      const repairCost = callbacks.getRepairCost ? callbacks.getRepairCost(wall) : BUILDING_STATS[BTYPE_WALL].repairCost;
-      if (energy >= repairCost + AI_ENERGY_RESERVE) {
-        return { type: 'repairWall', meta: { target: wall } };
+  // Find damaged buildings below HP threshold that aren't already repairing/upgrading
+  const repairCandidates = aiBuildings
+    .filter(b => {
+      if (b.type === BTYPE_CORE) return false;
+      if (!b.alive || b._repairing || b.constructionState) return false;
+      if ((b.hp / b.maxHp) >= AI_REPAIR_HP_THRESHOLD) return false;
+      // Skip buildings that have been repaired too many times recently
+      const attempts = aiState._repairAttempts[b.id];
+      if (attempts && attempts.count >= AI_REPAIR_MAX_ATTEMPTS) return false;
+      return true;
+    });
+
+  // Score repair priority: turrets and generators are more valuable to repair
+  const repairPriority = (b) => {
+    const hpRatio = b.hp / b.maxHp;
+    let typeWeight = 1;
+    if (b.type === BTYPE_TURRET) typeWeight = 3;
+    else if (b.type === BTYPE_GENERATOR) typeWeight = 2.5;
+    else if (b.type === BTYPE_FACTORY) typeWeight = 2;
+    else if (b.type === BTYPE_BARRACKS) typeWeight = 1.5;
+    else if (b.type === BTYPE_HELIPAD) typeWeight = 2;
+    // Upgraded buildings are more valuable to keep alive
+    const levelBonus = 1 + (b.level || 0) * 0.3 + (b.branch ? 0.5 : 0);
+    return (1 - hpRatio) * typeWeight * levelBonus;
+  };
+
+  repairCandidates.sort((a, b) => repairPriority(b) - repairPriority(a));
+
+  // AI keeps a larger energy reserve before spending on repairs
+  const repairReserve = AI_ENERGY_RESERVE * AI_REPAIR_ENERGY_RESERVE_MULT;
+  let repairsQueued = 0;
+
+  for (const building of repairCandidates) {
+    if (repairsQueued >= AI_MAX_REPAIRS_PER_TICK) break;
+    if (callbacks.canRepairBuilding && callbacks.canRepairBuilding(building)) {
+      const repairCost = callbacks.getRepairCostForBuilding(building);
+      if (energy >= repairCost + repairReserve) {
+        return { type: 'repairBuilding', meta: { target: building } };
       }
     }
   }
@@ -230,6 +310,18 @@ function pickNextAction(matchTime, energy, aiBuildings, callbacks) {
   if (matchTime >= tempo.upgradeDelay && matchTime - aiState.lastUpgradeTime >= tempo.upgradeInterval) {
     const upgradeAction = pickUpgradeAction(matchTime, energy, aiBuildings, callbacks);
     if (upgradeAction) return upgradeAction;
+  }
+
+  // --- Reactive build override (bypasses buildInterval) ---
+  const reactiveType = getReactiveBuildOverride(matchTime, energy, aiBuildings);
+  if (reactiveType) {
+    return { type: 'build', meta: { buildType: reactiveType } };
+  }
+
+  // --- Urgent counter-build queue (respects buildInterval) ---
+  if (matchTime - aiState.lastBuildTime >= tempo.buildInterval && aiState._urgentBuildQueue.length > 0) {
+    const urgentAction = pickFromUrgentQueue(matchTime, energy, aiBuildings);
+    if (urgentAction) return urgentAction;
   }
 
   // --- Build order walk ---
@@ -396,14 +488,28 @@ function executeAction(action, aiBuildings, callbacks, matchTime) {
       }
       return false;
     case 'repairWall':
-      if (callbacks.canRepairWall && callbacks.canRepairWall(action.meta.target)) {
-        const repairCost = callbacks.getRepairCost ? callbacks.getRepairCost(action.meta.target) : BUILDING_STATS[BTYPE_WALL].repairCost;
-        if (callbacks.spendEnergy(repairCost)) {
-          callbacks.startWallRepair(action.meta.target);
-          return true;
-        }
+    case 'repairBuilding': {
+      const target = action.meta.target;
+      const canRepair = callbacks.canRepairBuilding
+        ? callbacks.canRepairBuilding(target)
+        : (callbacks.canRepairWall && callbacks.canRepairWall(target));
+      if (!canRepair) return false;
+      const repairCost = callbacks.getRepairCostForBuilding
+        ? callbacks.getRepairCostForBuilding(target)
+        : (callbacks.getRepairCost ? callbacks.getRepairCost(target) : 0);
+      if (!callbacks.spendEnergy(repairCost)) return false;
+      if (callbacks.startBuildingRepair) {
+        callbacks.startBuildingRepair(target);
+      } else if (callbacks.startWallRepair) {
+        callbacks.startWallRepair(target);
       }
-      return false;
+      // Track repair attempt for this building
+      if (!aiState._repairAttempts[target.id]) {
+        aiState._repairAttempts[target.id] = { count: 0, firstTime: matchTime };
+      }
+      aiState._repairAttempts[target.id].count++;
+      return true;
+    }
     case 'upgradeWall':
     case 'upgradeProduction':
       if (callbacks.canUpgradeBuilding && callbacks.canUpgradeBuilding(action.meta.target)) {
@@ -536,6 +642,9 @@ function updateIntel(matchTime, allBuildings, allUnits) {
 
   intel.playerArmyPower = playerArmyPower;
   intel.aiArmyPower = aiArmyPower;
+
+  // Re-assess build priorities based on updated intel
+  reassessBuildPriority(allBuildings);
 }
 
 // ============================================================
@@ -546,7 +655,7 @@ export function updatePlayerRally(matchTime, callbacks) {
   _matchTime = matchTime;
   _getUnitsRef = callbacks.getUnits;
   const allUnits = callbacks.getUnits();
-  const playerUnits = allUnits.filter(u => u.alive && u.team === TEAM_PLAYER && u.type !== UTYPE_HELICOPTER && (u.stance ?? STANCE_ADVANCE) === STANCE_ADVANCE);
+  const playerUnits = allUnits.filter(u => u.alive && u.team === TEAM_PLAYER && u.type !== UTYPE_HELICOPTER && !u.isSupport && (u.stance ?? STANCE_ADVANCE) === STANCE_ADVANCE);
 
   const rallyPos = gridToWorld(Math.floor(GRID_COLS / 2), PLAYER_RALLY_ROW, TILE_SIZE);
 
@@ -637,7 +746,7 @@ function assessThreat(aiBuildings, allUnits) {
 
 function updateEnemyRally(matchTime, callbacks) {
   const allUnits = callbacks.getUnits();
-  const aiUnits = allUnits.filter(u => u.alive && u.team === TEAM_ENEMY && u.type !== UTYPE_HELICOPTER && (u.stance ?? STANCE_ADVANCE) === STANCE_ADVANCE);
+  const aiUnits = allUnits.filter(u => u.alive && u.team === TEAM_ENEMY && u.type !== UTYPE_HELICOPTER && !u.isSupport && (u.stance ?? STANCE_ADVANCE) === STANCE_ADVANCE);
 
   const rallyPos = gridToWorld(Math.floor(GRID_COLS / 2), AI_PUSH.rallyRow, TILE_SIZE);
 
@@ -680,6 +789,9 @@ function updateEnemyRally(matchTime, callbacks) {
   );
 
   if (shouldPush) {
+    // Try economic harassment when releasing a push
+    tryEconomicHarass(matchTime, aiUnits, callbacks);
+
     for (const u of aiUnits) {
       if (u.rallyHold) {
         u.rallyHold = false;
@@ -691,6 +803,7 @@ function updateEnemyRally(matchTime, callbacks) {
     aiState.pushActive = true;
     aiState.pushStartTime = matchTime;
     aiState._pushMarkedSuccess = false;
+    aiState._forwardBuildAttempted = false;
     aiState.lastPushUnitCount = holdingCount;
   }
 
@@ -703,6 +816,10 @@ function updateEnemyRally(matchTime, callbacks) {
       aiState._pushMarkedSuccess = true;
       aiState.dynamicPushBonus = Math.max(0, aiState.dynamicPushBonus - AI_PUSH.sizeShrink);
       aiState.consecutiveFailures = 0;
+      // Flag forward building attempt on next AI tick
+      if (!aiState._forwardBuildAttempted) {
+        aiState._attemptForwardBuild = true;
+      }
     }
 
     if (advancingCount === 0) {
@@ -721,10 +838,14 @@ function updateEnemyRally(matchTime, callbacks) {
   }
 
   if (!aiState.pushActive) {
+    // Scan for flank weakness during rally formation
+    scanFlankWeakness(matchTime, callbacks);
+
+    const flankOffset = aiState._flankOffsetX * TILE_SIZE;
     for (const u of aiUnits) {
       if (!u.rallyHold && !u._rallyAssigned) {
         u.rallyHold = true;
-        u.rallyX = rallyPos.x + (Math.random() - 0.5) * 60;
+        u.rallyX = rallyPos.x + flankOffset + (Math.random() - 0.5) * 60;
         u.rallyZ = rallyPos.z + (Math.random() - 0.5) * 60;
         u._rallyAssigned = true;
 
@@ -743,11 +864,13 @@ function updateEnemyRally(matchTime, callbacks) {
 export function assignEnemyUnitRally(u) {
   if (aiState.pushActive) return;
   if (u.type === UTYPE_HELICOPTER) return;
+  if (u.isSupport) return;
   if ((u.stance ?? STANCE_ADVANCE) !== STANCE_ADVANCE) return;
 
   const rallyPos = gridToWorld(Math.floor(GRID_COLS / 2), AI_PUSH.rallyRow, TILE_SIZE);
+  const flankOffset = aiState._flankOffsetX * TILE_SIZE;
   u.rallyHold = true;
-  u.rallyX = rallyPos.x + (Math.random() - 0.5) * 60;
+  u.rallyX = rallyPos.x + flankOffset + (Math.random() - 0.5) * 60;
   u.rallyZ = rallyPos.z + (Math.random() - 0.5) * 60;
   u._rallyAssigned = true;
 
@@ -856,6 +979,67 @@ function scoreAirStrikeTarget(tx, tz, playerUnits, playerBuildings) {
   }
 
   return score;
+}
+
+// ============================================================
+// AI Support Unit Spawn — Medic / Engineer
+// ============================================================
+
+function tryAISupportSpawn(matchTime, callbacks) {
+  const energy = callbacks.getEnergy();
+  const allBuildings = callbacks.getBuildings();
+  const allUnits = callbacks.getUnits();
+
+  // --- Medic spawn ---
+  if (matchTime >= AI_MEDIC_MIN_TIME && energy >= MEDIC_SPAWN_COST + AI_ENERGY_RESERVE) {
+    // Count injured infantry
+    let injuredInfantry = 0;
+    for (let i = 0; i < allUnits.length; i++) {
+      const u = allUnits[i];
+      if (!u.alive || u.team !== TEAM_ENEMY) continue;
+      if ((u.type === UTYPE_RIFLE || u.type === 'assault') && u.hp < u.maxHp) {
+        injuredInfantry++;
+      }
+    }
+    if (injuredInfantry >= AI_MEDIC_INJURED_THRESHOLD) {
+      // Find a branched barracks that can spawn
+      for (let i = 0; i < allBuildings.length; i++) {
+        const b = allBuildings[i];
+        if (b.team !== TEAM_ENEMY || b.type !== BTYPE_BARRACKS) continue;
+        if (callbacks.canSpawnMedic && callbacks.canSpawnMedic(b)) {
+          if (callbacks.spendEnergy(MEDIC_SPAWN_COST)) {
+            callbacks.spawnSupportUnit(UTYPE_MEDIC, b);
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  // --- Engineer spawn ---
+  if (matchTime >= AI_ENGINEER_MIN_TIME && energy >= ENGINEER_SPAWN_COST + AI_ENERGY_RESERVE) {
+    // Count injured tanks
+    let injuredTanks = 0;
+    for (let i = 0; i < allUnits.length; i++) {
+      const u = allUnits[i];
+      if (!u.alive || u.team !== TEAM_ENEMY) continue;
+      if (u.type === UTYPE_TANK && u.hp < u.maxHp) {
+        injuredTanks++;
+      }
+    }
+    if (injuredTanks >= AI_ENGINEER_INJURED_THRESHOLD) {
+      for (let i = 0; i < allBuildings.length; i++) {
+        const b = allBuildings[i];
+        if (b.team !== TEAM_ENEMY || b.type !== BTYPE_FACTORY) continue;
+        if (callbacks.canSpawnEngineer && callbacks.canSpawnEngineer(b)) {
+          if (callbacks.spendEnergy(ENGINEER_SPAWN_COST)) {
+            callbacks.spawnSupportUnit(UTYPE_ENGINEER, b);
+          }
+          break;
+        }
+      }
+    }
+  }
 }
 
 // ============================================================
@@ -1309,6 +1493,307 @@ function updateAISquads(matchTime, threat, callbacks) {
 }
 
 // ============================================================
+// Change 2: Reactive Build Priority Override
+// Bypasses buildInterval for emergency responses
+// ============================================================
+
+function getReactiveBuildOverride(matchTime, energy, aiBuildings) {
+  const intel = aiState.intel;
+
+  const btypeMap = {
+    barracks: BTYPE_BARRACKS,
+    turret: BTYPE_TURRET,
+    factory: BTYPE_FACTORY,
+    generator: BTYPE_GENERATOR,
+  };
+  const limitMap = {
+    barracks: AI_LIMITS.barracks,
+    turret: AI_LIMITS.turrets,
+    factory: AI_LIMITS.factories,
+    generator: AI_LIMITS.generators,
+  };
+
+  const tryReactive = (itemName) => {
+    const btype = btypeMap[itemName];
+    const timingGate = AI_TIMING.build[itemName] || 0;
+    if (matchTime < timingGate) return null;
+    const count = aiBuildings.filter(b => b.type === btype).length;
+    if (count >= (limitMap[itemName] || 4)) return null;
+    const cost = BUILDING_STATS[btype].cost;
+    if (energy < cost + AI_ENERGY_RESERVE) return null;
+    return btype;
+  };
+
+  // Player army overwhelming AI → force barracks
+  const aiBarracksCount = aiBuildings.filter(b => b.type === BTYPE_BARRACKS).length;
+  if (intel.playerArmyPower > intel.aiArmyPower * AI_REACTIVE_ARMY_RATIO &&
+      intel.playerBarracks > aiBarracksCount) {
+    const result = tryReactive('barracks');
+    if (result) return result;
+  }
+
+  // Player turret-heavy → force factory (tanks counter turrets)
+  const aiFactoryCount = aiBuildings.filter(b => b.type === BTYPE_FACTORY).length;
+  if (intel.playerTurrets >= AI_REACTIVE_TURRET_THRESHOLD && aiFactoryCount < 2) {
+    const result = tryReactive('factory');
+    if (result) return result;
+  }
+
+  // Player has many units, AI has few turrets → force turret
+  const aiTurretCount = aiBuildings.filter(b => b.type === BTYPE_TURRET).length;
+  if (intel.playerTotalUnits > 6 && aiTurretCount < 2) {
+    const result = tryReactive('turret');
+    if (result) return result;
+  }
+
+  return null;
+}
+
+// ============================================================
+// Change 3: Counter-Building Queue
+// Populated by reassessBuildPriority(), consumed by pickNextAction()
+// ============================================================
+
+function reassessBuildPriority(allBuildings) {
+  const intel = aiState.intel;
+  const aiBuildings = allBuildings.filter(b => b.team === TEAM_ENEMY && b.alive);
+  const queue = [];
+
+  const aiFactoryCount = aiBuildings.filter(b => b.type === BTYPE_FACTORY).length;
+  const aiBarracksCount = aiBuildings.filter(b => b.type === BTYPE_BARRACKS).length;
+  const aiTurretCount = aiBuildings.filter(b => b.type === BTYPE_TURRET).length;
+  const aiGeneratorCount = aiBuildings.filter(b => b.type === BTYPE_GENERATOR).length;
+
+  // Player turret-heavy, AI lacks tanks → queue factory
+  if (intel.playerTurrets >= AI_REACTIVE_TURRET_THRESHOLD && aiFactoryCount < 2) {
+    queue.push('factory');
+  }
+
+  // Player rushing (0 turrets, many barracks) → queue turret
+  if (intel.playerTurrets === 0 && intel.playerBarracks >= AI_REACTIVE_RUSH_BARRACKS) {
+    if (!queue.includes('turret')) queue.push('turret');
+  }
+
+  // Player army massively outnumbers AI → queue barracks
+  if (intel.playerArmyPower > intel.aiArmyPower * AI_REACTIVE_OVERWHELM_RATIO) {
+    if (!queue.includes('barracks')) queue.push('barracks');
+  }
+
+  // AI has no generators → queue generator
+  if (aiGeneratorCount === 0) {
+    if (!queue.includes('generator')) queue.push('generator');
+  }
+
+  // Limit queue size
+  aiState._urgentBuildQueue = queue.slice(0, AI_COUNTER_QUEUE_MAX);
+}
+
+function pickFromUrgentQueue(matchTime, energy, aiBuildings) {
+  const btypeMap = {
+    barracks: BTYPE_BARRACKS,
+    turret: BTYPE_TURRET,
+    factory: BTYPE_FACTORY,
+    generator: BTYPE_GENERATOR,
+  };
+  const limitMap = {
+    barracks: AI_LIMITS.barracks,
+    turret: AI_LIMITS.turrets,
+    factory: AI_LIMITS.factories,
+    generator: AI_LIMITS.generators,
+  };
+
+  for (let i = 0; i < aiState._urgentBuildQueue.length; i++) {
+    const itemName = aiState._urgentBuildQueue[i];
+    const btype = btypeMap[itemName];
+    if (!btype) continue;
+
+    const timingGate = AI_TIMING.build[itemName] || 0;
+    if (matchTime < timingGate) continue;
+
+    const count = aiBuildings.filter(b => b.type === btype).length;
+    if (count >= (limitMap[itemName] || 4)) continue;
+
+    const cost = BUILDING_STATS[btype].cost;
+    if (energy < cost + AI_ENERGY_RESERVE) continue;
+
+    // Remove from queue and return build action
+    aiState._urgentBuildQueue.splice(i, 1);
+    return { type: 'build', meta: { buildType: btype } };
+  }
+  return null;
+}
+
+// ============================================================
+// Change 4: Flank-Aware Push Rally
+// Scans player defenses left vs right, biases rally toward weaker side
+// ============================================================
+
+function scanFlankWeakness(matchTime, callbacks) {
+  if (matchTime - aiState._lastFlankScanTime < AI_FLANK_SCAN_INTERVAL) return;
+  aiState._lastFlankScanTime = matchTime;
+
+  const allBuildings = callbacks.getBuildings();
+  const mapCenterX = (GRID_COLS / 2) * TILE_SIZE;
+
+  let leftDefense = 0;
+  let rightDefense = 0;
+
+  for (let i = 0; i < allBuildings.length; i++) {
+    const b = allBuildings[i];
+    if (b.team !== TEAM_PLAYER || !b.alive) continue;
+    if (b.type !== BTYPE_TURRET && b.type !== BTYPE_WALL) continue;
+
+    const weight = b.type === BTYPE_TURRET ? 3 : 1;
+    if (b.x < mapCenterX) {
+      leftDefense += weight;
+    } else {
+      rightDefense += weight;
+    }
+  }
+
+  // Bias toward weaker side (negative = left, positive = right)
+  if (leftDefense === rightDefense) {
+    aiState._flankOffsetX = 0;
+  } else if (leftDefense < rightDefense) {
+    // Left side weaker — push left (negative X offset)
+    const ratio = rightDefense > 0 ? 1 - (leftDefense / rightDefense) : 1;
+    aiState._flankOffsetX = -Math.round(AI_FLANK_MAX_OFFSET * Math.min(ratio, 1));
+  } else {
+    // Right side weaker — push right (positive X offset)
+    const ratio = leftDefense > 0 ? 1 - (rightDefense / leftDefense) : 1;
+    aiState._flankOffsetX = Math.round(AI_FLANK_MAX_OFFSET * Math.min(ratio, 1));
+  }
+}
+
+// ============================================================
+// Change 5: Economic Harassment
+// Diverts a few expendable units toward player generators
+// ============================================================
+
+function tryEconomicHarass(matchTime, aiUnits, callbacks) {
+  if (matchTime < AI_HARASS_MIN_TIME) return;
+
+  const intel = aiState.intel;
+  if (intel.playerGenerators < AI_HARASS_MIN_GENERATORS) return;
+
+  // Find nearest player generator (closest to AI side = lowest Z)
+  const allBuildings = callbacks.getBuildings();
+  const playerGens = [];
+  for (let i = 0; i < allBuildings.length; i++) {
+    const b = allBuildings[i];
+    if (b.team === TEAM_PLAYER && b.alive && b.type === BTYPE_GENERATOR) {
+      playerGens.push(b);
+    }
+  }
+  if (playerGens.length === 0) return;
+
+  // Sort by Z ascending (closest to AI base first)
+  playerGens.sort((a, b) => a.z - b.z);
+  const target = playerGens[0];
+
+  // Divert up to AI_HARASS_UNIT_COUNT rifle units
+  let diverted = 0;
+  for (const u of aiUnits) {
+    if (diverted >= AI_HARASS_UNIT_COUNT) break;
+    if (u.type !== UTYPE_RIFLE) continue;
+    if (!u.rallyHold) continue;
+
+    u.rallyHold = false;
+    u.path = null;
+    u.pathIndex = 0;
+    u.targetPriority = TARGET_BUILDINGS;
+    // Override rally to generator location
+    u._harassTarget = true;
+    u.rallyX = target.x;
+    u.rallyZ = target.z;
+    diverted++;
+  }
+}
+
+// ============================================================
+// Change 6: Forward Building After Successful Push
+// AI places a turret or generator in the shared zone
+// ============================================================
+
+function tryForwardBuild(matchTime, aiBuildings, callbacks) {
+  if (!AI_FORWARD_BUILD_ENABLED) return;
+  if (!aiState._attemptForwardBuild) return;
+  if (matchTime < AI_FORWARD_BUILD_MIN_TIME) return;
+
+  // Consume the flag
+  aiState._attemptForwardBuild = false;
+  aiState._forwardBuildAttempted = true;
+
+  // Need at least 2 AI ground units in the shared zone
+  const allUnits = callbacks.getUnits();
+  const sharedMinZ = SHARED_BUILD_ROW_MIN * TILE_SIZE;
+  const sharedMaxZ = SHARED_BUILD_ROW_MAX * TILE_SIZE;
+  const sharedUnits = [];
+
+  for (let i = 0; i < allUnits.length; i++) {
+    const u = allUnits[i];
+    if (!u.alive || u.team !== TEAM_ENEMY || u.isAir) continue;
+    if (u.z >= sharedMinZ && u.z <= sharedMaxZ) {
+      sharedUnits.push(u);
+    }
+  }
+  if (sharedUnits.length < 2) return;
+
+  // Average position as search center
+  let avgX = 0, avgZ = 0;
+  for (const u of sharedUnits) {
+    avgX += u.x;
+    avgZ += u.z;
+  }
+  avgX /= sharedUnits.length;
+  avgZ /= sharedUnits.length;
+
+  // Try each forward building type
+  const btypeMap = { turret: BTYPE_TURRET, generator: BTYPE_GENERATOR };
+  for (const typeName of AI_FORWARD_BUILD_TYPES) {
+    const btype = btypeMap[typeName];
+    if (!btype) continue;
+
+    const stats = BUILDING_STATS[btype];
+    const energy = callbacks.getEnergy();
+    if (energy < stats.cost + AI_ENERGY_RESERVE) continue;
+
+    // Check limit
+    const count = aiBuildings.filter(b => b.type === btype).length;
+    const limitKey = typeName === 'turret' ? 'turrets' : typeName + 's';
+    if (count >= (AI_LIMITS[limitKey] || 4)) continue;
+
+    // Search near the average position for a buildable spot
+    const centerCol = Math.round(avgX / TILE_SIZE);
+    const centerRow = Math.round(avgZ / TILE_SIZE);
+    const size = stats.size;
+
+    let bestCol = -1, bestRow = -1, bestScore = -Infinity;
+    for (let dr = -4; dr <= 4; dr++) {
+      for (let dc = -4; dc <= 4; dc++) {
+        const col = centerCol + dc;
+        const row = centerRow + dr;
+        if (row < SHARED_BUILD_ROW_MIN || row > SHARED_BUILD_ROW_MAX - size + 1) continue;
+        if (col < 1 || col >= GRID_COLS - 1 - size + 1) continue;
+        if (!callbacks.isBuildable(col, row, size)) continue;
+
+        const score = scorePlacement(btype, col, row, aiBuildings, matchTime);
+        if (score > bestScore) {
+          bestScore = score;
+          bestCol = col;
+          bestRow = row;
+        }
+      }
+    }
+
+    if (bestCol >= 0 && callbacks.spendEnergy(stats.cost)) {
+      callbacks.createBuilding(btype, bestCol, bestRow);
+      return;
+    }
+  }
+}
+
+// ============================================================
 // Player Rally State Query + Manual Push
 // ============================================================
 
@@ -1374,6 +1859,11 @@ export function resetAI() {
     _pushMarkedSuccess: false,
     _lastRallyUpdateTime: 0,
     heliRallyX: 0, heliRallyZ: 0, heliRallyCommitUntil: 0,
+    _urgentBuildQueue: [],
+    _lastFlankScanTime: 0,
+    _flankOffsetX: 0,
+    _attemptForwardBuild: false,
+    _forwardBuildAttempted: false,
   };
   playerRallyState = { rallyStartTime: 0, pushActive: false };
   _matchTime = 0;

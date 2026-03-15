@@ -227,6 +227,8 @@ export const UTYPE_RIFLE = 'rifle';
 export const UTYPE_ASSAULT = 'assault';
 export const UTYPE_TANK = 'tank';
 export const UTYPE_HELICOPTER = 'helicopter';
+export const UTYPE_MEDIC = 'medic';
+export const UTYPE_ENGINEER = 'engineer';
 
 // Unit stat table
 // speed = world units per second
@@ -264,11 +266,37 @@ export const UNIT_STATS = {
     hp: 700,
     speed: 60,
     damage: 4,
-    range: 180,
+    range: 240,
     fireRate: 8.0,
     size: 10,
     label: 'Helicopter',
     isAir: true,
+  },
+  [UTYPE_MEDIC]: {
+    hp: 60,
+    speed: 42,
+    damage: 0,
+    range: 80,
+    fireRate: 0,
+    size: 6,
+    label: 'Medic',
+    isSupport: true,
+    healRate: 8,
+    healRange: 80,
+    healTargets: ['rifle', 'assault'],
+  },
+  [UTYPE_ENGINEER]: {
+    hp: 200,
+    speed: 22,
+    damage: 0,
+    range: 100,
+    fireRate: 0,
+    size: 10,
+    label: 'Engineer',
+    isSupport: true,
+    healRate: 15,
+    healRange: 100,
+    healTargets: ['tank'],
   },
 };
 
@@ -596,17 +624,17 @@ export const AI_BUILD_ORDER = {
   rusher: [
     'generator', 'barracks', 'barracks', 'generator', 'turret', 'barracks',
     'factory', 'generator', 'turret', 'barracks', 'helipad', 'generator',
-    'turret', 'factory', 'turret', 'generator', 'helipad', 'generator',
+    'turret', 'factory', 'wall', 'wall', 'turret', 'generator', 'helipad', 'generator',
   ],
   turtle: [
     'generator', 'barracks', 'turret', 'generator', 'turret', 'barracks',
     'generator', 'factory', 'turret', 'wall', 'wall', 'wall',
-    'turret', 'generator', 'factory', 'barracks', 'helipad', 'generator',
+    'turret', 'generator', 'factory', 'wall', 'wall', 'barracks', 'helipad', 'generator',
   ],
   balanced: [
     'generator', 'barracks', 'generator', 'turret', 'barracks', 'factory',
-    'generator', 'turret', 'barracks', 'generator', 'turret', 'factory',
-    'helipad', 'turret', 'generator', 'barracks', 'helipad', 'generator',
+    'generator', 'turret', 'wall', 'wall', 'wall', 'barracks', 'generator',
+    'turret', 'factory', 'wall', 'helipad', 'turret', 'generator', 'barracks', 'helipad', 'generator',
   ],
 };
 
@@ -648,11 +676,18 @@ export const AI_WALL_ZONE_MAX_ROW = 12;          // max row for ideal wall place
 // --- AI Turret Placement ---
 export const AI_TURRET_IDEAL_DISTANCE = 3;       // tiles from nearest production building (ideal turret distance)
 
-// --- AI Wall Repair ---
-export const AI_MAX_WALL_REPAIRS_PER_TICK = 3;   // max wall repairs AI can queue per AI tick
+// --- AI Building Repair ---
+export const AI_MAX_REPAIRS_PER_TICK = 2;         // max building repairs AI can queue per AI tick
+export const AI_REPAIR_HP_THRESHOLD = 0.4;        // AI considers repair when building HP drops below 40%
+export const AI_REPAIR_MAX_ATTEMPTS = 3;          // max repairs per building within the attempt window before abandoning
+export const AI_REPAIR_ATTEMPT_WINDOW = 90;       // seconds — window for tracking repair attempts per building
+export const AI_REPAIR_ENERGY_RESERVE_MULT = 2.0; // AI keeps 2x normal energy reserve before repairing (won't drain itself)
+
+// Legacy alias (wall-only code may still reference this)
+export const AI_MAX_WALL_REPAIRS_PER_TICK = AI_MAX_REPAIRS_PER_TICK;
 
 // --- AI Wave Power ---
-export const AI_WAVE_POWER = { rifle: 1.0, assault: 2.5, tank: 5.0, helicopter: 0 };
+export const AI_WAVE_POWER = { rifle: 1.0, assault: 2.5, tank: 5.0, helicopter: 0, medic: 0, engineer: 0 };
 
 // --- Squad / Command System ---
 // Stances control movement behavior
@@ -691,10 +726,10 @@ export const SQUAD_RALLY_HOLD_RADIUS = 60;     // world units — hold within th
 // --- Combat Priority Table ---
 // Per-priority per-target-type scoring bonuses for unified targeting
 export const COMBAT_PRIORITY_TABLE = {
-  any:       { rifle: 0, assault: 0, tank: 0, helicopter: 0, turret: 0, barracks: 0, factory: 0, generator: 0, helipad: 0, wall: 0, core: 0 },
-  units:     { rifle: 50, assault: 50, tank: 50, helicopter: 50, turret: -30, barracks: -30, factory: -30, generator: -30, helipad: -30, wall: -30, core: -30 },
-  buildings: { rifle: -30, assault: -30, tank: -30, helicopter: -30, turret: 50, barracks: 50, factory: 50, generator: 50, helipad: 50, wall: 50, core: 50 },
-  rally:     { rifle: 60, assault: 60, tank: 80, helicopter: 40, turret: 100, barracks: 20, factory: 20, generator: 20, helipad: 20, wall: 20, core: 20 },
+  any:       { rifle: 0, assault: 0, tank: 0, helicopter: 0, medic: 20, engineer: 20, turret: 0, barracks: 0, factory: 0, generator: 0, helipad: 0, wall: 0, core: 0 },
+  units:     { rifle: 50, assault: 50, tank: 50, helicopter: 50, medic: 70, engineer: 70, turret: -30, barracks: -30, factory: -30, generator: -30, helipad: -30, wall: -30, core: -30 },
+  buildings: { rifle: -30, assault: -30, tank: -30, helicopter: -30, medic: -10, engineer: -10, turret: 50, barracks: 50, factory: 50, generator: 50, helipad: 50, wall: 50, core: 50 },
+  rally:     { rifle: 60, assault: 60, tank: 80, helicopter: 40, medic: 80, engineer: 80, turret: 100, barracks: 20, factory: 20, generator: 20, helipad: 20, wall: 20, core: 20 },
 };
 export const COMBAT_WALL_BONUS = 100;
 export const COMBAT_SELF_DEFENSE_BONUS = 150;
@@ -717,6 +752,11 @@ export const WALL_CORNER_NW = 'corner_nw';       // connects north + west
 export const WALL_CORNER_SE = 'corner_se';       // connects south + east
 export const WALL_CORNER_SW = 'corner_sw';       // connects south + west
 
+// --- Building Repair ---
+export const REPAIR_COST_PER_HP = 0.15;    // energy per HP restored
+export const REPAIR_BASE_TIME = 4.0;       // seconds to fully repair
+export const REPAIR_MIN_COST = 5;          // minimum energy cost for any repair
+
 // --- Wall Demolish ---
 export const WALL_DEMOLISH_REFUND_RATIO = 0.5;  // refund 50% of invested cost on voluntary demolish
 
@@ -734,3 +774,42 @@ export const AIRSTRIKE_MAP_MARGIN = 400;          // world units off-map where b
 // AI air strike timing
 export const AI_AIRSTRIKE_MIN_TIME = 180;         // seconds — AI won't consider air strike before this
 export const AI_AIRSTRIKE_ENERGY_THRESHOLD = 25000; // AI needs this much energy to consider air strike
+
+// --- AI Reactive Build Override ---
+export const AI_REACTIVE_ARMY_RATIO = 1.5;        // player army > this × AI army → force barracks
+export const AI_REACTIVE_TURRET_THRESHOLD = 3;    // player turrets >= this → force factory (tanks counter turrets)
+
+// --- AI Counter-Building Queue ---
+export const AI_REACTIVE_RUSH_BARRACKS = 3;       // player has 0 turrets + this many barracks → queue turret
+export const AI_REACTIVE_OVERWHELM_RATIO = 2.0;   // player army > this × AI army → queue barracks
+export const AI_COUNTER_QUEUE_MAX = 3;            // max items in urgent build queue
+
+// --- AI Flank-Aware Push Rally ---
+export const AI_FLANK_SCAN_INTERVAL = 3.0;        // seconds between flank weakness scans
+export const AI_FLANK_MAX_OFFSET = 7;             // max tiles offset toward weaker flank
+
+// --- AI Economic Harassment ---
+export const AI_HARASS_MIN_GENERATORS = 3;        // player needs this many generators before AI harasses
+export const AI_HARASS_UNIT_COUNT = 2;            // max rifle units diverted for harassment
+export const AI_HARASS_MIN_TIME = 90;             // seconds — no harassment before this
+
+// --- AI Forward Building ---
+export const AI_FORWARD_BUILD_ENABLED = true;     // allow AI to build in shared zone after successful push
+export const AI_FORWARD_BUILD_TYPES = ['turret', 'generator']; // building types AI tries to place forward
+export const AI_FORWARD_BUILD_MIN_TIME = 120;     // seconds — no forward building before this
+
+// --- Support Units (Medic / Engineer) ---
+export const MEDIC_SPAWN_COST = 150;              // energy cost to spawn a medic
+export const MEDIC_SPAWN_COOLDOWN = 45;           // seconds between medic spawns per barracks
+export const ENGINEER_SPAWN_COST = 250;           // energy cost to spawn an engineer
+export const ENGINEER_SPAWN_COOLDOWN = 60;        // seconds between engineer spawns per factory
+
+// AI support unit timing gates
+export const AI_MEDIC_MIN_TIME = 90;              // seconds — AI won't spawn medics before this
+export const AI_MEDIC_INJURED_THRESHOLD = 3;      // min injured infantry to trigger AI medic spawn
+export const AI_ENGINEER_MIN_TIME = 120;          // seconds — AI won't spawn engineers before this
+export const AI_ENGINEER_INJURED_THRESHOLD = 2;   // min injured tanks to trigger AI engineer spawn
+
+// Support unit colors
+export const MEDIC_COLOR = 0x32FF64;              // green
+export const ENGINEER_COLOR = 0xFFD700;           // gold

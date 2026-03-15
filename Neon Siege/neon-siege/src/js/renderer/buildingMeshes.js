@@ -1365,6 +1365,8 @@ export function updateBuildingMeshes(now, buildings) {
       setGroupEmissive(group, t);
       b.hitFlashTimer -= dt;
       if (b.hitFlashTimer < 0) b.hitFlashTimer = 0;
+    } else {
+      setGroupEmissive(group, 0);
     }
   }
 }

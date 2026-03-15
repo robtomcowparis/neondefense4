@@ -198,15 +198,21 @@ export function updateProjectileMeshes(now, projectiles) {
       // Trail spheres from trail history
       if (p.mesh.userData.trails && p.trail) {
         const trails = p.mesh.userData.trails;
+        const theta = -(p.mesh.rotation.y || 0);
+        const cosT = Math.cos(theta);
+        const sinT = Math.sin(theta);
         for (let j = 0; j < trails.length; j++) {
           const idx = p.trail.length - 1 - j;
           if (idx >= 0) {
             trails[j].visible = true;
-            // Trail positions are in world coords; convert to local
+            // Trail positions are in world coords; apply inverse rotation to convert to local
+            const wx = p.trail[idx][0] - p.x;
+            const wy = p.trail[idx][1] - p.y;
+            const wz = p.trail[idx][2] - p.z;
             trails[j].position.set(
-              p.trail[idx][0] - p.x,
-              p.trail[idx][1] - p.y,
-              p.trail[idx][2] - p.z
+              wx * cosT - wz * sinT,
+              wy,
+              wx * sinT + wz * cosT
             );
           }
         }

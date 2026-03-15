@@ -18,6 +18,7 @@ import {
   DEFEND_ROW_OFFSET, DEFEND_HOLD_RADIUS, DEFEND_ZONE_RADIUS,
   SQUAD_RALLY_ENGAGE_RADIUS, SQUAD_RALLY_HOLD_RADIUS,
   BTYPE_WALL,
+  UTYPE_MEDIC, UTYPE_ENGINEER,
 } from './config.js';
 import { nextId, worldToGrid, gridToWorld, dist, SpatialHash } from './utils.js';
 import { getTile } from './map.js';
@@ -91,6 +92,14 @@ export function createUnit(type, x, z, team, bonuses = null) {
     // Selection render flags (set by main.js, read by unitMeshes.js)
     selected: false,
     squadHighlight: false,
+    // Support unit fields
+    isSupport: !!(stats.isSupport),
+    healRate: stats.healRate || 0,
+    healRange: stats.healRange || 0,
+    healTargets: stats.healTargets || null,
+    _healTargetId: null,
+    _parentBuildingId: null,
+    _healing: false,
   };
 
   // Helicopter air unit fields
@@ -177,6 +186,12 @@ export function updateUnits(dt, callbacks) {
         if (u.fireCooldown < 0) u.fireCooldown = 0;
       }
       updateHelicopter(u, dt);
+      continue;
+    }
+
+    // Support units (Medic/Engineer) have their own movement AI
+    if (u.isSupport) {
+      updateSupportUnit(u, dt, allUnits, callbacks);
       continue;
     }
 
@@ -718,6 +733,122 @@ export function getUnits() {
 export function removeUnit(u) {
   u.alive = false;
   _dirty = true;
+}
+
+// --- Support unit (Medic/Engineer) movement and healing ---
+
+function updateSupportUnit(u, dt, allUnits, callbacks) {
+  u._healing = false;
+
+  // Find best heal target: most injured friendly of correct type
+  let bestTarget = null;
+  let bestMissing = 0;
+
+  // Only rescan targets every ~4 frames to save perf
+  const shouldRescan = (u.id % 4) === (_frameCount % 4);
+
+  // Check if current target is still valid
+  if (u._healTargetId != null) {
+    let found = false;
+    for (let i = 0; i < allUnits.length; i++) {
+      const t = allUnits[i];
+      if (t.id === u._healTargetId && t.alive && t.hp < t.maxHp) {
+        found = true;
+        bestTarget = t;
+        bestMissing = t.maxHp - t.hp;
+        break;
+      }
+    }
+    if (!found) {
+      u._healTargetId = null;
+    }
+  }
+
+  // Rescan for a better target periodically
+  if (shouldRescan) {
+    for (let i = 0; i < allUnits.length; i++) {
+      const t = allUnits[i];
+      if (!t.alive || t.team !== u.team || t.isSupport) continue;
+      if (t.hp >= t.maxHp) continue;
+      if (!u.healTargets || !u.healTargets.includes(t.type)) continue;
+      const missing = t.maxHp - t.hp;
+      if (missing > bestMissing) {
+        bestMissing = missing;
+        bestTarget = t;
+      }
+    }
+    if (bestTarget) {
+      u._healTargetId = bestTarget.id;
+    }
+  }
+
+  if (bestTarget) {
+    const d = dist(u.x, u.z, bestTarget.x, bestTarget.z);
+    if (d <= u.healRange) {
+      // In range — heal
+      u._healing = true;
+      u._healTargetX = bestTarget.x;
+      u._healTargetZ = bestTarget.z;
+      const healAmount = u.healRate * dt;
+      bestTarget.hp = Math.min(bestTarget.maxHp, bestTarget.hp + healAmount);
+    } else {
+      // Path toward target (throttled)
+      if (shouldRescan && callbacks && callbacks.findPath) {
+        const grid = worldToGrid(u.x, u.z, TILE_SIZE);
+        const tGrid = worldToGrid(bestTarget.x, bestTarget.z, TILE_SIZE);
+        const newPath = callbacks.findPath(grid.col, grid.row, tGrid.col, tGrid.row);
+        if (newPath && newPath.length > 0) {
+          u.path = newPath;
+          u.pathIndex = 0;
+        }
+      }
+    }
+  } else {
+    // No injured friendlies — follow friendly forces forward
+    u._healTargetId = null;
+    if (shouldRescan && callbacks && callbacks.findPath) {
+      // Follow behind advancing friendly units
+      let closestFriendly = null;
+      let closestDist = Infinity;
+      for (let i = 0; i < allUnits.length; i++) {
+        const t = allUnits[i];
+        if (!t.alive || t.team !== u.team || t.isSupport || t.isAir) continue;
+        if (!u.healTargets || !u.healTargets.includes(t.type)) continue;
+        const d = dist(u.x, u.z, t.x, t.z);
+        if (d < closestDist) {
+          closestDist = d;
+          closestFriendly = t;
+        }
+      }
+      if (closestFriendly && closestDist > 60) {
+        const grid = worldToGrid(u.x, u.z, TILE_SIZE);
+        const tGrid = worldToGrid(closestFriendly.x, closestFriendly.z, TILE_SIZE);
+        const newPath = callbacks.findPath(grid.col, grid.row, tGrid.col, tGrid.row);
+        if (newPath && newPath.length > 0) {
+          u.path = newPath;
+          u.pathIndex = 0;
+        }
+      }
+    }
+  }
+
+  // Move toward current waypoint
+  if (u.path && u.pathIndex < u.path.length && !u._healing) {
+    const wp = u.path[u.pathIndex];
+    const target = gridToWorld(wp.col, wp.row, TILE_SIZE);
+    const dx = target.x - u.x;
+    const dz = target.z - u.z;
+    const d = Math.sqrt(dx * dx + dz * dz);
+
+    if (d < TILE_SIZE / 2) {
+      u.pathIndex++;
+    } else {
+      const moveSpeed = u.speed * dt;
+      const step = Math.min(moveSpeed, d);
+      u.x += (dx / d) * step;
+      u.z += (dz / d) * step;
+    }
+  }
 }
 
 // --- Helicopter movement ---

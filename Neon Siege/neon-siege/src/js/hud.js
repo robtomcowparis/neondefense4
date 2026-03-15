@@ -15,12 +15,16 @@ import {
   WALL_DEMOLISH_REFUND_RATIO,
   SPAWN_STANCE_DEFAULT, SPAWN_TARGET_DEFAULT,
   AIRSTRIKE_COST, AIRSTRIKE_COOLDOWN,
+  MEDIC_SPAWN_COST, MEDIC_SPAWN_COOLDOWN,
+  ENGINEER_SPAWN_COST, ENGINEER_SPAWN_COOLDOWN,
 } from './config.js';
 import {
   getTurretStats, getProductionStats, getGeneratorStats,
   canUpgradeBuilding, canBranchBuilding,
   getUpgradeCost, getBranchCost,
   canAirStrike,
+  canSpawnMedic, canSpawnEngineer,
+  canRepairBuilding, getRepairCostForBuilding,
 } from './buildings.js';
 
 let container = null;
@@ -693,18 +697,29 @@ function buildBuildingActions(b, currentEnergy, matchTime) {
     affordBrB = currentEnergy >= getBranchCost(b, 'B');
   }
 
-  // Wall repair
+  // Building repair (all types except Core)
   const isWall = b.type === BTYPE_WALL;
-  const wallDamaged = isWall && b.hp < b.maxHp && !b.constructionState;
-  const repairCost = isWall ? (BUILDING_STATS[BTYPE_WALL].repairCost || 10) : 0;
-  const affordRepair = wallDamaged && currentEnergy >= repairCost;
+  const canRepair = canRepairBuilding(b);
+  const repairCost = canRepair ? getRepairCostForBuilding(b) : 0;
+  const affordRepair = canRepair && currentEnergy >= repairCost;
+  const isRepairing = !!b._repairing;
 
   // Air strike
   const airStrikeReady = canAirStrike(b, matchTime || 0);
   const affordAirStrike = airStrikeReady && currentEnergy >= AIRSTRIKE_COST;
   const airStrikeCooldownLeft = (b.airStrikeCooldownUntil && matchTime) ? Math.max(0, b.airStrikeCooldownUntil - matchTime) : 0;
 
-  const key = `${b.id}:${b.level}:${b.branch}:${doUpgrade}:${doBranch}:${affordUpg}:${affordBrA}:${affordBrB}:${wallDamaged}:${affordRepair}:${Math.ceil(b.hp)}:${b.orientation || ''}:${airStrikeReady}:${affordAirStrike}:${Math.floor(airStrikeCooldownLeft)}`;
+  // Support unit spawns
+  const medicReady = canSpawnMedic(b, matchTime || 0);
+  const affordMedic = medicReady && currentEnergy >= MEDIC_SPAWN_COST;
+  const medicCooldownLeft = (b.supportCooldownUntil && matchTime) ? Math.max(0, b.supportCooldownUntil - matchTime) : 0;
+  const hasMedicActive = b.type === BTYPE_BARRACKS && b._activeSupportUnitId != null;
+  const engineerReady = canSpawnEngineer(b, matchTime || 0);
+  const affordEngineer = engineerReady && currentEnergy >= ENGINEER_SPAWN_COST;
+  const engineerCooldownLeft = (b.supportCooldownUntil && matchTime) ? Math.max(0, b.supportCooldownUntil - matchTime) : 0;
+  const hasEngineerActive = b.type === BTYPE_FACTORY && b._activeSupportUnitId != null;
+
+  const key = `${b.id}:${b.level}:${b.branch}:${doUpgrade}:${doBranch}:${affordUpg}:${affordBrA}:${affordBrB}:${canRepair}:${affordRepair}:${isRepairing}:${Math.ceil(b.hp)}:${b.orientation || ''}:${airStrikeReady}:${affordAirStrike}:${Math.floor(airStrikeCooldownLeft)}:${medicReady}:${affordMedic}:${hasMedicActive}:${Math.floor(medicCooldownLeft)}:${engineerReady}:${affordEngineer}:${hasEngineerActive}:${Math.floor(engineerCooldownLeft)}`;
   if (key === _lastBuildingActionsKey) return;
   _lastBuildingActionsKey = key;
 
@@ -729,11 +744,18 @@ function buildBuildingActions(b, currentEnergy, matchTime) {
     html += '</div>';
   }
 
-  // Wall repair button
-  if (wallDamaged) {
+  // Repair button (all building types)
+  if (canRepair) {
     html += `<button class="build-btn turret-action-btn repair-btn ${affordRepair ? '' : 'disabled'}" data-action="repair">
       <span>REPAIR</span><span class="cost">${repairCost} E</span>
     </button>`;
+  }
+  if (isRepairing) {
+    const repairPct = Math.min((b._repairTimer || 0) / (b._repairDuration || 1), 1.0) * 100;
+    html += `<div class="repair-progress-row">
+      <span class="repair-progress-label">REPAIRING...</span>
+      <div class="hp-bar-track repair-track"><div class="hp-bar-fill construction-repair" style="width:${repairPct.toFixed(0)}%"></div></div>
+    </div>`;
   }
 
   if (doUpgrade) {
@@ -765,6 +787,40 @@ function buildBuildingActions(b, currentEnergy, matchTime) {
     } else if (airStrikeCooldownLeft > 0) {
       html += `<button class="build-btn turret-action-btn airstrike-btn disabled" data-action="airstrike">
         <span>AIR STRIKE</span><span class="cost">COOLDOWN ${Math.ceil(airStrikeCooldownLeft)}s</span>
+      </button>`;
+    }
+  }
+
+  // Medic spawn button (branched barracks only)
+  if (b.type === BTYPE_BARRACKS && b.branch) {
+    if (hasMedicActive) {
+      html += `<button class="build-btn turret-action-btn medic-btn disabled" data-action="medic">
+        <span>MEDIC ACTIVE</span>
+      </button>`;
+    } else if (medicReady) {
+      html += `<button class="build-btn turret-action-btn medic-btn ${affordMedic ? '' : 'disabled'}" data-action="medic">
+        <span>SPAWN MEDIC</span><span class="cost">${MEDIC_SPAWN_COST} E</span>
+      </button>`;
+    } else if (medicCooldownLeft > 0) {
+      html += `<button class="build-btn turret-action-btn medic-btn disabled" data-action="medic">
+        <span>SPAWN MEDIC</span><span class="cost">COOLDOWN ${Math.ceil(medicCooldownLeft)}s</span>
+      </button>`;
+    }
+  }
+
+  // Engineer spawn button (branched factory only)
+  if (b.type === BTYPE_FACTORY && b.branch) {
+    if (hasEngineerActive) {
+      html += `<button class="build-btn turret-action-btn engineer-btn disabled" data-action="engineer">
+        <span>ENGINEER ACTIVE</span>
+      </button>`;
+    } else if (engineerReady) {
+      html += `<button class="build-btn turret-action-btn engineer-btn ${affordEngineer ? '' : 'disabled'}" data-action="engineer">
+        <span>SPAWN ENGINEER</span><span class="cost">${ENGINEER_SPAWN_COST} E</span>
+      </button>`;
+    } else if (engineerCooldownLeft > 0) {
+      html += `<button class="build-btn turret-action-btn engineer-btn disabled" data-action="engineer">
+        <span>SPAWN ENGINEER</span><span class="cost">COOLDOWN ${Math.ceil(engineerCooldownLeft)}s</span>
       </button>`;
     }
   }
@@ -801,7 +857,9 @@ function buildBuildingActions(b, currentEnergy, matchTime) {
   elements.buildingActions.querySelectorAll('[data-action="repair"]').forEach(btn => {
     btn.addEventListener('click', () => {
       if (btn.classList.contains('disabled')) return;
-      if (callbacks && callbacks.onWallRepair) {
+      if (callbacks && callbacks.onBuildingRepair) {
+        callbacks.onBuildingRepair(selectedBuilding);
+      } else if (callbacks && callbacks.onWallRepair) {
         callbacks.onWallRepair(selectedBuilding);
       }
     });
@@ -831,6 +889,24 @@ function buildBuildingActions(b, currentEnergy, matchTime) {
       if (btn.classList.contains('disabled')) return;
       if (callbacks && callbacks.onAirStrike) {
         callbacks.onAirStrike(selectedBuilding);
+      }
+    });
+  });
+
+  elements.buildingActions.querySelectorAll('[data-action="medic"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('disabled')) return;
+      if (callbacks && callbacks.onSpawnMedic) {
+        callbacks.onSpawnMedic(selectedBuilding);
+      }
+    });
+  });
+
+  elements.buildingActions.querySelectorAll('[data-action="engineer"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.classList.contains('disabled')) return;
+      if (callbacks && callbacks.onSpawnEngineer) {
+        callbacks.onSpawnEngineer(selectedBuilding);
       }
     });
   });

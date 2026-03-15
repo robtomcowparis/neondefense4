@@ -67,6 +67,8 @@ export function updateCombat(dt, callbacks) {
   for (let i = 0; i < units.length; i++) {
     const u = units[i];
     if (!u.alive) continue;
+    // Support units (Medic/Engineer) never attack
+    if (u.isSupport) continue;
     if (u.fireCooldown > 0 && !u.inCombat) {
       u.targetX = undefined;
       u.targetZ = undefined;

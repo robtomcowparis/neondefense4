@@ -6,9 +6,11 @@ import * as THREE from 'three';
 import { makeStructuralMaterial, makeAccentMaterial, makeGlowMaterial } from './scene.js';
 import {
   UTYPE_RIFLE, UTYPE_ASSAULT, UTYPE_TANK, UTYPE_HELICOPTER,
+  UTYPE_MEDIC, UTYPE_ENGINEER,
   COLORS, HELI_FLY_HEIGHT, AIRSTRIKE_BOMBER_HEIGHT,
   TEAM_PLAYER, TEAM_ENEMY, HIT_FLASH_DURATION,
   SELECTION_RING_COLOR, SQUAD_HIGHLIGHT_COLOR,
+  MEDIC_COLOR, ENGINEER_COLOR,
 } from '../config.js';
 
 // ================================================================
@@ -28,6 +30,8 @@ export function createUnitMesh(unit, scene) {
     case UTYPE_ASSAULT:    buildAssaultMesh(group, teamColor, isEnemy); break;
     case UTYPE_TANK:       buildTankMesh(group, teamColor, isEnemy); break;
     case UTYPE_HELICOPTER: buildHelicopterMesh(group, teamColor, isEnemy); group.scale.setScalar(1.8); break;
+    case UTYPE_MEDIC:      buildMedicMesh(group, isEnemy); break;
+    case UTYPE_ENGINEER:   buildEngineerMesh(group, isEnemy); break;
   }
 
   // Upgrade indicator — glowing ring for upgraded units
@@ -48,7 +52,7 @@ export function createUnitMesh(unit, scene) {
   }
 
   // --- Selection ring (bright white, blooms) ---
-  const selRadius = { [UTYPE_RIFLE]: 12, [UTYPE_ASSAULT]: 15, [UTYPE_TANK]: 22, [UTYPE_HELICOPTER]: 16 }[unit.type] || 12;
+  const selRadius = { [UTYPE_RIFLE]: 12, [UTYPE_ASSAULT]: 15, [UTYPE_TANK]: 22, [UTYPE_HELICOPTER]: 16, [UTYPE_MEDIC]: 10, [UTYPE_ENGINEER]: 14 }[unit.type] || 12;
   const selRingGeo = new THREE.RingGeometry(selRadius - 1.5, selRadius, 32);
   const selRingMat = new THREE.MeshBasicMaterial({
     color: SELECTION_RING_COLOR,
@@ -156,6 +160,7 @@ export function updateUnitMeshes(now, units, selectedHeliId) {
     if (utype === 'rifle') animRifle(group, u, now, offset, moved);
     else if (utype === 'assault') animAssault(group, u, now, offset, moved);
     else if (utype === 'tank') animTank(group, u, now, offset, moved);
+    else if (utype === 'medic' || utype === 'engineer') animSupportUnit(group, u, now, offset);
     else if (utype === 'helicopter') {
       animHelicopter(group, u, now, offset, moved);
       // Selection ring visibility
@@ -239,6 +244,8 @@ export function updateUnitMeshes(now, units, selectedHeliId) {
       setGroupEmissive(group, u.hitFlashTimer / HIT_FLASH_DURATION);
       u.hitFlashTimer -= 1 / 60;
       if (u.hitFlashTimer < 0) u.hitFlashTimer = 0;
+    } else {
+      setGroupEmissive(group, 0);
     }
   }
 }
@@ -1332,6 +1339,150 @@ function setGroupEmissive(group, intensity) {
       ch.material.emissive.setScalar(intensity);
     }
   });
+}
+
+// ================================================================
+// MEDIC MESH — small body + glowing green cross + green halo
+// ================================================================
+
+function buildMedicMesh(group, isEnemy) {
+  const color = MEDIC_COLOR;
+  group.userData.unitType = 'medic';
+  group.userData.baseY = 4;
+  group.userData.glowParts = [];
+
+  // Body — compact rounded shape
+  _m(group, new THREE.BoxGeometry(6, 7, 6), makeStructuralMaterial(color), 0, 3.5, 0);
+
+  // Head dome
+  _m(group, new THREE.SphereGeometry(3.5, 8, 6), makeStructuralMaterial(color), 0, 9, 0);
+
+  // Cross accent (horizontal bar)
+  _m(group, new THREE.BoxGeometry(6, 1.2, 1.2), makeAccentMaterial(color), 0, 6, 3.5);
+  // Cross accent (vertical bar)
+  _m(group, new THREE.BoxGeometry(1.2, 6, 1.2), makeAccentMaterial(color), 0, 6, 3.5);
+
+  // Green halo ring
+  const halo = new THREE.Mesh(
+    new THREE.TorusGeometry(8, 0.6, 6, 16),
+    makeGlowMaterial(color, 0.25)
+  );
+  halo.rotation.x = Math.PI / 2;
+  halo.position.y = 10;
+  group.add(halo);
+  group.userData.glowParts.push(halo);
+
+  // Backpack
+  _m(group, new THREE.BoxGeometry(4, 5, 3), makeStructuralMaterial(color), 0, 4, -4);
+
+  // Enemy threat indicator
+  if (isEnemy) {
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(10, 0.5, 4, 16),
+      makeAccentMaterial(COLORS.RED)
+    );
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 1;
+    group.add(ring);
+    group.userData.threatRing = ring;
+  }
+}
+
+// ================================================================
+// ENGINEER MESH — stocky body + glowing gold gear + gold halo
+// ================================================================
+
+function buildEngineerMesh(group, isEnemy) {
+  const color = ENGINEER_COLOR;
+  group.userData.unitType = 'engineer';
+  group.userData.baseY = 4;
+  group.userData.glowParts = [];
+
+  // Stocky body
+  _m(group, new THREE.BoxGeometry(10, 8, 10), makeStructuralMaterial(color), 0, 4, 0);
+
+  // Head block
+  _m(group, new THREE.BoxGeometry(6, 5, 6), makeStructuralMaterial(color), 0, 10.5, 0);
+
+  // Gold gear accent (represented as an octagonal ring)
+  const gear = new THREE.Mesh(
+    new THREE.TorusGeometry(6, 1.2, 3, 8),
+    makeAccentMaterial(color)
+  );
+  gear.rotation.x = Math.PI / 2;
+  gear.position.set(0, 6, 5.5);
+  group.add(gear);
+  group.userData.gearMesh = gear;
+
+  // Gold halo
+  const halo = new THREE.Mesh(
+    new THREE.TorusGeometry(12, 0.8, 6, 16),
+    makeGlowMaterial(color, 0.2)
+  );
+  halo.rotation.x = Math.PI / 2;
+  halo.position.y = 1;
+  group.add(halo);
+  group.userData.glowParts.push(halo);
+
+  // Tool arm
+  _m(group, new THREE.BoxGeometry(2, 8, 2), makeAccentMaterial(color), 6, 6, 3);
+
+  // Shoulder pads
+  _m(group, new THREE.BoxGeometry(4, 3, 5), makeStructuralMaterial(color), 7, 8, 0);
+  _m(group, new THREE.BoxGeometry(4, 3, 5), makeStructuralMaterial(color), -7, 8, 0);
+
+  // Enemy threat indicator
+  if (isEnemy) {
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(14, 0.5, 4, 16),
+      makeAccentMaterial(COLORS.RED)
+    );
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 1;
+    group.add(ring);
+    group.userData.threatRing = ring;
+  }
+}
+
+// ================================================================
+// SUPPORT UNIT ANIMATION — heal beam + cross/gear spin
+// ================================================================
+
+function animSupportUnit(group, u, now, offset) {
+  // Gentle bob
+  group.position.y = group.userData.baseY + Math.sin(now * 3 + offset) * 1.5;
+
+  // Gear spin for engineer
+  if (group.userData.gearMesh) {
+    group.userData.gearMesh.rotation.z += 0.03;
+  }
+
+  // Heal beam
+  let beam = group.userData._healBeam;
+  if (u._healing && u._healTargetX !== undefined) {
+    const dx = u._healTargetX - u.x;
+    const dz = u._healTargetZ - u.z;
+    const d = Math.sqrt(dx * dx + dz * dz);
+    if (d > 1) {
+      if (!beam) {
+        const beamColor = u.type === 'medic' ? MEDIC_COLOR : ENGINEER_COLOR;
+        const beamGeo = new THREE.CylinderGeometry(0.5, 0.5, 1, 4);
+        beamGeo.rotateZ(Math.PI / 2);
+        const beamMat = makeGlowMaterial(beamColor, 0.5 + 0.2 * Math.sin(now * 8));
+        beam = new THREE.Mesh(beamGeo, beamMat);
+        group.add(beam);
+        group.userData._healBeam = beam;
+      }
+      beam.visible = true;
+      // Position beam from unit to target (in local space)
+      beam.position.set(dx / 2, 6, dz / 2);
+      beam.scale.set(d, 1, 1);
+      beam.lookAt(new THREE.Vector3(dx, 6, dz));
+      beam.material.opacity = 0.4 + 0.2 * Math.sin(now * 8);
+    }
+  } else if (beam) {
+    beam.visible = false;
+  }
 }
 
 function disposeGroup(group) {
