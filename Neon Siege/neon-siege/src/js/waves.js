@@ -313,14 +313,14 @@ function pickNextAction(matchTime, energy, aiBuildings, callbacks) {
   }
 
   // --- Reactive build override (bypasses buildInterval) ---
-  const reactiveType = getReactiveBuildOverride(matchTime, energy, aiBuildings);
+  const reactiveType = getReactiveBuildOverride(matchTime, energy, aiBuildings, callbacks);
   if (reactiveType) {
     return { type: 'build', meta: { buildType: reactiveType } };
   }
 
   // --- Urgent counter-build queue (respects buildInterval) ---
   if (matchTime - aiState.lastBuildTime >= tempo.buildInterval && aiState._urgentBuildQueue.length > 0) {
-    const urgentAction = pickFromUrgentQueue(matchTime, energy, aiBuildings);
+    const urgentAction = pickFromUrgentQueue(matchTime, energy, aiBuildings, callbacks);
     if (urgentAction) return urgentAction;
   }
 
@@ -1500,7 +1500,7 @@ function updateAISquads(matchTime, threat, callbacks) {
 // Bypasses buildInterval for emergency responses
 // ============================================================
 
-function getReactiveBuildOverride(matchTime, energy, aiBuildings) {
+function getReactiveBuildOverride(matchTime, energy, aiBuildings, callbacks) {
   const intel = aiState.intel;
 
   const btypeMap = {
@@ -1592,7 +1592,7 @@ function reassessBuildPriority(allBuildings) {
   aiState._urgentBuildQueue = queue.slice(0, AI_COUNTER_QUEUE_MAX);
 }
 
-function pickFromUrgentQueue(matchTime, energy, aiBuildings) {
+function pickFromUrgentQueue(matchTime, energy, aiBuildings, callbacks) {
   const btypeMap = {
     barracks: BTYPE_BARRACKS,
     turret: BTYPE_TURRET,
