@@ -18,7 +18,9 @@ import {
   LIGHT_MAIN_COLOR, LIGHT_MAIN_INTENSITY,
   LIGHT_FILL_COLOR, LIGHT_FILL_INTENSITY,
   LIGHT_HEMI_SKY, LIGHT_HEMI_GROUND, LIGHT_HEMI_INTENSITY,
+  LIGHT_RIM_COLOR, LIGHT_RIM_INTENSITY,
   BLOOM_STRENGTH, BLOOM_RADIUS, BLOOM_THRESHOLD,
+  STRUCTURAL_COLOR_MULT, STRUCTURAL_EMISSIVE_MULT,
 } from '../config.js';
 
 let scene, camera, renderer, composer, controls;
@@ -27,13 +29,16 @@ let scene, camera, renderer, composer, controls;
 
 export function makeStructuralMaterial(color) {
   const c = new THREE.Color(color);
-  return new THREE.MeshStandardMaterial({
-    color: c.clone().multiplyScalar(0.25),
+  const emissiveColor = c.clone().multiplyScalar(STRUCTURAL_EMISSIVE_MULT);
+  const mat = new THREE.MeshStandardMaterial({
+    color: c.clone().multiplyScalar(STRUCTURAL_COLOR_MULT),
     metalness: 0.7,
     roughness: 0.35,
-    emissive: c.clone().multiplyScalar(0.05),
+    emissive: emissiveColor,
     emissiveIntensity: 1.0,
   });
+  mat.userData._origEmissive = emissiveColor.clone();
+  return mat;
 }
 
 export function makeAccentMaterial(color) {
@@ -119,6 +124,13 @@ export function initScene(container) {
   // Hemisphere
   const hemi = new THREE.HemisphereLight(LIGHT_HEMI_SKY, LIGHT_HEMI_GROUND, LIGHT_HEMI_INTENSITY);
   scene.add(hemi);
+
+  // Rim light — behind/below camera for edge highlights on silhouettes
+  const rim = new THREE.DirectionalLight(LIGHT_RIM_COLOR, LIGHT_RIM_INTENSITY);
+  rim.position.set(-MAP_W * 0.5, 400, MAP_H * 1.5);
+  rim.target.position.set(MAP_W / 2, 0, MAP_H / 2);
+  scene.add(rim);
+  scene.add(rim.target);
 
   // ---- Post-processing ----
 

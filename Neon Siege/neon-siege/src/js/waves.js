@@ -361,13 +361,14 @@ function pickNextAction(matchTime, energy, aiBuildings, callbacks) {
     const limit = limitMap[itemName] || 4;
     if (count >= limit) continue;
 
-    // Check cost
-    const cost = BUILDING_STATS[btype].cost;
+    // Check cost (generators use scaling cost)
+    const cost = (btype === BTYPE_GENERATOR && callbacks.getGeneratorCost)
+      ? callbacks.getGeneratorCost() : BUILDING_STATS[btype].cost;
     if (energy < cost + AI_ENERGY_RESERVE) continue;
 
     // Found a buildable item — advance index
     aiState.buildOrderIndex = (idx + 1) % buildOrder.length;
-    return { type: 'build', meta: { buildType: btype } };
+    return { type: 'build', meta: { buildType: btype, cost } };
   }
 
   // Build order exhausted — no build action
@@ -1426,8 +1427,10 @@ function tryBuildStrategic(type, existingBuildings, callbacks, matchTime) {
   candidates.sort((a, b) => b.score - a.score);
   const best = candidates[0];
 
-  if (callbacks.spendEnergy(stats.cost)) {
-    callbacks.createBuilding(type, best.col, best.row);
+  const buildCost = (type === BTYPE_GENERATOR && callbacks.getGeneratorCost)
+    ? callbacks.getGeneratorCost() : stats.cost;
+  if (callbacks.spendEnergy(buildCost)) {
+    callbacks.createBuilding(type, best.col, best.row, buildCost);
     return true;
   }
   return false;
@@ -1519,7 +1522,8 @@ function getReactiveBuildOverride(matchTime, energy, aiBuildings) {
     if (matchTime < timingGate) return null;
     const count = aiBuildings.filter(b => b.type === btype).length;
     if (count >= (limitMap[itemName] || 4)) return null;
-    const cost = BUILDING_STATS[btype].cost;
+    const cost = (btype === BTYPE_GENERATOR && callbacks.getGeneratorCost)
+      ? callbacks.getGeneratorCost() : BUILDING_STATS[btype].cost;
     if (energy < cost + AI_ENERGY_RESERVE) return null;
     return btype;
   };
@@ -1613,12 +1617,13 @@ function pickFromUrgentQueue(matchTime, energy, aiBuildings) {
     const count = aiBuildings.filter(b => b.type === btype).length;
     if (count >= (limitMap[itemName] || 4)) continue;
 
-    const cost = BUILDING_STATS[btype].cost;
+    const cost = (btype === BTYPE_GENERATOR && callbacks.getGeneratorCost)
+      ? callbacks.getGeneratorCost() : BUILDING_STATS[btype].cost;
     if (energy < cost + AI_ENERGY_RESERVE) continue;
 
     // Remove from queue and return build action
     aiState._urgentBuildQueue.splice(i, 1);
-    return { type: 'build', meta: { buildType: btype } };
+    return { type: 'build', meta: { buildType: btype, cost } };
   }
   return null;
 }
@@ -1756,7 +1761,9 @@ function tryForwardBuild(matchTime, aiBuildings, callbacks) {
 
     const stats = BUILDING_STATS[btype];
     const energy = callbacks.getEnergy();
-    if (energy < stats.cost + AI_ENERGY_RESERVE) continue;
+    const buildCost = (btype === BTYPE_GENERATOR && callbacks.getGeneratorCost)
+      ? callbacks.getGeneratorCost() : stats.cost;
+    if (energy < buildCost + AI_ENERGY_RESERVE) continue;
 
     // Check limit
     const count = aiBuildings.filter(b => b.type === btype).length;
@@ -1786,8 +1793,8 @@ function tryForwardBuild(matchTime, aiBuildings, callbacks) {
       }
     }
 
-    if (bestCol >= 0 && callbacks.spendEnergy(stats.cost)) {
-      callbacks.createBuilding(btype, bestCol, bestRow);
+    if (bestCol >= 0 && callbacks.spendEnergy(buildCost)) {
+      callbacks.createBuilding(btype, bestCol, bestRow, buildCost);
       return;
     }
   }

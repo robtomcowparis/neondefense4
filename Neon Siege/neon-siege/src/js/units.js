@@ -737,15 +737,33 @@ export function removeUnit(u) {
 
 // --- Support unit (Medic/Engineer) movement and healing ---
 
+// Hysteresis: once healing, allow a larger range before breaking off
+const HEAL_RANGE_OUTER_MULT = 1.35;
+// Follow distance: medics stay this far behind friendlies when no one is injured
+const SUPPORT_FOLLOW_DIST = 40;
+// Minimum distance before re-pathing to avoid micro-path jitter
+const SUPPORT_MIN_REPATH_DIST = 25;
+// Smooth approach: slow down when nearing heal range to avoid overshoot jitter
+const SUPPORT_APPROACH_SLOW_DIST = 30;
+// Rescan interval: how many frames between target rescans (higher = less jitter)
+const SUPPORT_RESCAN_INTERVAL = 8;
+
 function updateSupportUnit(u, dt, allUnits, callbacks) {
+  // Initialize support-specific tracking state
+  if (u._supportLastPathX === undefined) {
+    u._supportLastPathX = 0;
+    u._supportLastPathZ = 0;
+    u._supportFollowId = null;
+  }
+
+  const wasHealing = u._healing;
   u._healing = false;
 
   // Find best heal target: most injured friendly of correct type
   let bestTarget = null;
   let bestMissing = 0;
 
-  // Only rescan targets every ~4 frames to save perf
-  const shouldRescan = (u.id % 4) === (_frameCount % 4);
+  const shouldRescan = (u.id % SUPPORT_RESCAN_INTERVAL) === (_frameCount % SUPPORT_RESCAN_INTERVAL);
 
   // Check if current target is still valid
   if (u._healTargetId != null) {
@@ -761,11 +779,15 @@ function updateSupportUnit(u, dt, allUnits, callbacks) {
     }
     if (!found) {
       u._healTargetId = null;
+      // Clear path when target dies/is fully healed — prevents stale path jitter
+      u.path = null;
+      u.pathIndex = 0;
     }
   }
 
   // Rescan for a better target periodically
   if (shouldRescan) {
+    let prevBest = bestTarget;
     for (let i = 0; i < allUnits.length; i++) {
       const t = allUnits[i];
       if (!t.alive || t.team !== u.team || t.isSupport) continue;
@@ -777,62 +799,101 @@ function updateSupportUnit(u, dt, allUnits, callbacks) {
         bestTarget = t;
       }
     }
-    if (bestTarget) {
+    if (bestTarget && bestTarget !== prevBest) {
       u._healTargetId = bestTarget.id;
+      // Clear stale path when switching to a new target
+      u.path = null;
+      u.pathIndex = 0;
     }
   }
 
   if (bestTarget) {
     const d = dist(u.x, u.z, bestTarget.x, bestTarget.z);
-    if (d <= u.healRange) {
-      // In range — heal
+
+    // Hysteresis: use a wider range if already healing to prevent start/stop jitter
+    const effectiveRange = wasHealing ? (u.healRange * HEAL_RANGE_OUTER_MULT) : u.healRange;
+
+    if (d <= effectiveRange) {
+      // In range — heal (don't move, stay put)
       u._healing = true;
       u._healTargetX = bestTarget.x;
       u._healTargetZ = bestTarget.z;
       const healAmount = u.healRate * dt;
       bestTarget.hp = Math.min(bestTarget.maxHp, bestTarget.hp + healAmount);
+      // Clear movement path while healing — prevents resume jitter
+      u.path = null;
+      u.pathIndex = 0;
     } else {
-      // Path toward target (throttled)
+      // Out of range — path toward target, but only repath if target moved significantly
       if (shouldRescan && callbacks && callbacks.findPath) {
-        const grid = worldToGrid(u.x, u.z, TILE_SIZE);
-        const tGrid = worldToGrid(bestTarget.x, bestTarget.z, TILE_SIZE);
-        const newPath = callbacks.findPath(grid.col, grid.row, tGrid.col, tGrid.row);
-        if (newPath && newPath.length > 0) {
-          u.path = newPath;
-          u.pathIndex = 0;
+        const targetMoved = dist(u._supportLastPathX, u._supportLastPathZ, bestTarget.x, bestTarget.z);
+        const needsRepath = !u.path || u.pathIndex >= u.path.length || targetMoved > SUPPORT_MIN_REPATH_DIST;
+        if (needsRepath) {
+          const grid = worldToGrid(u.x, u.z, TILE_SIZE);
+          const tGrid = worldToGrid(bestTarget.x, bestTarget.z, TILE_SIZE);
+          const newPath = callbacks.findPath(grid.col, grid.row, tGrid.col, tGrid.row);
+          if (newPath && newPath.length > 0) {
+            u.path = newPath;
+            u.pathIndex = 0;
+            u._supportLastPathX = bestTarget.x;
+            u._supportLastPathZ = bestTarget.z;
+          }
         }
       }
     }
   } else {
-    // No injured friendlies — follow friendly forces forward
+    // No injured friendlies — follow friendly forces at a comfortable distance
     u._healTargetId = null;
     if (shouldRescan && callbacks && callbacks.findPath) {
-      // Follow behind advancing friendly units
-      let closestFriendly = null;
+      // Find the centroid of nearby heal-compatible friendlies (smoother than tracking one unit)
+      let sumX = 0, sumZ = 0, count = 0;
       let closestDist = Infinity;
       for (let i = 0; i < allUnits.length; i++) {
         const t = allUnits[i];
         if (!t.alive || t.team !== u.team || t.isSupport || t.isAir) continue;
         if (!u.healTargets || !u.healTargets.includes(t.type)) continue;
         const d = dist(u.x, u.z, t.x, t.z);
-        if (d < closestDist) {
-          closestDist = d;
-          closestFriendly = t;
+        if (d < closestDist) closestDist = d;
+        // Only average units within a reasonable radius
+        if (d < 300) {
+          sumX += t.x;
+          sumZ += t.z;
+          count++;
         }
       }
-      if (closestFriendly && closestDist > 60) {
-        const grid = worldToGrid(u.x, u.z, TILE_SIZE);
-        const tGrid = worldToGrid(closestFriendly.x, closestFriendly.z, TILE_SIZE);
-        const newPath = callbacks.findPath(grid.col, grid.row, tGrid.col, tGrid.row);
-        if (newPath && newPath.length > 0) {
-          u.path = newPath;
-          u.pathIndex = 0;
+      if (count > 0 && closestDist > SUPPORT_FOLLOW_DIST) {
+        const avgX = sumX / count;
+        const avgZ = sumZ / count;
+        // Path toward centroid but stay behind (offset toward own base)
+        const baseRow = u.team === TEAM_PLAYER ? PLAYER_BASE_ROW : ENEMY_BASE_ROW;
+        const baseZ = baseRow * TILE_SIZE;
+        const toBaseX = 0;
+        const toBaseZ = baseZ - avgZ;
+        const toBaseLen = Math.abs(toBaseZ) || 1;
+        const offsetX = avgX + (toBaseX / toBaseLen) * SUPPORT_FOLLOW_DIST * 0.5;
+        const offsetZ = avgZ + (toBaseZ / toBaseLen) * SUPPORT_FOLLOW_DIST * 0.5;
+
+        const targetMoved = dist(u._supportLastPathX, u._supportLastPathZ, offsetX, offsetZ);
+        const needsRepath = !u.path || u.pathIndex >= u.path.length || targetMoved > SUPPORT_MIN_REPATH_DIST * 2;
+        if (needsRepath) {
+          const grid = worldToGrid(u.x, u.z, TILE_SIZE);
+          const tGrid = worldToGrid(offsetX, offsetZ, TILE_SIZE);
+          // Clamp to grid bounds
+          tGrid.col = Math.max(0, Math.min(GRID_COLS - 1, tGrid.col));
+          tGrid.row = Math.max(0, Math.min(GRID_ROWS - 1, tGrid.row));
+          const newPath = callbacks.findPath(grid.col, grid.row, tGrid.col, tGrid.row);
+          if (newPath && newPath.length > 0) {
+            u.path = newPath;
+            u.pathIndex = 0;
+            u._supportLastPathX = offsetX;
+            u._supportLastPathZ = offsetZ;
+          }
         }
       }
     }
   }
 
-  // Move toward current waypoint
+  // Move toward current waypoint — with approach deceleration
   if (u.path && u.pathIndex < u.path.length && !u._healing) {
     const wp = u.path[u.pathIndex];
     const target = gridToWorld(wp.col, wp.row, TILE_SIZE);
@@ -843,7 +904,15 @@ function updateSupportUnit(u, dt, allUnits, callbacks) {
     if (d < TILE_SIZE / 2) {
       u.pathIndex++;
     } else {
-      const moveSpeed = u.speed * dt;
+      let moveSpeed = u.speed * dt;
+      // Smooth deceleration when approaching a heal target to prevent overshoot
+      if (bestTarget) {
+        const distToTarget = dist(u.x, u.z, bestTarget.x, bestTarget.z);
+        const approachFactor = distToTarget < SUPPORT_APPROACH_SLOW_DIST
+          ? 0.4 + 0.6 * (distToTarget / SUPPORT_APPROACH_SLOW_DIST)
+          : 1.0;
+        moveSpeed *= approachFactor;
+      }
       const step = Math.min(moveSpeed, d);
       u.x += (dx / d) * step;
       u.z += (dz / d) * step;

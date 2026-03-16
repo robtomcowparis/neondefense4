@@ -83,7 +83,7 @@ export function createUnitMesh(unit, scene) {
   group.add(sqRingMesh);
   group.userData._squadHighlightRing = sqRingMesh;
 
-  const baseY = { [UTYPE_RIFLE]: 3, [UTYPE_ASSAULT]: 3, [UTYPE_TANK]: 2, [UTYPE_HELICOPTER]: HELI_FLY_HEIGHT }[unit.type] || 10;
+  const baseY = { [UTYPE_RIFLE]: 3, [UTYPE_ASSAULT]: 3, [UTYPE_TANK]: 2, [UTYPE_HELICOPTER]: HELI_FLY_HEIGHT, [UTYPE_MEDIC]: 3, [UTYPE_ENGINEER]: 2 }[unit.type] || 10;
   group.position.set(unit.x, baseY, unit.z);
   group.userData.baseY = baseY;
   group.userData.idOffset = unit.idOffset;
@@ -199,10 +199,15 @@ export function updateUnitMeshes(now, units, selectedHeliId) {
     // --- HP-reactive damage glow ---
     const hpR = u.hp / u.maxHp;
     if (hpR < 0.5) {
-      const extra = (1 - hpR * 2) * 0.35;
+      const t = 1 - hpR * 2; // 0 at 50% HP, 1 at 0% HP
+      const damageColor = new THREE.Color(0.8, 0.2, 0.0);
       group.traverse(ch => {
         if (ch.isMesh && ch.material.emissive) {
-          ch.material.emissiveIntensity = 1.0 + extra;
+          const orig = ch.material.userData?._origEmissive;
+          if (orig) {
+            ch.material.emissive.copy(orig).lerp(damageColor, t * 0.5);
+            ch.material.emissiveIntensity = 1.0 + t * 0.5;
+          }
         }
       });
       if (hpR < 0.25 && glows) {
@@ -215,6 +220,10 @@ export function updateUnitMeshes(now, units, selectedHeliId) {
     } else {
       group.traverse(ch => {
         if (ch.isMesh && ch.material.emissive) {
+          const orig = ch.material.userData?._origEmissive;
+          if (orig) {
+            ch.material.emissive.copy(orig);
+          }
           ch.material.emissiveIntensity = 1.0;
         }
       });
@@ -1333,52 +1342,160 @@ function _m(parent, geo, mat, x, y, z) {
   return mesh;
 }
 
+const _white = new THREE.Color(1, 1, 1);
 function setGroupEmissive(group, intensity) {
   group.traverse(ch => {
     if (ch.isMesh && ch.material.emissive) {
-      ch.material.emissive.setScalar(intensity);
+      const orig = ch.material.userData?._origEmissive;
+      if (orig) {
+        ch.material.emissive.copy(orig).lerp(_white, intensity);
+      }
     }
   });
 }
 
 // ================================================================
-// MEDIC MESH — small body + glowing green cross + green halo
+// MEDIC MESH — "Neon Paramedic"
+// Lean bipedal support unit with prominent glowing cross emblem,
+// medical satchel, injector arm, visor, and hovering cross drone
 // ================================================================
 
 function buildMedicMesh(group, isEnemy) {
   const color = MEDIC_COLOR;
+  const S = makeStructuralMaterial(color);
+  const A = makeAccentMaterial(color);
+
   group.userData.unitType = 'medic';
-  group.userData.baseY = 4;
+  group.userData.baseY = 3;
   group.userData.glowParts = [];
 
-  // Body — compact rounded shape
-  _m(group, new THREE.BoxGeometry(6, 7, 6), makeStructuralMaterial(color), 0, 3.5, 0);
+  // --- LEGS ---
+  // Left leg
+  const lLeg = new THREE.Group();
+  group.add(lLeg);
+  _m(lLeg, new THREE.CylinderGeometry(0.9, 1.2, 4.5, 6), S, -1.8, 3, 0);
+  _m(lLeg, new THREE.SphereGeometry(1.0, 6, 4), A, -1.8, 1, 0.2);        // knee
+  _m(lLeg, new THREE.CylinderGeometry(1.1, 0.8, 4, 6), S, -1.8, -1, 0.3);
+  _m(lLeg, new THREE.BoxGeometry(2, 1, 3), S, -1.8, -3, 0.5);             // boot
+  _m(lLeg, new THREE.BoxGeometry(1.6, 0.2, 2.5), A, -1.8, -2.5, 0.5);    // boot accent
+  group.userData._lLeg = lLeg;
 
-  // Head dome
-  _m(group, new THREE.SphereGeometry(3.5, 8, 6), makeStructuralMaterial(color), 0, 9, 0);
+  // Right leg
+  const rLeg = new THREE.Group();
+  group.add(rLeg);
+  _m(rLeg, new THREE.CylinderGeometry(0.9, 1.2, 4.5, 6), S, 1.8, 3, 0);
+  _m(rLeg, new THREE.SphereGeometry(1.0, 6, 4), A, 1.8, 1, 0.2);
+  _m(rLeg, new THREE.CylinderGeometry(1.1, 0.8, 4, 6), S, 1.8, -1, 0.3);
+  _m(rLeg, new THREE.BoxGeometry(2, 1, 3), S, 1.8, -3, 0.5);
+  _m(rLeg, new THREE.BoxGeometry(1.6, 0.2, 2.5), A, 1.8, -2.5, 0.5);
+  group.userData._rLeg = rLeg;
 
-  // Cross accent (horizontal bar)
-  _m(group, new THREE.BoxGeometry(6, 1.2, 1.2), makeAccentMaterial(color), 0, 6, 3.5);
-  // Cross accent (vertical bar)
-  _m(group, new THREE.BoxGeometry(1.2, 6, 1.2), makeAccentMaterial(color), 0, 6, 3.5);
+  // --- WAIST ---
+  _m(group, new THREE.CylinderGeometry(2.5, 2.2, 1.8, 6), S, 0, 6, 0);
+  const belt = _m(group, new THREE.TorusGeometry(2.6, 0.25, 4, 12), A, 0, 5.3, 0);
+  belt.rotation.x = Math.PI / 2;
 
-  // Green halo ring
-  const halo = new THREE.Mesh(
-    new THREE.TorusGeometry(8, 0.6, 6, 16),
-    makeGlowMaterial(color, 0.25)
+  // --- TORSO — lighter, medic-style chest armor ---
+  _m(group, new THREE.BoxGeometry(6, 5.5, 4.5), S, 0, 10, 0);
+  // Front chest plate
+  const chest = _m(group, new THREE.BoxGeometry(5.5, 3.5, 1), S, 0, 10.5, 2.8);
+  chest.rotation.x = -0.08;
+
+  // --- PROMINENT CHEST CROSS (the medic's signature) ---
+  _m(group, new THREE.BoxGeometry(4.5, 1.2, 0.4), A, 0, 10.5, 3.5);   // horizontal
+  _m(group, new THREE.BoxGeometry(1.2, 4.5, 0.4), A, 0, 10.5, 3.5);   // vertical
+  // Cross glow halo behind it
+  const crossGlow = _m(group, new THREE.BoxGeometry(5.5, 5.5, 0.15),
+    makeGlowMaterial(color, 0.18), 0, 10.5, 3.3);
+  group.userData.glowParts.push(crossGlow);
+
+  // Side torso panels
+  _m(group, new THREE.BoxGeometry(0.7, 4, 3.5), S, -3.5, 10, 0);
+  _m(group, new THREE.BoxGeometry(0.7, 4, 3.5), S, 3.5, 10, 0);
+
+  // --- SHOULDER GUARDS (slim, medic-style) ---
+  _m(group, new THREE.BoxGeometry(3, 2, 3.5), S, -5, 12.5, 0);
+  _m(group, new THREE.BoxGeometry(2.5, 0.25, 3), A, -5, 13.7, 0);
+  // Right shoulder — small cross marking
+  _m(group, new THREE.BoxGeometry(3, 2, 3.5), S, 5, 12.5, 0);
+  _m(group, new THREE.BoxGeometry(1.8, 0.3, 0.3), A, 5, 13.2, 1.8);  // mini cross H
+  _m(group, new THREE.BoxGeometry(0.3, 1.8, 0.3), A, 5, 13.2, 1.8);  // mini cross V
+
+  // --- LEFT ARM (injector tool) ---
+  _m(group, new THREE.SphereGeometry(1.0, 6, 4), A, -5, 11, 0.5);
+  _m(group, new THREE.CylinderGeometry(0.7, 0.9, 4, 6), S, -5, 8.8, 1).rotation.x = -0.15;
+  _m(group, new THREE.SphereGeometry(0.7, 6, 4), S, -5, 7, 1.2);     // elbow
+  // Injector device
+  const injector = _m(group, new THREE.CylinderGeometry(0.3, 0.3, 5, 4), S, -4.5, 7, 4.5);
+  injector.rotation.x = -Math.PI / 2;
+  const injTip = _m(group, new THREE.SphereGeometry(0.6, 6, 4), A, -4.5, 7, 7);
+  const injGlow = _m(group, new THREE.SphereGeometry(1.2, 6, 4),
+    makeGlowMaterial(color, 0.2), -4.5, 7, 7);
+  group.userData.glowParts.push(injGlow);
+  group.userData._injectorTip = injTip;
+
+  // --- RIGHT ARM (holds medical satchel strap) ---
+  _m(group, new THREE.SphereGeometry(1.0, 6, 4), A, 5, 11, 0.5);
+  _m(group, new THREE.CylinderGeometry(0.7, 0.9, 4, 6), S, 5, 8.8, 1).rotation.x = -0.15;
+  _m(group, new THREE.SphereGeometry(0.7, 6, 4), S, 5, 7, 1.2);
+
+  // --- HEAD — sleek helmet with visor ---
+  _m(group, new THREE.CylinderGeometry(0.9, 1.2, 1.2, 6), S, 0, 13.5, 0.2); // neck
+  _m(group, new THREE.BoxGeometry(3.2, 2.8, 3.5), S, 0, 16, 0.2);           // helmet
+  _m(group, new THREE.BoxGeometry(0.7, 1, 3.2), S, 0, 17.6, 0.2);           // top ridge
+  // Visor — bright scan line
+  const visor = _m(group, new THREE.BoxGeometry(3.3, 0.9, 0.5), A, 0, 16, 2.2);
+  const visorGlow = _m(group, new THREE.BoxGeometry(3.6, 1.2, 0.25),
+    makeGlowMaterial(color, 0.22), 0, 16, 2.4);
+  group.userData.glowParts.push(visorGlow);
+  // Antenna
+  _m(group, new THREE.CylinderGeometry(0.12, 0.12, 2.2, 4), S, 1.3, 18.2, 0.2);
+  _m(group, new THREE.SphereGeometry(0.3, 6, 4), A, 1.3, 19.5, 0.2);
+
+  // --- MEDICAL SATCHEL (back) ---
+  _m(group, new THREE.BoxGeometry(4.5, 3.5, 2.5), S, 0, 10.5, -3.5);
+  // Satchel cross
+  _m(group, new THREE.BoxGeometry(2.5, 0.5, 0.2), A, 0, 10.5, -2.3);
+  _m(group, new THREE.BoxGeometry(0.5, 2.5, 0.2), A, 0, 10.5, -2.3);
+  // Satchel detail lines
+  _m(group, new THREE.BoxGeometry(3.5, 0.15, 0.15), A, 0, 12, -2.3);
+  _m(group, new THREE.BoxGeometry(3.5, 0.15, 0.15), A, 0, 9, -2.3);
+  // Vial accent
+  _m(group, new THREE.CylinderGeometry(0.3, 0.3, 2, 4), A, -1.5, 10.5, -2.5);
+  _m(group, new THREE.CylinderGeometry(0.3, 0.3, 2, 4), A, 1.5, 10.5, -2.5);
+
+  // --- HOVERING CROSS DRONE (orbits above medic) ---
+  const droneGrp = new THREE.Group();
+  droneGrp.position.set(0, 22, 0);
+  group.add(droneGrp);
+  // Cross shape
+  _m(droneGrp, new THREE.BoxGeometry(3.5, 0.8, 0.8), A, 0, 0, 0);
+  _m(droneGrp, new THREE.BoxGeometry(0.8, 3.5, 0.8), A, 0, 0, 0);
+  // Drone glow
+  const droneGlow = _m(droneGrp, new THREE.SphereGeometry(2.5, 8, 6),
+    makeGlowMaterial(color, 0.15), 0, 0, 0);
+  group.userData.glowParts.push(droneGlow);
+  group.userData._drone = droneGrp;
+
+  // --- GROUND INDICATOR RING ---
+  const groundRing = _m(group, new THREE.TorusGeometry(5.5, 0.5, 4, 14), A, 0, 0.5, 0);
+  groundRing.rotation.x = Math.PI / 2;
+
+  // --- HEAL RANGE CIRCLE (subtle, visible when healing) ---
+  const rangeCircle = new THREE.Mesh(
+    new THREE.RingGeometry(0, 1, 32),
+    makeGlowMaterial(color, 0.06)
   );
-  halo.rotation.x = Math.PI / 2;
-  halo.position.y = 10;
-  group.add(halo);
-  group.userData.glowParts.push(halo);
-
-  // Backpack
-  _m(group, new THREE.BoxGeometry(4, 5, 3), makeStructuralMaterial(color), 0, 4, -4);
+  rangeCircle.rotation.x = -Math.PI / 2;
+  rangeCircle.position.y = 0.3;
+  rangeCircle.visible = false;
+  group.add(rangeCircle);
+  group.userData._rangeCircle = rangeCircle;
 
   // Enemy threat indicator
   if (isEnemy) {
     const ring = new THREE.Mesh(
-      new THREE.TorusGeometry(10, 0.5, 4, 16),
+      new THREE.TorusGeometry(8, 0.5, 4, 16),
       makeAccentMaterial(COLORS.RED)
     );
     ring.rotation.x = Math.PI / 2;
@@ -1389,52 +1506,139 @@ function buildMedicMesh(group, isEnemy) {
 }
 
 // ================================================================
-// ENGINEER MESH — stocky body + glowing gold gear + gold halo
+// ENGINEER MESH — "Neon Machinist"
+// Stocky bipedal repair unit with rotating gear emblem,
+// heavy tool arm, welding visor, and armored plating
 // ================================================================
 
 function buildEngineerMesh(group, isEnemy) {
   const color = ENGINEER_COLOR;
+  const S = makeStructuralMaterial(color);
+  const A = makeAccentMaterial(color);
+
   group.userData.unitType = 'engineer';
-  group.userData.baseY = 4;
+  group.userData.baseY = 2;
   group.userData.glowParts = [];
 
-  // Stocky body
-  _m(group, new THREE.BoxGeometry(10, 8, 10), makeStructuralMaterial(color), 0, 4, 0);
+  // --- LEGS (stocky, heavy) ---
+  const lLeg = new THREE.Group();
+  group.add(lLeg);
+  _m(lLeg, new THREE.CylinderGeometry(1.5, 1.8, 4.5, 6), S, -3, 3, 0);
+  _m(lLeg, new THREE.SphereGeometry(1.3, 6, 4), A, -3, 1, 0.2);
+  _m(lLeg, new THREE.CylinderGeometry(1.6, 1.2, 4, 6), S, -3, -1, 0.3);
+  _m(lLeg, new THREE.BoxGeometry(3, 1.5, 4), S, -3, -3, 0.5);
+  _m(lLeg, new THREE.BoxGeometry(2.5, 0.25, 3.5), A, -3, -2.3, 0.5);
+  group.userData._lLeg = lLeg;
 
-  // Head block
-  _m(group, new THREE.BoxGeometry(6, 5, 6), makeStructuralMaterial(color), 0, 10.5, 0);
+  const rLeg = new THREE.Group();
+  group.add(rLeg);
+  _m(rLeg, new THREE.CylinderGeometry(1.5, 1.8, 4.5, 6), S, 3, 3, 0);
+  _m(rLeg, new THREE.SphereGeometry(1.3, 6, 4), A, 3, 1, 0.2);
+  _m(rLeg, new THREE.CylinderGeometry(1.6, 1.2, 4, 6), S, 3, -1, 0.3);
+  _m(rLeg, new THREE.BoxGeometry(3, 1.5, 4), S, 3, -3, 0.5);
+  _m(rLeg, new THREE.BoxGeometry(2.5, 0.25, 3.5), A, 3, -2.3, 0.5);
+  group.userData._rLeg = rLeg;
 
-  // Gold gear accent (represented as an octagonal ring)
+  // --- WAIST (heavy belt) ---
+  _m(group, new THREE.CylinderGeometry(3.5, 3, 2, 6), S, 0, 6, 0);
+  const belt = _m(group, new THREE.TorusGeometry(3.6, 0.35, 4, 12), A, 0, 5.2, 0);
+  belt.rotation.x = Math.PI / 2;
+
+  // --- TORSO (wide, armored) ---
+  _m(group, new THREE.BoxGeometry(9, 6, 6), S, 0, 10.5, 0);
+  // Front armor plate
+  _m(group, new THREE.BoxGeometry(8, 4.5, 1.2), S, 0, 11, 3.5);
+
+  // --- GEAR EMBLEM (front chest — rotates) ---
   const gear = new THREE.Mesh(
-    new THREE.TorusGeometry(6, 1.2, 3, 8),
-    makeAccentMaterial(color)
+    new THREE.TorusGeometry(3, 0.8, 3, 8),
+    A
   );
   gear.rotation.x = Math.PI / 2;
-  gear.position.set(0, 6, 5.5);
+  gear.position.set(0, 11, 4.3);
   group.add(gear);
   group.userData.gearMesh = gear;
+  // Gear center dot
+  _m(group, new THREE.SphereGeometry(1.2, 6, 4), A, 0, 11, 4.5);
+  // Gear glow
+  const gearGlow = _m(group, new THREE.SphereGeometry(3.5, 8, 6),
+    makeGlowMaterial(color, 0.12), 0, 11, 4.2);
+  group.userData.glowParts.push(gearGlow);
 
-  // Gold halo
-  const halo = new THREE.Mesh(
-    new THREE.TorusGeometry(12, 0.8, 6, 16),
-    makeGlowMaterial(color, 0.2)
+  // Side torso armor
+  _m(group, new THREE.BoxGeometry(1, 5, 5), S, -5, 10.5, 0);
+  _m(group, new THREE.BoxGeometry(1, 5, 5), S, 5, 10.5, 0);
+  // Side accent stripes
+  _m(group, new THREE.BoxGeometry(0.2, 4, 0.3), A, -5.5, 10.5, 2);
+  _m(group, new THREE.BoxGeometry(0.2, 4, 0.3), A, 5.5, 10.5, 2);
+
+  // --- SHOULDER PADS (heavy) ---
+  _m(group, new THREE.BoxGeometry(4.5, 2.5, 4.5), S, -7, 13, 0);
+  _m(group, new THREE.BoxGeometry(4, 0.3, 4), A, -7, 14.5, 0);
+  _m(group, new THREE.BoxGeometry(4.5, 2.5, 4.5), S, 7, 13, 0);
+  _m(group, new THREE.BoxGeometry(4, 0.3, 4), A, 7, 14.5, 0);
+
+  // --- LEFT ARM (heavy tool / welding arm) ---
+  _m(group, new THREE.SphereGeometry(1.3, 6, 4), A, -7, 11.5, 0.5);
+  _m(group, new THREE.CylinderGeometry(1, 1.2, 4.5, 6), S, -7, 9, 1).rotation.x = -0.15;
+  _m(group, new THREE.SphereGeometry(0.9, 6, 4), S, -7, 7, 1.2);
+  // Welding tool
+  _m(group, new THREE.BoxGeometry(1.5, 1.5, 4), S, -6.5, 7, 4);
+  const weldTip = _m(group, new THREE.SphereGeometry(0.8, 6, 4), A, -6.5, 7, 6.5);
+  const weldGlow = _m(group, new THREE.SphereGeometry(1.5, 6, 4),
+    makeGlowMaterial(color, 0.2), -6.5, 7, 6.5);
+  group.userData.glowParts.push(weldGlow);
+  group.userData._weldTip = weldTip;
+
+  // --- RIGHT ARM ---
+  _m(group, new THREE.SphereGeometry(1.3, 6, 4), A, 7, 11.5, 0.5);
+  _m(group, new THREE.CylinderGeometry(1, 1.2, 4.5, 6), S, 7, 9, 1).rotation.x = -0.15;
+  _m(group, new THREE.SphereGeometry(0.9, 6, 4), S, 7, 7, 1.2);
+
+  // --- HEAD (welding visor style) ---
+  _m(group, new THREE.CylinderGeometry(1.2, 1.5, 1.5, 6), S, 0, 14.5, 0.2);
+  _m(group, new THREE.BoxGeometry(4.5, 3.5, 4.5), S, 0, 17, 0.2);
+  // Welding visor — wide bright strip
+  _m(group, new THREE.BoxGeometry(4.6, 1.5, 0.5), A, 0, 17, 2.6);
+  const visorGlow = _m(group, new THREE.BoxGeometry(5, 1.8, 0.25),
+    makeGlowMaterial(color, 0.2), 0, 17, 2.8);
+  group.userData.glowParts.push(visorGlow);
+  // Antenna
+  _m(group, new THREE.CylinderGeometry(0.15, 0.15, 2.5, 4), S, -1.8, 19.5, 0.2);
+  _m(group, new THREE.SphereGeometry(0.35, 6, 4), A, -1.8, 21, 0.2);
+
+  // --- BACKPACK (tool box / power unit) ---
+  _m(group, new THREE.BoxGeometry(6, 4.5, 3), S, 0, 11, -4);
+  // Exhaust vents
+  _m(group, new THREE.BoxGeometry(1.5, 0.3, 0.3), A, -1.5, 13, -2.6);
+  _m(group, new THREE.BoxGeometry(1.5, 0.3, 0.3), A, 1.5, 13, -2.6);
+  _m(group, new THREE.BoxGeometry(1.5, 0.3, 0.3), A, -1.5, 11.5, -2.6);
+  _m(group, new THREE.BoxGeometry(1.5, 0.3, 0.3), A, 1.5, 11.5, -2.6);
+  // Power core
+  const core = _m(group, new THREE.SphereGeometry(1.2, 6, 4), A, 0, 11, -2.8);
+  const coreGlow = _m(group, new THREE.SphereGeometry(2, 6, 4),
+    makeGlowMaterial(color, 0.14), 0, 11, -2.8);
+  group.userData.glowParts.push(coreGlow);
+
+  // --- GROUND INDICATOR RING ---
+  const groundRing = _m(group, new THREE.TorusGeometry(8, 0.6, 4, 14), A, 0, 0.5, 0);
+  groundRing.rotation.x = Math.PI / 2;
+
+  // --- HEAL RANGE CIRCLE ---
+  const rangeCircle = new THREE.Mesh(
+    new THREE.RingGeometry(0, 1, 32),
+    makeGlowMaterial(color, 0.06)
   );
-  halo.rotation.x = Math.PI / 2;
-  halo.position.y = 1;
-  group.add(halo);
-  group.userData.glowParts.push(halo);
-
-  // Tool arm
-  _m(group, new THREE.BoxGeometry(2, 8, 2), makeAccentMaterial(color), 6, 6, 3);
-
-  // Shoulder pads
-  _m(group, new THREE.BoxGeometry(4, 3, 5), makeStructuralMaterial(color), 7, 8, 0);
-  _m(group, new THREE.BoxGeometry(4, 3, 5), makeStructuralMaterial(color), -7, 8, 0);
+  rangeCircle.rotation.x = -Math.PI / 2;
+  rangeCircle.position.y = 0.3;
+  rangeCircle.visible = false;
+  group.add(rangeCircle);
+  group.userData._rangeCircle = rangeCircle;
 
   // Enemy threat indicator
   if (isEnemy) {
     const ring = new THREE.Mesh(
-      new THREE.TorusGeometry(14, 0.5, 4, 16),
+      new THREE.TorusGeometry(12, 0.5, 4, 16),
       makeAccentMaterial(COLORS.RED)
     );
     ring.rotation.x = Math.PI / 2;
@@ -1445,43 +1649,152 @@ function buildEngineerMesh(group, isEnemy) {
 }
 
 // ================================================================
-// SUPPORT UNIT ANIMATION — heal beam + cross/gear spin
+// SUPPORT UNIT ANIMATION — walk cycle, drone orbit, heal beam
 // ================================================================
 
-function animSupportUnit(group, u, now, offset) {
-  // Gentle bob
-  group.position.y = group.userData.baseY + Math.sin(now * 3 + offset) * 1.5;
+// Number of particles along the heal beam
+const HEAL_BEAM_PARTICLE_COUNT = 8;
 
-  // Gear spin for engineer
-  if (group.userData.gearMesh) {
-    group.userData.gearMesh.rotation.z += 0.03;
+function animSupportUnit(group, u, now, offset) {
+  const isMedic = group.userData.unitType === 'medic';
+
+  // --- Bob ---
+  group.position.y = group.userData.baseY + Math.sin(now * 3 + offset) * 1.2;
+
+  // --- Walk cycle for legs ---
+  const dx = u.x - (group.userData.lastX || u.x);
+  const dz = u.z - (group.userData.lastZ || u.z);
+  const moving = (dx * dx + dz * dz) > 0.01;
+
+  if (group.userData._lLeg && group.userData._rLeg) {
+    if (moving) {
+      const walkPhase = now * 6 + offset;
+      group.userData._lLeg.rotation.x = Math.sin(walkPhase) * 0.25;
+      group.userData._rLeg.rotation.x = Math.sin(walkPhase + Math.PI) * 0.25;
+    } else {
+      group.userData._lLeg.rotation.x *= 0.85;
+      group.userData._rLeg.rotation.x *= 0.85;
+    }
   }
 
-  // Heal beam
-  let beam = group.userData._healBeam;
-  if (u._healing && u._healTargetX !== undefined) {
-    const dx = u._healTargetX - u.x;
-    const dz = u._healTargetZ - u.z;
-    const d = Math.sqrt(dx * dx + dz * dz);
-    if (d > 1) {
-      if (!beam) {
-        const beamColor = u.type === 'medic' ? MEDIC_COLOR : ENGINEER_COLOR;
-        const beamGeo = new THREE.CylinderGeometry(0.5, 0.5, 1, 4);
-        beamGeo.rotateZ(Math.PI / 2);
-        const beamMat = makeGlowMaterial(beamColor, 0.5 + 0.2 * Math.sin(now * 8));
-        beam = new THREE.Mesh(beamGeo, beamMat);
-        group.add(beam);
-        group.userData._healBeam = beam;
-      }
-      beam.visible = true;
-      // Position beam from unit to target (in local space)
-      beam.position.set(dx / 2, 6, dz / 2);
-      beam.scale.set(d, 1, 1);
-      beam.lookAt(new THREE.Vector3(dx, 6, dz));
-      beam.material.opacity = 0.4 + 0.2 * Math.sin(now * 8);
+  // --- Gear spin for engineer ---
+  if (group.userData.gearMesh) {
+    const spinSpeed = u._healing ? 0.08 : 0.02;
+    group.userData.gearMesh.rotation.z += spinSpeed;
+  }
+
+  // --- Drone orbit for medic ---
+  if (group.userData._drone) {
+    const drone = group.userData._drone;
+    const orbitSpeed = u._healing ? 4 : 2;
+    const orbitRadius = u._healing ? 3 : 5;
+    const droneAngle = now * orbitSpeed + offset;
+    drone.position.x = Math.cos(droneAngle) * orbitRadius;
+    drone.position.z = Math.sin(droneAngle) * orbitRadius;
+    drone.position.y = 22 + Math.sin(now * 2 + offset) * 1;
+    drone.rotation.y = droneAngle;
+  }
+
+  // --- Heal range circle visibility ---
+  if (group.userData._rangeCircle) {
+    const rc = group.userData._rangeCircle;
+    rc.visible = u._healing;
+    if (rc.visible) {
+      const healRange = u.healRange || 80;
+      rc.scale.set(healRange, healRange, 1);
+      rc.material.opacity = 0.03 + 0.02 * Math.sin(now * 2 + offset);
     }
-  } else if (beam) {
-    beam.visible = false;
+  }
+
+  // --- Heal beam (particle chain from unit to target) ---
+  _updateHealBeam(group, u, now, offset, isMedic);
+}
+
+function _updateHealBeam(group, u, now, offset, isMedic) {
+  const beamColor = isMedic ? MEDIC_COLOR : ENGINEER_COLOR;
+
+  // Lazy-create particle chain
+  if (!group.userData._healParticles) {
+    const particles = [];
+    for (let i = 0; i < HEAL_BEAM_PARTICLE_COUNT; i++) {
+      // Alternating sizes: core particle + glow particle
+      const size = (i % 2 === 0) ? 0.8 : 1.4;
+      const mat = (i % 2 === 0)
+        ? makeAccentMaterial(beamColor)
+        : makeGlowMaterial(beamColor, 0.35);
+      const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(size, 6, 4),
+        mat
+      );
+      mesh.visible = false;
+      group.add(mesh);
+      particles.push(mesh);
+    }
+    group.userData._healParticles = particles;
+
+    // Impact ring at the target end
+    const impactRing = new THREE.Mesh(
+      new THREE.TorusGeometry(3, 0.4, 4, 12),
+      makeGlowMaterial(beamColor, 0.3)
+    );
+    impactRing.rotation.x = Math.PI / 2;
+    impactRing.visible = false;
+    group.add(impactRing);
+    group.userData._healImpactRing = impactRing;
+  }
+
+  const particles = group.userData._healParticles;
+  const impactRing = group.userData._healImpactRing;
+
+  if (u._healing && u._healTargetX !== undefined) {
+    // Delta from unit position to target (in local space since group.position = unit pos)
+    const tdx = u._healTargetX - u.x;
+    const tdz = u._healTargetZ - u.z;
+    const d = Math.sqrt(tdx * tdx + tdz * tdz);
+
+    if (d > 1) {
+      // Origin height (injector tip for medic, weld tip for engineer)
+      const originY = isMedic ? 7 : 7;
+
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.visible = true;
+        // Distribute along beam with flowing motion
+        const baseT = (i + 1) / (particles.length + 1);
+        // Add a flowing wave so particles stream toward target
+        const flow = ((now * 3 + offset + i * 0.3) % 1);
+        const t = baseT;
+
+        p.position.set(
+          tdx * t,
+          originY + Math.sin(now * 6 + i * 1.2 + offset) * 1.5 - originY * t + 4 * t,
+          tdz * t
+        );
+
+        // Pulsing scale
+        const pulse = 0.7 + 0.5 * Math.sin(now * 8 + i * 0.8 + offset);
+        p.scale.setScalar(pulse);
+
+        // Update opacity for glow particles
+        if (p.material.transparent) {
+          p.material.opacity = 0.2 + 0.2 * Math.sin(now * 6 + i * 1.0);
+        }
+      }
+
+      // Impact ring at target
+      impactRing.visible = true;
+      impactRing.position.set(tdx, 4, tdz);
+      impactRing.material.opacity = 0.2 + 0.15 * Math.sin(now * 5 + offset);
+      impactRing.rotation.z = now * 2;
+      const ringPulse = 0.8 + 0.3 * Math.sin(now * 4);
+      impactRing.scale.setScalar(ringPulse);
+    }
+  } else {
+    // Hide all beam particles when not healing
+    for (let i = 0; i < particles.length; i++) {
+      particles[i].visible = false;
+    }
+    if (impactRing) impactRing.visible = false;
   }
 }
 

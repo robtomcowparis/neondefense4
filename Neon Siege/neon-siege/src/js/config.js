@@ -147,9 +147,12 @@ export const BUILDING_STATS = {
 };
 
 // Generator building stats
+// Base cost scales per team: cost = GENERATOR_COST_BASE + ownedCount * GENERATOR_COST_INCREMENT
+export const GENERATOR_COST_BASE = 60;
+export const GENERATOR_COST_INCREMENT = 50;
 BUILDING_STATS[BTYPE_GENERATOR] = {
   hp: 150,
-  cost: 60,
+  cost: 60,  // base cost (1st generator) — use getScaledGeneratorCost() for actual cost
   size: 1,
   buildTime: 5,
   label: 'Generator',
@@ -159,17 +162,22 @@ BUILDING_STATS[BTYPE_GENERATOR] = {
     // Level 0 (base)
     { incomeBonus: 3, territoryMult: 1.0, upgradeCost: 0 },
     // Level 1
-    { incomeBonus: 5, territoryMult: 1.0, upgradeCost: 100 },
+    { incomeBonus: 6, territoryMult: 1.0, upgradeCost: 100 },
     // Level 2
-    { incomeBonus: 7, territoryMult: 1.0, upgradeCost: 200 },
+    { incomeBonus: 9, territoryMult: 1.0, upgradeCost: 200 },
   ],
   branches: {
     A: { name: 'Overcharge', desc: 'Maximum energy output',
-         cost: 500, incomeBonus: 10, territoryMult: 1.0 },
+         cost: 500, incomeBonus: 13, territoryMult: 1.0 },
     B: { name: 'Capacitor Network', desc: 'Income + 2x territory bonus',
-         cost: 425, incomeBonus: 6, territoryMult: 2.0 },
+         cost: 425, incomeBonus: 7, territoryMult: 2.0 },
   },
 };
+
+/** Get the scaled cost for the next generator based on how many a team already owns. */
+export function getScaledGeneratorCost(ownedCount) {
+  return GENERATOR_COST_BASE + ownedCount * GENERATOR_COST_INCREMENT;
+}
 
 // Helipad building stats
 BUILDING_STATS[BTYPE_HELIPAD] = {
@@ -439,19 +447,27 @@ export const ORBIT_DAMPING = 0.06;
 
 // --- Lighting ---
 export const LIGHT_AMBIENT_COLOR = 0x1a1a2e;
-export const LIGHT_AMBIENT_INTENSITY = 0.6;
+export const LIGHT_AMBIENT_INTENSITY = 0.75;
 export const LIGHT_MAIN_COLOR = 0xc0c8ff;
-export const LIGHT_MAIN_INTENSITY = 0.9;
+export const LIGHT_MAIN_INTENSITY = 1.1;
 export const LIGHT_FILL_COLOR = 0x4040a0;
-export const LIGHT_FILL_INTENSITY = 0.3;
+export const LIGHT_FILL_INTENSITY = 0.45;
 export const LIGHT_HEMI_SKY = 0x1a1a3e;
 export const LIGHT_HEMI_GROUND = 0x080810;
-export const LIGHT_HEMI_INTENSITY = 0.4;
+export const LIGHT_HEMI_INTENSITY = 0.5;
+
+// --- Rim Light ---
+export const LIGHT_RIM_COLOR = 0x4488cc;
+export const LIGHT_RIM_INTENSITY = 0.5;
 
 // --- Bloom ---
-export const BLOOM_STRENGTH = 0.22;
-export const BLOOM_RADIUS = 0.12;
-export const BLOOM_THRESHOLD = 0.7;
+export const BLOOM_STRENGTH = 0.30;
+export const BLOOM_RADIUS = 0.14;
+export const BLOOM_THRESHOLD = 0.68;
+
+// --- Structural Material Tuning ---
+export const STRUCTURAL_COLOR_MULT = 0.40;
+export const STRUCTURAL_EMISSIVE_MULT = 0.12;
 
 // --- Animation ---
 export const BOB_SPEED = 3.0;
@@ -542,8 +558,8 @@ export const OBSTACLE_KINDS = [
 // Neon accent colors cycled across obstacles
 export const OBSTACLE_NEON_COLORS = ['#00ccff', '#00ffaa', '#ff00cc', '#aa44ff', '#00aaff'];
 
-// Structural base colors for obstacles (dark)
-export const OBSTACLE_BASE_COLORS = ['#0a1628', '#0c1a30', '#0e1e38', '#101828'];
+// Structural base colors for obstacles (dark blue, visible against background)
+export const OBSTACLE_BASE_COLORS = ['#1a2a48', '#1e3050', '#223858', '#1c2840'];
 
 // HP values by obstacle category (for future destructibility)
 export const OBSTACLE_HP = {

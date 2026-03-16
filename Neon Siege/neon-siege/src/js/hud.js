@@ -440,12 +440,20 @@ export function updateHUD(state) {
       String(min).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
   }
 
-  // Build button disabled states
+  // Build button disabled states + dynamic generator cost display
   for (const type of PLAYER_BUILDABLE) {
-    const stats = BUILDING_STATS[type];
     const btn = elements.buildButtons[type];
     if (!btn) continue;
-    if (state.energy < stats.cost) {
+    // Generators use dynamic scaling cost
+    const cost = (type === BTYPE_GENERATOR && state.generatorCost != null)
+      ? state.generatorCost
+      : BUILDING_STATS[type].cost;
+    // Update displayed cost for generators (changes as player builds more)
+    if (type === BTYPE_GENERATOR) {
+      const costSpan = btn.querySelector('.cost');
+      if (costSpan) costSpan.textContent = cost + ' E';
+    }
+    if (state.energy < cost) {
       btn.classList.add('disabled');
     } else {
       btn.classList.remove('disabled');

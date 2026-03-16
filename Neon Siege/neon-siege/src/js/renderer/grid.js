@@ -776,9 +776,11 @@ function createObstacleMesh(kind, height, color, footprintX, footprintZ) {
 
   // Three-tier materials
   const strMat = makeStructuralMaterial(color);
-  // Override emissive for obstacles
-  strMat.emissive = new THREE.Color(color).multiplyScalar(0.15);
+  // Override emissive for obstacles (brighter than default structural)
+  const emissiveColor = new THREE.Color(color).multiplyScalar(0.20);
+  strMat.emissive = emissiveColor.clone();
   strMat.emissiveIntensity = 1.0;
+  strMat.userData._origEmissive = emissiveColor.clone();
 
   const accMat = makeAccentMaterial(neonColor);
   const glwMat = makeGlowMaterial(neonColor, 0.12);

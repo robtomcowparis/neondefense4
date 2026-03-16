@@ -1359,14 +1359,38 @@ export function updateBuildingMeshes(now, buildings) {
       group.scale.setScalar(1);
     }
 
-    // Hit flash
+    // HP-reactive damage emissive (buildings shift toward red/orange when below 50% HP)
+    const hpR = b.hp / b.maxHp;
+    if (hpR < 0.5) {
+      const t = 1 - hpR * 2; // 0 at 50% HP, 1 at 0% HP
+      const damageColor = new THREE.Color(0.8, 0.2, 0.0);
+      group.traverse(ch => {
+        if (ch.isMesh && ch.material.emissive) {
+          const orig = ch.material.userData?._origEmissive;
+          if (orig) {
+            ch.material.emissive.copy(orig).lerp(damageColor, t * 0.5);
+            ch.material.emissiveIntensity = 1.0 + t * 0.5;
+          }
+        }
+      });
+    } else {
+      group.traverse(ch => {
+        if (ch.isMesh && ch.material.emissive) {
+          const orig = ch.material.userData?._origEmissive;
+          if (orig) {
+            ch.material.emissive.copy(orig);
+          }
+          ch.material.emissiveIntensity = 1.0;
+        }
+      });
+    }
+
+    // Hit flash (overrides damage emissive temporarily)
     if (b.hitFlashTimer && b.hitFlashTimer > 0) {
       const t = b.hitFlashTimer / HIT_FLASH_DURATION;
       setGroupEmissive(group, t);
       b.hitFlashTimer -= dt;
       if (b.hitFlashTimer < 0) b.hitFlashTimer = 0;
-    } else {
-      setGroupEmissive(group, 0);
     }
   }
 }
@@ -2606,10 +2630,14 @@ function _buildWallCorner(group, c, level, cornerType) {
 
 // ---- Helpers ----
 
+const _white = new THREE.Color(1, 1, 1);
 function setGroupEmissive(group, intensity) {
   group.traverse(child => {
     if (child.isMesh && child.material.emissive) {
-      child.material.emissive.setScalar(intensity);
+      const orig = child.material.userData?._origEmissive;
+      if (orig) {
+        child.material.emissive.copy(orig).lerp(_white, intensity);
+      }
     }
   });
 }

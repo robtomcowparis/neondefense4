@@ -7,6 +7,7 @@ import {
   STATE_MENU, STATE_PLAYING, STATE_PAUSED, STATE_VICTORY, STATE_DEFEAT,
   PLAYER_BASE_COL, PLAYER_BASE_ROW, ENEMY_BASE_COL, ENEMY_BASE_ROW,
   BTYPE_CORE, BTYPE_TURRET, BTYPE_BARRACKS, BTYPE_FACTORY, BTYPE_GENERATOR, BTYPE_HELIPAD, BTYPE_WALL, BUILDING_STATS, PLAYER_BUILDABLE,
+  getScaledGeneratorCost,
   COLORS, BASE_DEFENSE_RADIUS,
   SHARED_ZONE_UNIT_RADIUS, SHARED_BUILD_ROW_MIN, SHARED_BUILD_ROW_MAX,
   UTYPE_HELICOPTER, UTYPE_MEDIC, UTYPE_ENGINEER,
@@ -173,8 +174,15 @@ function handleBuildPlacement(col, row, buildingType) {
   const stats = BUILDING_STATS[buildingType];
   if (!stats) return false;
 
+  // Generators use scaling cost based on how many the player already owns
+  let cost = stats.cost;
+  if (buildingType === BTYPE_GENERATOR) {
+    const genCount = getBuildings().filter(b => b.alive && b.team === TEAM_PLAYER && b.type === BTYPE_GENERATOR).length;
+    cost = getScaledGeneratorCost(genCount);
+  }
+
   const energy = getEnergy(TEAM_PLAYER);
-  if (energy < stats.cost) {
+  if (energy < cost) {
     playSound('denied');
     return false;
   }
@@ -184,9 +192,9 @@ function handleBuildPlacement(col, row, buildingType) {
     return false;
   }
 
-  if (!spendEnergy(TEAM_PLAYER, stats.cost)) return false;
+  if (!spendEnergy(TEAM_PLAYER, cost)) return false;
 
-  const building = createBuilding(buildingType, col, row, TEAM_PLAYER);
+  const building = createBuilding(buildingType, col, row, TEAM_PLAYER, cost);
   createBuildingMesh(building, getScene());
 
   // Create a squad for production buildings
@@ -602,8 +610,12 @@ function gameLoop(timestamp) {
       spendEnergy: (amount) => spendEnergy(TEAM_ENEMY, amount),
       getBuildings,
       getUnits,
-      createBuilding: (type, col, row) => {
-        const b = createBuilding(type, col, row, TEAM_ENEMY);
+      getGeneratorCost: () => {
+        const genCount = getBuildings().filter(b => b.alive && b.team === TEAM_ENEMY && b.type === BTYPE_GENERATOR).length;
+        return getScaledGeneratorCost(genCount);
+      },
+      createBuilding: (type, col, row, actualCost) => {
+        const b = createBuilding(type, col, row, TEAM_ENEMY, actualCost);
         createBuildingMesh(b, getScene());
         // Create squad for AI production buildings too (for consistency)
         if (type === BTYPE_BARRACKS || type === BTYPE_FACTORY || type === BTYPE_HELIPAD) {
@@ -880,11 +892,16 @@ function gameLoop(timestamp) {
     }
 
     // Update HUD
+    // Compute current scaled generator cost for player
+    const playerGenCount = buildings.filter(b => b.alive && b.team === TEAM_PLAYER && b.type === BTYPE_GENERATOR).length;
+    const generatorCost = getScaledGeneratorCost(playerGenCount);
+
     updateHUD({
       energy: getEnergy(TEAM_PLAYER),
       enemyEnergy: getEnergy(TEAM_ENEMY),
       incomeBreakdown: getIncomeBreakdown(TEAM_PLAYER),
       buildings,
+      generatorCost,
       units: getUnits(),
       matchTime,
       buildable: PLAYER_BUILDABLE,

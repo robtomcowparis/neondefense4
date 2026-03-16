@@ -45,7 +45,7 @@ let _getCalls = 0;
  * Create a building of the given type at grid (col, row) for the given team.
  * Marks tiles as occupied and returns the building object.
  */
-export function createBuilding(type, col, row, team) {
+export function createBuilding(type, col, row, team, actualCost) {
   const stats = BUILDING_STATS[type];
   if (!stats) return null;
 
@@ -85,7 +85,7 @@ export function createBuilding(type, col, row, team) {
     lastFireTime: 0,
     totalDamage: 0,
     kills: 0,
-    investedCost: stats.cost,
+    investedCost: actualCost != null ? actualCost : stats.cost,
     orientation: type === BTYPE_WALL ? WALL_HORIZONTAL : null,
     // Air strike cooldown (helipads only)
     airStrikeCooldownUntil: 0,

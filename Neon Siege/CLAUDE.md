@@ -153,11 +153,12 @@ This creates visual depth: dark body → bright highlights → soft halo.
 - **Branch B — Siege Cannons** (550E): 22s prod, 1.2x HP, 1.6x dmg, 1.3x range
 
 #### Generator
-- 1×1 tile, cost 60, build time 5s
+- 1×1 tile, **scaling cost** (60 + 50 per owned generator), build time 5s
 - Increases energy income
-- **Upgrade path:** L0 (+3/s) → L1 (+5/s, 100E) → L2 (+7/s, 200E)
-- **Branch A — Overcharge** (500E): +10/s income
-- **Branch B — Capacitor Network** (425E): +6/s income + 2× territory bonus multiplier
+- **Scaling cost:** 1st = 60E, 2nd = 110E, 3rd = 160E, 4th = 210E, etc. — encourages upgrading over spamming
+- **Upgrade path:** L0 (+3/s) → L1 (+6/s, 100E) → L2 (+9/s, 200E)
+- **Branch A — Overcharge** (500E): +13/s income
+- **Branch B — Capacitor Network** (425E): +7/s income + 2× territory bonus multiplier
 
 #### Helipad
 - 2×2 tiles, cost 300, build time 10s
@@ -223,7 +224,7 @@ Each production building (Barracks, Factory, Helipad) gets a **squad** (`squads.
 ### Economy
 Primary resource is **Energy**. No passive income — players must build generators.
 
-- **Generators**: +3 to +10E/s depending on level/branch
+- **Generators**: +3 to +13E/s depending on level/branch (scaling build cost: 60 + 50 per owned)
 - **Territory control**: +1E/s per friendly building in the shared zone (rows 14-26)
 - **Territory multiplier**: Capacitor Network generators multiply territory income
 - **No upkeep**: Units are free to maintain
