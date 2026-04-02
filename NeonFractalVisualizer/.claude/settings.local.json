@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const d=JSON.parse\\(require\\(''fs''\\).readFileSync\\(''toolu_0197ExU9zcmj9EgpHwNujbkY.json'',''utf8''\\)\\); require\\(''fs''\\).writeFileSync\\(''plan_text.md'', d[0].text\\)\")",
+      "Bash(npm --version)",
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(node test-capture.mjs)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8080/)",
+      "Bash(node test-zoom.mjs)",
+      "Bash(node test-dark.mjs)",
+      "Bash(wc:*)",
+      "Bash(npx http-server:*)",
+      "Bash(start:*)",
+      "Bash(grep -n \"T1\\\\|T2\\\\|T3\\\\|T4\\\\|optimization\\\\|TODO\\\\|FIXME\\\\|performance\\\\|bottleneck\" /c/Users/rober/Desktop/neondefense4/FractalVisualizer/js/*.js)"
+    ]
+  }
+}

@@ -255,6 +255,16 @@
     background: rgba(255,215,0,0.06);
   }
 
+  .card[data-accent="green"] .card-title {
+    color: var(--green);
+    text-shadow: 0 0 6px rgba(0,255,136,0.4);
+  }
+  .card[data-accent="green"] .card-tag {
+    color: var(--green);
+    border: 1px solid rgba(0,255,136,0.25);
+    background: rgba(0,255,136,0.06);
+  }
+
   /* ── Footer ── */
   .footer {
     margin-top: 56px;
@@ -315,11 +325,14 @@
       </div>
     </a>
 
-    <!--
-    ── ADD MORE GAMES ──
-    Copy a card block. Set data-accent to "cyan", "magenta", or add
-    new accent styles. Add a canvas draw function in the script below.
-    -->
+    <a class="card" href="/neon-fractal-visualizer/" data-accent="green">
+      <div class="card-art"><canvas id="art-nfv"></canvas></div>
+      <div class="card-body">
+        <div class="card-title">NEON FRACTAL VISUALIZER</div>
+        <div class="card-desc">Audio-reactive fractal renderer. Feed it music and watch infinite geometry pulse with light.</div>
+        <span class="card-tag">MUSIC VISUALIZER</span>
+      </div>
+    </a>
 
   </div>
 
@@ -805,10 +818,80 @@ function drawSiegeIcon(ctx, s, color) {
   ctx.setLineDash([]);
 }
 
+function drawFractalIcon(ctx, s, color) {
+  const cr = '0,255,136';
+
+  // Draw a simplified Julia-set-style fractal pattern
+  const res = 80;
+  const cx = -0.7, cy = 0.27015;
+  for (let px = -res; px < res; px++) {
+    for (let py = -res; py < res; py++) {
+      let zx = px / (res * 0.5) * 1.2;
+      let zy = py / (res * 0.5) * 1.2;
+      let iter = 0;
+      const maxIter = 40;
+      while (zx * zx + zy * zy < 4 && iter < maxIter) {
+        const tmp = zx * zx - zy * zy + cx;
+        zy = 2 * zx * zy + cy;
+        zx = tmp;
+        iter++;
+      }
+      if (iter < maxIter) {
+        const t = iter / maxIter;
+        const alpha = Math.pow(t, 0.6) * 0.7;
+        ctx.fillStyle = `rgba(${cr},${alpha})`;
+        const sz = s / res;
+        ctx.fillRect(px * sz, py * sz, sz + 0.5, sz + 0.5);
+      }
+    }
+  }
+
+  // Glowing center orb
+  ctx.beginPath();
+  ctx.arc(0, 0, s * 0.08, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 25;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Inner highlight
+  ctx.beginPath();
+  ctx.arc(-s * 0.02, -s * 0.02, s * 0.025, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.fill();
+
+  // Audio wave ring
+  ctx.beginPath();
+  ctx.strokeStyle = `rgba(${cr},0.5)`;
+  ctx.lineWidth = 1.5;
+  for (let i = 0; i <= 64; i++) {
+    const angle = (i / 64) * Math.PI * 2;
+    const wave = 1 + Math.sin(angle * 8) * 0.08;
+    const r = s * 0.55 * wave;
+    const x = Math.cos(angle) * r;
+    const y = Math.sin(angle) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.stroke();
+
+  // Outer dashed orbit
+  ctx.setLineDash([4, 6]);
+  ctx.beginPath();
+  ctx.arc(0, 0, s * 0.85, 0, Math.PI * 2);
+  ctx.strokeStyle = `rgba(${cr},0.15)`;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   drawIcon(document.getElementById('art-nd4'), drawTowerIcon, '#00ffff');
   drawIcon(document.getElementById('art-nt'), drawTankIcon, '#ff00ff');
   drawIcon(document.getElementById('art-ns'), drawSiegeIcon, '#ffd700');
+  drawIcon(document.getElementById('art-nfv'), drawFractalIcon, '#00ff88');
   let t;
   window.addEventListener('resize', () => {
     clearTimeout(t);
@@ -816,6 +899,7 @@ window.addEventListener('DOMContentLoaded', () => {
       drawIcon(document.getElementById('art-nd4'), drawTowerIcon, '#00ffff');
       drawIcon(document.getElementById('art-nt'), drawTankIcon, '#ff00ff');
       drawIcon(document.getElementById('art-ns'), drawSiegeIcon, '#ffd700');
+      drawIcon(document.getElementById('art-nfv'), drawFractalIcon, '#00ff88');
     }, 200);
   });
 });
