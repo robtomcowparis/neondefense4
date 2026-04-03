@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head><title>OG Image Generator</title></head>
+<body style="background:#111;display:flex;flex-direction:column;align-items:center;padding:40px;font-family:sans-serif;color:#fff">
+<h2>Neon Arcade – OG Preview Image Generator</h2>
+<p>Right-click the image below and "Save image as..." → <code>og-image.png</code>, then place it in your <code>dist/</code> folder.</p>
+<canvas id="c" width="1200" height="630"></canvas>
+<br>
+<button onclick="downloadImage()" style="padding:12px 32px;font-size:18px;background:#00ffff;color:#000;border:none;cursor:pointer;border-radius:6px;font-weight:bold">Download PNG</button>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = 1200, H = 630;
+
+// Background
+const bg = ctx.createLinearGradient(0, 0, W, H);
+bg.addColorStop(0, '#040410');
+bg.addColorStop(0.5, '#0a0a20');
+bg.addColorStop(1, '#040410');
+ctx.fillStyle = bg;
+ctx.fillRect(0, 0, W, H);
+
+// Grid floor (perspective)
+ctx.save();
+ctx.strokeStyle = 'rgba(0, 255, 255, 0.12)';
+ctx.lineWidth = 1;
+const horizon = H * 0.52;
+const groundBottom = H;
+// Horizontal lines
+for (let i = 0; i < 20; i++) {
+  const t = i / 19;
+  const y = horizon + (groundBottom - horizon) * Math.pow(t, 0.7);
+  ctx.beginPath();
+  ctx.moveTo(0, y);
+  ctx.lineTo(W, y);
+  ctx.stroke();
+}
+// Vertical lines (converging to center)
+for (let i = -15; i <= 15; i++) {
+  const x = W / 2 + i * 60;
+  ctx.beginPath();
+  ctx.moveTo(W / 2, horizon);
+  ctx.lineTo(x, groundBottom + 50);
+  ctx.stroke();
+}
+ctx.restore();
+
+// Glow circles (decorative)
+function drawGlow(x, y, r, color, alpha) {
+  const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+  grad.addColorStop(0, color.replace(')', `,${alpha})`).replace('rgb', 'rgba'));
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(x - r, y - r, r * 2, r * 2);
+}
+drawGlow(W * 0.5, H * 0.38, 350, 'rgb(0,255,255)', 0.08);
+drawGlow(W * 0.3, H * 0.3, 200, 'rgb(255,0,255)', 0.06);
+drawGlow(W * 0.7, H * 0.3, 200, 'rgb(255,0,255)', 0.06);
+
+// Horizontal neon line accent
+const lineY = H * 0.54;
+const lineGrad = ctx.createLinearGradient(W * 0.1, 0, W * 0.9, 0);
+lineGrad.addColorStop(0, 'rgba(255,0,255,0)');
+lineGrad.addColorStop(0.3, 'rgba(255,0,255,0.8)');
+lineGrad.addColorStop(0.5, 'rgba(0,255,255,1)');
+lineGrad.addColorStop(0.7, 'rgba(255,0,255,0.8)');
+lineGrad.addColorStop(1, 'rgba(255,0,255,0)');
+ctx.strokeStyle = lineGrad;
+ctx.lineWidth = 2;
+ctx.beginPath();
+ctx.moveTo(W * 0.08, lineY);
+ctx.lineTo(W * 0.92, lineY);
+ctx.stroke();
+// Line glow
+ctx.shadowColor = '#00ffff';
+ctx.shadowBlur = 20;
+ctx.strokeStyle = lineGrad;
+ctx.lineWidth = 1;
+ctx.beginPath();
+ctx.moveTo(W * 0.08, lineY);
+ctx.lineTo(W * 0.92, lineY);
+ctx.stroke();
+ctx.shadowBlur = 0;
+
+// Title: "NEON ARCADE"
+ctx.textAlign = 'center';
+ctx.textBaseline = 'middle';
+
+// Glow layers for title
+const titleY = H * 0.32;
+ctx.font = '900 96px "Consolas", "Courier New", monospace';
+
+// Outer glow
+ctx.shadowColor = '#00ffff';
+ctx.shadowBlur = 60;
+ctx.fillStyle = 'rgba(0,255,255,0.3)';
+ctx.fillText('NEON ARCADE', W / 2, titleY);
+
+// Mid glow
+ctx.shadowBlur = 30;
+ctx.fillStyle = 'rgba(0,255,255,0.6)';
+ctx.fillText('NEON ARCADE', W / 2, titleY);
+
+// Core text
+ctx.shadowBlur = 15;
+ctx.shadowColor = '#00ffff';
+ctx.fillStyle = '#00ffff';
+ctx.fillText('NEON ARCADE', W / 2, titleY);
+ctx.shadowBlur = 0;
+
+// Subtitle
+ctx.font = '600 26px "Consolas", "Courier New", monospace';
+ctx.letterSpacing = '12px';
+ctx.shadowColor = '#ff00ff';
+ctx.shadowBlur = 10;
+ctx.fillStyle = '#ff00ff';
+ctx.fillText('RETRO GAMES  \u2022  NEON VIBES  \u2022  FREE TO PLAY', W / 2, lineY - 28);
+ctx.shadowBlur = 0;
+
+// Game icons / labels at bottom
+const games = [
+  { name: 'NEON DEFENSE', color: '#00ffff' },
+  { name: 'NEON SIEGE', color: '#ff00ff' },
+  { name: 'NEON TANKS', color: '#00ff88' },
+  { name: 'VISUALIZER', color: '#ffd700' }
+];
+
+const cardY = H * 0.74;
+const cardW = 200;
+const cardH = 80;
+const totalW = games.length * cardW + (games.length - 1) * 30;
+const startX = (W - totalW) / 2;
+
+games.forEach((g, i) => {
+  const x = startX + i * (cardW + 30);
+
+  // Card background
+  ctx.fillStyle = 'rgba(10, 10, 30, 0.7)';
+  ctx.strokeStyle = g.color;
+  ctx.lineWidth = 1.5;
+  ctx.shadowColor = g.color;
+  ctx.shadowBlur = 10;
+
+  // Rounded rect
+  const r = 8;
+  ctx.beginPath();
+  ctx.moveTo(x + r, cardY);
+  ctx.lineTo(x + cardW - r, cardY);
+  ctx.quadraticCurveTo(x + cardW, cardY, x + cardW, cardY + r);
+  ctx.lineTo(x + cardW, cardY + cardH - r);
+  ctx.quadraticCurveTo(x + cardW, cardY + cardH, x + cardW - r, cardY + cardH);
+  ctx.lineTo(x + r, cardY + cardH);
+  ctx.quadraticCurveTo(x, cardY + cardH, x, cardY + cardH - r);
+  ctx.lineTo(x, cardY + r);
+  ctx.quadraticCurveTo(x, cardY, x + r, cardY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.shadowBlur = 0;
+
+  // Game label
+  ctx.font = '700 16px "Consolas", "Courier New", monospace';
+  ctx.fillStyle = g.color;
+  ctx.shadowColor = g.color;
+  ctx.shadowBlur = 8;
+  ctx.fillText(g.name, x + cardW / 2, cardY + cardH / 2);
+  ctx.shadowBlur = 0;
+});
+
+// Bottom edge glow
+const edgeGrad = ctx.createLinearGradient(0, H - 6, 0, H);
+edgeGrad.addColorStop(0, 'rgba(0,255,255,0.4)');
+edgeGrad.addColorStop(1, 'rgba(0,255,255,0)');
+ctx.fillStyle = edgeGrad;
+ctx.fillRect(0, H - 6, W, 6);
+
+// Top edge glow
+const topGrad = ctx.createLinearGradient(0, 0, 0, 6);
+topGrad.addColorStop(0, 'rgba(255,0,255,0)');
+topGrad.addColorStop(1, 'rgba(255,0,255,0.3)');
+ctx.fillStyle = topGrad;
+ctx.fillRect(0, 0, W, 6);
+
+// Stars / particles
+for (let i = 0; i < 60; i++) {
+  const sx = Math.random() * W;
+  const sy = Math.random() * H * 0.5;
+  const size = Math.random() * 2 + 0.5;
+  const alpha = Math.random() * 0.6 + 0.1;
+  ctx.fillStyle = `rgba(200,220,255,${alpha})`;
+  ctx.beginPath();
+  ctx.arc(sx, sy, size, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function downloadImage() {
+  const link = document.createElement('a');
+  link.download = 'og-image.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+</script>
+</body>
+</html>

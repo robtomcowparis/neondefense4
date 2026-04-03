@@ -11,7 +11,10 @@
       "Bash(cp:*)",
       "Bash(rm -rf \"C:/Users/rober/Desktop/neondefense4/src/public/neon-siege/\"* && cp -r \"C:/Users/rober/Desktop/neondefense4/Neon Siege/neon-siege/dist/\"* \"C:/Users/rober/Desktop/neondefense4/src/public/neon-siege/\" 2>&1)",
       "Bash(tree:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(npm list:*)",
+      "Bash(python -c \"from PIL import Image; print\\('pillow available'\\)\")",
+      "Bash(python:*)"
     ]
   }
 }
