@@ -14,7 +14,8 @@
       "Bash(cd:*)",
       "Bash(npm list:*)",
       "Bash(python -c \"from PIL import Image; print\\('pillow available'\\)\")",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "WebFetch(domain:neondefense4.com)"
     ]
   }
 }
