@@ -5,11 +5,6 @@
 # after deploying the backend (see Calendar Agent/DEPLOY.md).
 
 [[redirects]]
-  from = "/calendar"
-  to = "/calendar/"
-  status = 301
-
-[[redirects]]
   from = "/calendar/*"
   to = "https://calendar-assistant-557006098611.us-west1.run.app/:splat"
   status = 200
