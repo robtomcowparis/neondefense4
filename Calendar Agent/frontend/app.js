@@ -444,6 +444,8 @@ function greet() {
   );
 }
 
+let CHAT_HISTORY = [];
+
 $("#chat-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const input = $("#chat-input");
@@ -457,10 +459,11 @@ $("#chat-form").addEventListener("submit", async (e) => {
   try {
     const res = await api("/api/chat", {
       method: "POST",
-      body: JSON.stringify({ message: text }),
+      body: JSON.stringify({ message: text, history: CHAT_HISTORY }),
     });
     typingEl.remove();
     addMessage("assistant", res.reply || "(no reply)");
+    if (Array.isArray(res.history)) CHAT_HISTORY = res.history;
     // Refresh summary in the background in case the agent modified the calendar.
     loadSummary().catch(() => {});
   } catch (ex) {
@@ -478,6 +481,7 @@ $("#chat-input").addEventListener("keydown", (e) => {
 });
 
 $("#reset-chat").addEventListener("click", async () => {
+  CHAT_HISTORY = [];
   try { await api("/api/chat/reset", { method: "POST" }); } catch {}
   greet();
 });

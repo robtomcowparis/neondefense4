@@ -22,8 +22,8 @@ FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 _signer = URLSafeSerializer(config.SESSION_SECRET, salt="cal-session")
 SESSION_COOKIE = "cal_session"
 
-# In-memory chat sessions keyed by session token. Fine for one user.
-_chat_sessions: dict[str, list[dict]] = {}
+# Chat history is stored client-side and sent with each request so it survives
+# container restarts. See ChatBody.history below.
 
 
 def _issue_session(resp: Response) -> str:
@@ -164,29 +164,24 @@ def events(
 
 class ChatBody(BaseModel):
     message: str
-    reset: bool = False
+    history: list[dict] = []
 
 
 @app.post("/api/chat")
-def chat_endpoint(body: ChatBody, token: str = Depends(require_auth)):
+def chat_endpoint(body: ChatBody, _: str = Depends(require_auth)):
     if not config.ANTHROPIC_API_KEY:
         raise HTTPException(500, "ANTHROPIC_API_KEY not set")
     if not gcal.is_authorized():
         raise HTTPException(503, "Google Calendar not authorized — run oauth_setup")
-    if body.reset:
-        _chat_sessions.pop(token, None)
-    history = _chat_sessions.get(token, [])
     try:
-        reply, new_history = agent_chat(history, body.message)
+        reply, new_history = agent_chat(body.history, body.message)
     except Exception as e:
         raise HTTPException(500, f"Agent error: {type(e).__name__}: {e}")
-    _chat_sessions[token] = new_history
-    return {"reply": reply}
+    return {"reply": reply, "history": new_history}
 
 
 @app.post("/api/chat/reset")
-def chat_reset(token: str = Depends(require_auth)):
-    _chat_sessions.pop(token, None)
+def chat_reset(_: str = Depends(require_auth)):
     return {"ok": True}
 
 
