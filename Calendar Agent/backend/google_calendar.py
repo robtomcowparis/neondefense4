@@ -65,6 +65,14 @@ def _call(thunk: Callable[[Any], Any]):
         raise last_exc
 
 
+def reset_service() -> None:
+    """Drop the cached service so the next call builds a fresh httplib2 pool.
+    Call after any write op — httplib2 + OpenSSL can leave the pool in a
+    corrupted state that segfaults on the next request."""
+    global _service
+    _service = None
+
+
 def _load_credentials() -> Credentials | None:
     if config.GOOGLE_TOKEN_FILE.exists():
         return Credentials.from_authorized_user_file(
@@ -211,9 +219,12 @@ def create_event(
         body["description"] = description
     if location:
         body["location"] = location
-    return _call(lambda svc: svc.events().insert(
-        calendarId=calendar_id, body=body
-    ).execute(num_retries=_NUM_RETRIES))
+    try:
+        return _call(lambda svc: svc.events().insert(
+            calendarId=calendar_id, body=body
+        ).execute(num_retries=_NUM_RETRIES))
+    finally:
+        reset_service()
 
 
 def update_event(
@@ -238,21 +249,30 @@ def update_event(
         body["description"] = description
     if location is not None:
         body["location"] = location
-    return _call(lambda svc: svc.events().update(
-        calendarId=calendar_id, eventId=event_id, body=body
-    ).execute(num_retries=_NUM_RETRIES))
+    try:
+        return _call(lambda svc: svc.events().update(
+            calendarId=calendar_id, eventId=event_id, body=body
+        ).execute(num_retries=_NUM_RETRIES))
+    finally:
+        reset_service()
 
 
 def move_event(src_cal: str, event_id: str, dest_cal: str) -> dict:
-    return _call(lambda svc: svc.events().move(
-        calendarId=src_cal, eventId=event_id, destination=dest_cal
-    ).execute(num_retries=_NUM_RETRIES))
+    try:
+        return _call(lambda svc: svc.events().move(
+            calendarId=src_cal, eventId=event_id, destination=dest_cal
+        ).execute(num_retries=_NUM_RETRIES))
+    finally:
+        reset_service()
 
 
 def delete_event(calendar_id: str, event_id: str) -> None:
-    _call(lambda svc: svc.events().delete(
-        calendarId=calendar_id, eventId=event_id
-    ).execute(num_retries=_NUM_RETRIES))
+    try:
+        _call(lambda svc: svc.events().delete(
+            calendarId=calendar_id, eventId=event_id
+        ).execute(num_retries=_NUM_RETRIES))
+    finally:
+        reset_service()
 
 
 def freebusy(time_min: dt.datetime, time_max: dt.datetime) -> dict:
