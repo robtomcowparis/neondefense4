@@ -2,3 +2,10 @@ node_modules/
 dist/
 .env
 .env.local
+
+# Calendar Agent secrets — never commit
+Calendar Agent/credentials.json
+Calendar Agent/token.json
+Calendar Agent/.env
+Calendar Agent/.venv/
+Calendar Agent/**/__pycache__/

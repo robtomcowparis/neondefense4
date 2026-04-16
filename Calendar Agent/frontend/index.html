@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>CALENDAR ASSISTANT</title>
+  <link rel="stylesheet" href="static/styles.css" />
+</head>
+<body>
+
+<div id="bg-grid" aria-hidden="true"></div>
+
+<!-- LOGIN -->
+<section id="login" class="screen">
+  <div class="login-wrap">
+    <h1 class="title" data-text="CALENDAR">CALENDAR</h1>
+    <p class="subtitle">ASSISTANT // HANNAH</p>
+    <form id="login-form" class="login-form" autocomplete="off">
+      <label class="label">ACCESS CODE</label>
+      <input id="password" class="input" type="password" required autocomplete="current-password" />
+      <button class="btn btn-primary" type="submit">AUTHENTICATE</button>
+      <div id="login-error" class="error"></div>
+    </form>
+  </div>
+</section>
+
+<!-- APP -->
+<section id="app" class="screen hidden">
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-title">CALENDAR</span>
+      <span class="brand-sub">ASSISTANT</span>
+    </div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="summary">SUMMARY</button>
+      <button class="tab" data-tab="chat">CHAT</button>
+    </nav>
+    <div class="header-meta">
+      <span id="clock" class="clock"></span>
+      <button id="logout-btn" class="btn btn-secondary btn-mini">LOGOUT</button>
+    </div>
+  </header>
+
+  <!-- SUMMARY TAB -->
+  <main id="tab-summary" class="tab-panel active">
+    <div class="summary-header">
+      <div>
+        <h2 class="section-title">TODAY</h2>
+        <div id="today-date" class="section-sub"></div>
+      </div>
+      <button id="refresh-btn" class="btn btn-secondary btn-mini">REFRESH</button>
+    </div>
+
+    <div class="columns">
+      <div class="column">
+        <h3 class="col-title col-client">CLIENT MEETINGS</h3>
+        <div id="today-client" class="event-list"></div>
+      </div>
+      <div class="column">
+        <h3 class="col-title col-court">COURT DEADLINES</h3>
+        <div id="today-court" class="event-list"></div>
+      </div>
+    </div>
+
+    <div class="range-bar">
+      <div class="range-tabs">
+        <button class="range-tab active" data-view="week">WEEK</button>
+        <button class="range-tab" data-view="month">MONTH</button>
+      </div>
+      <div class="range-nav">
+        <button id="nav-prev"  class="nav-btn" title="Previous">‹</button>
+        <button id="nav-today" class="nav-btn nav-today" title="Today">TODAY</button>
+        <button id="nav-next"  class="nav-btn" title="Next">›</button>
+      </div>
+      <div id="range-label" class="range-label"></div>
+    </div>
+
+    <div id="week-view"  class="week-view"></div>
+    <div id="month-view" class="month-view hidden"></div>
+
+    <div id="summary-error" class="banner banner-error hidden"></div>
+  </main>
+
+  <!-- CHAT TAB -->
+  <main id="tab-chat" class="tab-panel">
+    <div class="chat-wrap">
+      <div id="messages" class="messages"></div>
+      <form id="chat-form" class="chat-form">
+        <textarea id="chat-input" class="chat-input"
+                  placeholder="Try: 'Schedule a client meeting with Davison next Tuesday at 10am'"
+                  rows="2" required></textarea>
+        <div class="chat-actions">
+          <button type="button" id="reset-chat" class="btn btn-secondary btn-mini">RESET</button>
+          <button type="submit" id="chat-send" class="btn btn-primary btn-mini">SEND</button>
+        </div>
+      </form>
+    </div>
+  </main>
+</section>
+
+<script src="static/app.js"></script>
+</body>
+</html>

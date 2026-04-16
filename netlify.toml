@@ -1,0 +1,16 @@
+# Netlify config — redirects only. Build settings remain in the Netlify UI.
+#
+# The /calendar/* rules proxy the Calendar Assistant at neondefense4.com/calendar/
+# to a FastAPI backend running on Google Cloud Run. Swap CLOUD_RUN_URL below
+# after deploying the backend (see Calendar Agent/DEPLOY.md).
+
+[[redirects]]
+  from = "/calendar"
+  to = "/calendar/"
+  status = 301
+
+[[redirects]]
+  from = "/calendar/*"
+  to = "https://CLOUD_RUN_URL/:splat"
+  status = 200
+  force = true
