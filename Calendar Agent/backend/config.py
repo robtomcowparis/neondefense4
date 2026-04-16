@@ -1,4 +1,5 @@
 import os
+import shutil
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -23,8 +24,24 @@ HOST = os.getenv("HOST", "127.0.0.1")
 PORT = int(os.getenv("PORT", "8000"))
 COOKIE_SECURE = os.getenv("COOKIE_SECURE", "false").lower() in ("1", "true", "yes")
 
-GOOGLE_CLIENT_SECRETS = ROOT / "credentials.json"
-GOOGLE_TOKEN_FILE = ROOT / "token.json"
+# In production (Cloud Run), secrets are mounted read-only at configurable
+# paths. The google-auth library needs to *write* the refreshed token, so we
+# copy it into a writable directory at startup and use that path thereafter.
+_cred_src = Path(os.getenv("GOOGLE_CREDENTIALS_SRC", str(ROOT / "credentials.json")))
+_token_src = Path(os.getenv("GOOGLE_TOKEN_SRC", str(ROOT / "token.json")))
+_writable_dir = Path(os.getenv("GOOGLE_WRITABLE_DIR", str(ROOT)))
+
+GOOGLE_CLIENT_SECRETS = _writable_dir / "credentials.json"
+GOOGLE_TOKEN_FILE = _writable_dir / "token.json"
+
+if _cred_src.resolve() != GOOGLE_CLIENT_SECRETS.resolve():
+    GOOGLE_CLIENT_SECRETS.parent.mkdir(parents=True, exist_ok=True)
+    if _cred_src.exists() and not GOOGLE_CLIENT_SECRETS.exists():
+        shutil.copyfile(_cred_src, GOOGLE_CLIENT_SECRETS)
+if _token_src.resolve() != GOOGLE_TOKEN_FILE.resolve():
+    GOOGLE_TOKEN_FILE.parent.mkdir(parents=True, exist_ok=True)
+    if _token_src.exists() and not GOOGLE_TOKEN_FILE.exists():
+        shutil.copyfile(_token_src, GOOGLE_TOKEN_FILE)
 
 GOOGLE_SCOPES = [
     "https://www.googleapis.com/auth/calendar",
