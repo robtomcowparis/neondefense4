@@ -11,6 +11,6 @@
 
 [[redirects]]
   from = "/calendar/*"
-  to = "https://CLOUD_RUN_URL/:splat"
+  to = "https://calendar-assistant-557006098611.us-west1.run.app/:splat"
   status = 200
   force = true
