@@ -6,11 +6,11 @@
 <title>Neon Arcade</title>
 
 <!-- Open Graph / Link Preview -->
-<meta name="description" content="Free retro neon browser games — Neon Defense, Neon Siege, Neon Tanks, and a fractal audio visualizer. Play now!">
+<meta name="description" content="Free retro neon browser games — Neon Defense, Neon Siege, Neon Tanks, Wildspell, and a fractal audio visualizer. Play now!">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://neondefense4.com">
 <meta property="og:title" content="Neon Arcade">
-<meta property="og:description" content="Free retro neon browser games — Neon Defense, Neon Siege, Neon Tanks, and a fractal audio visualizer. Play now!">
+<meta property="og:description" content="Free retro neon browser games — Neon Defense, Neon Siege, Neon Tanks, Wildspell, and a fractal audio visualizer. Play now!">
 <meta property="og:image" content="https://neondefense4.com/og-image.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
@@ -19,7 +19,7 @@
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Neon Arcade">
-<meta name="twitter:description" content="Free retro neon browser games — Neon Defense, Neon Siege, Neon Tanks, and a fractal audio visualizer.">
+<meta name="twitter:description" content="Free retro neon browser games — Neon Defense, Neon Siege, Neon Tanks, Wildspell, and a fractal audio visualizer.">
 <meta name="twitter:image" content="https://neondefense4.com/og-image.png">
 
 <!-- Theme -->
@@ -285,6 +285,16 @@
     background: rgba(0,255,136,0.06);
   }
 
+  .card[data-accent="violet"] .card-title {
+    color: #b388ff;
+    text-shadow: 0 0 6px rgba(179,136,255,0.4);
+  }
+  .card[data-accent="violet"] .card-tag {
+    color: #b388ff;
+    border: 1px solid rgba(179,136,255,0.25);
+    background: rgba(179,136,255,0.06);
+  }
+
   /* ── Footer ── */
   .footer {
     margin-top: 56px;
@@ -351,6 +361,15 @@
         <div class="card-title">NEON FRACTAL VISUALIZER</div>
         <div class="card-desc">Audio-reactive fractal renderer. Feed it music and watch infinite geometry pulse with light.</div>
         <span class="card-tag">MUSIC VISUALIZER</span>
+      </div>
+    </a>
+
+    <a class="card" href="/wildspell/" data-accent="violet">
+      <div class="card-art"><canvas id="art-ws"></canvas></div>
+      <div class="card-body">
+        <div class="card-title">WILDSPELL</div>
+        <div class="card-desc">Creature-collecting deck-building adventure. Bond with wild creatures, build a deck, cross five regions.</div>
+        <span class="card-tag">DECK-BUILDING RPG</span>
       </div>
     </a>
 
@@ -546,7 +565,7 @@ function drawIcon(canvas, drawFn, color) {
   }
 
   // Center glow
-  const cr = color === '#00ffff' ? '0,255,255' : color === '#ffd700' ? '255,215,0' : '255,0,255';
+  const cr = color === '#00ffff' ? '0,255,255' : color === '#ffd700' ? '255,215,0' : color === '#b388ff' ? '179,136,255' : '255,0,255';
   const bg = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, W * 0.35);
   bg.addColorStop(0, `rgba(${cr},0.06)`);
   bg.addColorStop(1, 'transparent');
@@ -907,11 +926,67 @@ function drawFractalIcon(ctx, s, color) {
   ctx.setLineDash([]);
 }
 
+function drawWildspellIcon(ctx, s, color) {
+  const cr = '179,136,255';
+  // A 16-wide pixel creature over tall grass; p = one art pixel.
+  const p = (s * 2) / 16;
+  const art = [
+    '....A......A....',
+    '...AWA....AWA...',
+    '...AAAA..AAAA...',
+    '....AAAAAAAA....',
+    '...AAWAAAAWAA...',
+    '...AAAAAAAAAA...',
+    '....AAABBAAA....',
+    '.....AAAAAA.....',
+    '....AAAAAAAAA...',
+    '...AAAAAAAAAAA..',
+    '...AAAAAAAAAAAA.',
+    '....AAAAAAAAAAA.',
+  ];
+  const palette = { A: color, W: '#ffffff', B: '#2a1f4a' };
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 18;
+  const ox = -8 * p, oy = -9 * p;
+  for (let y = 0; y < art.length; y++) {
+    for (let x = 0; x < 16; x++) {
+      const c = art[y][x];
+      if (c === '.') continue;
+      ctx.fillStyle = palette[c];
+      ctx.fillRect(ox + x * p, oy + y * p, p + 0.5, p + 0.5);
+    }
+  }
+  ctx.shadowBlur = 0;
+  // Tall grass in front, hiding the creature's lower half
+  for (let i = -12; i <= 12; i++) {
+    const h = 3 + ((i * 7 + 13) % 4 + 4) % 4;
+    const bx = i * p * 0.95 + (i % 2) * p * 0.3;
+    for (let k = 0; k < h; k++) {
+      const a = 0.55 + (k / h) * 0.4;
+      ctx.fillStyle = `rgba(${cr},${a})`;
+      ctx.fillRect(bx, oy + 12 * p - k * p * 0.9 - p * 0.5, p * 0.6, p * 0.9);
+    }
+  }
+  const g = ctx.createLinearGradient(0, oy + 12 * p, 0, oy + 15 * p);
+  g.addColorStop(0, `rgba(${cr},0.18)`);
+  g.addColorStop(1, 'transparent');
+  ctx.fillStyle = g;
+  ctx.fillRect(-s * 1.4, oy + 12 * p, s * 2.8, 3 * p);
+  ctx.setLineDash([4, 6]);
+  ctx.beginPath();
+  ctx.arc(0, 0, s * 0.95, 0, Math.PI * 2);
+  ctx.strokeStyle = `rgba(${cr},0.15)`;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   drawIcon(document.getElementById('art-nd4'), drawTowerIcon, '#00ffff');
   drawIcon(document.getElementById('art-nt'), drawTankIcon, '#ff00ff');
   drawIcon(document.getElementById('art-ns'), drawSiegeIcon, '#ffd700');
   drawIcon(document.getElementById('art-nfv'), drawFractalIcon, '#00ff88');
+  drawIcon(document.getElementById('art-ws'), drawWildspellIcon, '#b388ff');
   let t;
   window.addEventListener('resize', () => {
     clearTimeout(t);
@@ -920,6 +995,7 @@ window.addEventListener('DOMContentLoaded', () => {
       drawIcon(document.getElementById('art-nt'), drawTankIcon, '#ff00ff');
       drawIcon(document.getElementById('art-ns'), drawSiegeIcon, '#ffd700');
       drawIcon(document.getElementById('art-nfv'), drawFractalIcon, '#00ff88');
+      drawIcon(document.getElementById('art-ws'), drawWildspellIcon, '#b388ff');
     }, 200);
   });
 });
