@@ -9,3 +9,7 @@
   to = "https://calendar-assistant-557006098611.us-west1.run.app/:splat"
   status = 200
   force = true
+
+[build.environment]
+  # Vite 7 needs Node 20.19 or newer; pin what the site is built with.
+  NODE_VERSION = "22"
