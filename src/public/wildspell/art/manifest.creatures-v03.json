@@ -1,0 +1,3628 @@
+{
+  "version": 1,
+  "note": "The Living Storybook working set: kept candidates for every region, the two Forest Edge interiors, every object, and all 90 creatures front and back (creatures v0.3, kept 2026-11-18). On by default; ?art=off shows the pixel art. Working candidates, not approved production art.",
+  "renderScale": 2,
+  "ground": [
+    {
+      "id": "forest-ground-short-grass",
+      "file": "candidates/ground-v0.2-8x8/forest-ground-short-grass.png",
+      "tile": "grass",
+      "tiles": 8,
+      "maps": [
+        "forest-edge",
+        "kilnhollow"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-ground-tall-grass",
+      "file": "candidates/ground-v0.2-8x8/forest-ground-tall-grass.png",
+      "tile": "tall",
+      "tiles": 8,
+      "maps": [
+        "forest-edge",
+        "kilnhollow"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-ground-ash",
+      "file": "candidates/ground-v0.2-8x8/forest-ground-ash.png",
+      "tile": "ash",
+      "tiles": 8,
+      "maps": [
+        "forest-edge",
+        "kilnhollow"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-ground-path",
+      "file": "candidates/ground-v0.3/forest-ground-path.png",
+      "tile": "path",
+      "tiles": 8,
+      "maps": [
+        "forest-edge",
+        "kilnhollow"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-ground-sand",
+      "file": "candidates/ground-v0.3/forest-ground-sand.png",
+      "tile": "sand",
+      "tiles": 8,
+      "maps": [
+        "forest-edge",
+        "kilnhollow",
+        "observatory"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-ground-scree",
+      "file": "candidates/ground-v0.3/forest-ground-scree.png",
+      "tile": "scree",
+      "tiles": 8,
+      "maps": [
+        "forest-edge",
+        "kilnhollow"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-ground-floor",
+      "file": "candidates/ground-v0.3/forest-ground-floor.png",
+      "tile": "floor",
+      "tiles": 3,
+      "maps": [
+        "fenwater",
+        "forest-edge",
+        "kilnhollow",
+        "reedmarsh",
+        "weir-road"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-bridge-deck",
+      "file": "candidates/misc-v0.1/forest-bridge-deck.png",
+      "tile": "bridge",
+      "tiles": 4,
+      "maps": [
+        "forest-edge",
+        "reedmarsh",
+        "weir-road",
+        "fenwater",
+        "kilnhollow"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-water",
+      "file": "candidates/water-v0.1/forest-water-a.png",
+      "file2": "candidates/water-v0.1/forest-water-b.png",
+      "tile": "water",
+      "tiles": 6,
+      "maps": [
+        "forest-edge",
+        "kilnhollow",
+        "observatory"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "fen-ground-grass",
+      "file": "candidates/fen-v0.1/fen-ground-grass.png",
+      "tile": "grass",
+      "tiles": 8,
+      "maps": [
+        "reedmarsh",
+        "weir-road",
+        "fenwater"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "fen-ground-tall",
+      "file": "candidates/fen-v0.1/fen-ground-tall.png",
+      "tile": "tall",
+      "tiles": 8,
+      "maps": [
+        "reedmarsh",
+        "weir-road",
+        "fenwater"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "fen-ground-path",
+      "file": "candidates/fen-v0.1/fen-ground-path.png",
+      "tile": "path",
+      "tiles": 8,
+      "maps": [
+        "reedmarsh",
+        "weir-road",
+        "fenwater",
+        "salt-flats"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "fen-water",
+      "file": "candidates/fen-v0.1/fen-water.png",
+      "file2": "candidates/fen-v0.1/fen-water-b.png",
+      "tile": "water",
+      "tiles": 6,
+      "maps": [
+        "reedmarsh",
+        "weir-road",
+        "fenwater"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "salt-ground-sand",
+      "file": "candidates/salt-v0.1/salt-ground-sand.png",
+      "tile": "sand",
+      "tiles": 8,
+      "maps": [
+        "fenwater",
+        "salt-flats",
+        "tidecave"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "salt-ground-tall",
+      "file": "candidates/salt-v0.1/salt-ground-tall.png",
+      "tile": "tall",
+      "tiles": 8,
+      "maps": [
+        "salt-flats"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "salt-ground-scree",
+      "file": "candidates/salt-v0.1/salt-ground-scree2.png",
+      "tile": "scree",
+      "tiles": 8,
+      "maps": [
+        "salt-flats"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "salt-water",
+      "file": "candidates/salt-v0.1/salt-water.png",
+      "file2": "candidates/salt-v0.1/salt-water-b.png",
+      "tile": "water",
+      "tiles": 6,
+      "maps": [
+        "salt-flats"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "cave-floor",
+      "file": "candidates/cave-v0.1/cave-floor2.png",
+      "tile": "floor",
+      "tiles": 6,
+      "maps": [
+        "tidecave"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "cave-water",
+      "file": "candidates/cave-v0.1/cave-water.png",
+      "file2": "candidates/cave-v0.1/cave-water-b.png",
+      "tile": "water",
+      "tiles": 6,
+      "maps": [
+        "tidecave"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "cinder-ground-ash",
+      "file": "candidates/cinder-v0.1/cinder-ground-ash.png",
+      "tile": "ash",
+      "tiles": 8,
+      "maps": [
+        "cinder-road",
+        "cinder-slopes",
+        "crag-stair",
+        "emberholt"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "cinder-ground-tall",
+      "file": "candidates/cinder-v0.1/cinder-ground-tall.png",
+      "tile": "tall",
+      "tiles": 8,
+      "maps": [
+        "cinder-road",
+        "cinder-slopes",
+        "crag-stair",
+        "emberholt"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "cinder-ground-path",
+      "file": "candidates/cinder-v0.1/cinder-ground-path.png",
+      "tile": "path",
+      "tiles": 8,
+      "maps": [
+        "cinder-road",
+        "cinder-slopes",
+        "crag-stair",
+        "emberholt"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "cinder-ground-scree",
+      "file": "candidates/cinder-v0.1/cinder-ground-scree2.png",
+      "tile": "scree",
+      "tiles": 8,
+      "maps": [
+        "cinder-road",
+        "cinder-slopes",
+        "crag-stair",
+        "emberholt"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "cinder-lava",
+      "file": "candidates/cinder-v0.1/cinder-lava.png",
+      "file2": "candidates/cinder-v0.1/cinder-lava-b.png",
+      "tile": "lava",
+      "tiles": 6,
+      "maps": [
+        "cinder-road",
+        "cinder-slopes",
+        "crag-stair",
+        "emberholt",
+        "kiln-deep"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "kiln-floor",
+      "file": "candidates/cinder-v0.3/kiln-floor.png",
+      "tile": "floor",
+      "tiles": 4,
+      "maps": [
+        "kiln-deep"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "ember-floor",
+      "file": "candidates/cinder-v0.3/kiln-floor.png",
+      "tile": "floor",
+      "tiles": 4,
+      "maps": [
+        "emberholt"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "rime-ground-snow",
+      "file": "candidates/rime-v0.1/rime-ground-snow.png",
+      "tile": "snow",
+      "tiles": 8,
+      "maps": [
+        "pinewold",
+        "fall-road",
+        "rimemere",
+        "rimehold"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "rime-ground-tall",
+      "file": "candidates/rime-v0.1/rime-ground-tall.png",
+      "tile": "tall",
+      "tiles": 8,
+      "maps": [
+        "pinewold",
+        "fall-road",
+        "rimemere",
+        "rimehold"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "rime-ground-path",
+      "file": "candidates/rime-v0.1/rime-ground-path2.png",
+      "tile": "path",
+      "tiles": 8,
+      "maps": [
+        "pinewold",
+        "fall-road",
+        "rimemere",
+        "rimehold"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "rime-ground-under",
+      "file": "candidates/rime-v0.1/rime-ground-snow.png",
+      "tile": "grass",
+      "tiles": 8,
+      "maps": [
+        "pinewold",
+        "fall-road",
+        "rimemere",
+        "rimehold"
+      ],
+      "status": "candidate, not approved",
+      "notes": "the ground drawn under a boulder or tree where the map falls back to grass"
+    },
+    {
+      "id": "rime-ice",
+      "file": "candidates/rime-v0.3/rime-ice2.png",
+      "tile": "ice",
+      "tiles": 8,
+      "maps": [
+        "rimemere",
+        "icehollow"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "rime-scree",
+      "file": "candidates/rime-v0.3/rime-scree.png",
+      "tile": "scree",
+      "tiles": 8,
+      "maps": [
+        "pinewold",
+        "fall-road",
+        "rimemere",
+        "rimehold"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "rime-water",
+      "file": "candidates/fen-v0.1/fen-water.png",
+      "file2": "candidates/fen-v0.1/fen-water-b.png",
+      "tile": "water",
+      "tiles": 6,
+      "maps": [
+        "fall-road"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "rime-cave-floor",
+      "file": "candidates/rime-v0.3/rime-cave-floor2.png",
+      "tile": "floor",
+      "tiles": 6,
+      "maps": [
+        "icehollow"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "rime-cabin-floor",
+      "file": "candidates/rime-v0.3/rime-cave-floor.png",
+      "tile": "floor",
+      "tiles": 6,
+      "maps": [
+        "rimehold",
+        "fall-road"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "loom-ground-turf",
+      "file": "candidates/loom-v0.1/loom-ground-turf2.png",
+      "tile": "grass",
+      "tiles": 8,
+      "maps": [
+        "spiral-stair",
+        "loom-causeway",
+        "loomfoot"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "loom-ground-tall",
+      "file": "candidates/loom-v0.1/loom-ground-tall.png",
+      "tile": "tall",
+      "tiles": 8,
+      "maps": [
+        "spiral-stair",
+        "loom-causeway",
+        "loomfoot"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "loom-ground-path",
+      "file": "candidates/loom-v0.1/loom-ground-path.png",
+      "tile": "path",
+      "tiles": 8,
+      "maps": [
+        "spiral-stair",
+        "loom-causeway",
+        "loomfoot"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "loom-scree",
+      "file": "candidates/loom-v0.1/loom-scree2.png",
+      "tile": "scree",
+      "tiles": 5,
+      "maps": [
+        "spiral-stair",
+        "loom-causeway",
+        "loomfoot"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "loom-floor",
+      "file": "candidates/loom-v0.3/loom-floor.png",
+      "tile": "floor",
+      "tiles": 4,
+      "maps": [
+        "spiral-stair",
+        "loom-causeway",
+        "loomfoot",
+        "spire-root",
+        "loom-hall",
+        "loom-heart"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "loom-rug",
+      "file": "candidates/loom-v0.3/loom-rug2.png",
+      "tile": "rug",
+      "tiles": 2,
+      "maps": [
+        "spire-root",
+        "loom-hall",
+        "loom-heart"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "loom-sea",
+      "file": "candidates/loom-v0.3/loom-sea.png",
+      "file2": "candidates/loom-v0.3/loom-sea-b.png",
+      "tile": "water",
+      "tiles": 6,
+      "maps": [
+        "loomfoot",
+        "loom-causeway",
+        "spire-root"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "loom-deep",
+      "file": "candidates/loom-v0.3/loom-deep.png",
+      "file2": "candidates/loom-v0.3/loom-deep-b.png",
+      "tile": "deep",
+      "tiles": 6,
+      "maps": [
+        "loomfoot",
+        "loom-causeway"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "loom-abyss",
+      "file": "candidates/loom-v0.3/loom-abyss.png",
+      "tile": "deep",
+      "tiles": 8,
+      "maps": [
+        "loom-heart"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "loom-sand",
+      "file": "candidates/loom-v0.3/loom-sand.png",
+      "tile": "sand",
+      "tiles": 8,
+      "maps": [
+        "loomfoot",
+        "loom-heart"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "heart-grass",
+      "file": "candidates/ground-v0.2-8x8/forest-ground-short-grass.png",
+      "tile": "grass",
+      "tiles": 8,
+      "maps": [
+        "loom-heart"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "heart-snow",
+      "file": "candidates/rime-v0.1/rime-ground-snow.png",
+      "tile": "snow",
+      "tiles": 8,
+      "maps": [
+        "loom-heart"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "heart-ash",
+      "file": "candidates/cinder-v0.1/cinder-ground-ash.png",
+      "tile": "ash",
+      "tiles": 8,
+      "maps": [
+        "loom-heart"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "obs-floor",
+      "file": "candidates/rest-v0.1/obs-floor.png",
+      "tile": "floor",
+      "tiles": 4,
+      "maps": [
+        "observatory"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-rug",
+      "file": "candidates/loom-v0.3/loom-rug2.png",
+      "tile": "rug",
+      "tiles": 2,
+      "maps": [
+        "observatory",
+        "home"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "home-floor",
+      "file": "candidates/misc-v0.1/forest-bridge-deck.png",
+      "tile": "floor",
+      "tiles": 4,
+      "maps": [
+        "home"
+      ],
+      "status": "candidate, not approved"
+    }
+  ],
+  "shore": [
+    {
+      "id": "forest-shore-storybook-v01c",
+      "maps": [
+        "forest-edge",
+        "kilnhollow",
+        "observatory"
+      ],
+      "edges": {
+        "n": "candidates/shore-v0.1b/forest-shore-n.png",
+        "e": "candidates/shore-v0.1b/forest-shore-e.png",
+        "s": "candidates/shore-v0.1b/forest-shore-s-full.png",
+        "w": "candidates/shore-v0.1b/forest-shore-w.png"
+      },
+      "tiles": 2,
+      "landShare": 0.2917,
+      "noBank": [
+        "bridge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "fen-shore",
+      "maps": [
+        "reedmarsh",
+        "weir-road",
+        "fenwater"
+      ],
+      "edges": {
+        "n": "candidates/fen-v0.1/fen-shore2-n.png",
+        "e": "candidates/fen-v0.1/fen-shore2-e.png",
+        "s": "candidates/fen-v0.1/fen-shore2-s.png",
+        "w": "candidates/fen-v0.1/fen-shore2-w.png"
+      },
+      "tiles": 2,
+      "landShare": 0.3333,
+      "noBank": [
+        "bridge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "salt-shore",
+      "maps": [
+        "salt-flats",
+        "tidecave"
+      ],
+      "edges": {
+        "n": "candidates/salt-v0.1/salt-shore2-n.png",
+        "e": "candidates/salt-v0.1/salt-shore2-e.png",
+        "s": "candidates/salt-v0.1/salt-shore2-s.png",
+        "w": "candidates/salt-v0.1/salt-shore2-w.png"
+      },
+      "tiles": 2,
+      "landShare": 0.2917,
+      "noBank": [
+        "bridge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "cinder-shore",
+      "maps": [
+        "cinder-road",
+        "cinder-slopes",
+        "crag-stair",
+        "emberholt",
+        "kiln-deep"
+      ],
+      "edges": {
+        "n": "candidates/cinder-v0.1/cinder-shore-n.png",
+        "e": "candidates/cinder-v0.1/cinder-shore-e.png",
+        "s": "candidates/cinder-v0.1/cinder-shore-s.png",
+        "w": "candidates/cinder-v0.1/cinder-shore-w.png"
+      },
+      "tiles": 2,
+      "landShare": 0.25,
+      "noBank": [
+        "bridge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "rime-iceshore",
+      "maps": [
+        "rimemere",
+        "icehollow"
+      ],
+      "edges": {
+        "n": "candidates/rime-v0.3/rime-iceshore-n.png",
+        "e": "candidates/rime-v0.3/rime-iceshore-e.png",
+        "s": "candidates/rime-v0.3/rime-iceshore-s.png",
+        "w": "candidates/rime-v0.3/rime-iceshore-w.png"
+      },
+      "tiles": 2,
+      "landShare": 0.125,
+      "noBank": [
+        "bridge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "rime-watershore",
+      "maps": [
+        "fall-road"
+      ],
+      "edges": {
+        "n": "candidates/rime-v0.3/rime-watershore-n.png",
+        "e": "candidates/rime-v0.3/rime-watershore-e.png",
+        "s": "candidates/rime-v0.3/rime-watershore-s.png",
+        "w": "candidates/rime-v0.3/rime-watershore-w.png"
+      },
+      "tiles": 2,
+      "landShare": 0.25,
+      "noBank": [
+        "bridge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "loom-seashore",
+      "maps": [
+        "loomfoot",
+        "loom-causeway",
+        "spire-root"
+      ],
+      "edges": {
+        "n": "candidates/loom-v0.3/loom-seashore-n.png",
+        "e": "candidates/loom-v0.3/loom-seashore-e.png",
+        "s": "candidates/loom-v0.3/loom-seashore-s.png",
+        "w": "candidates/loom-v0.3/loom-seashore-w.png"
+      },
+      "tiles": 2,
+      "landShare": 0.25,
+      "noBank": [
+        "bridge"
+      ],
+      "status": "candidate, not approved"
+    }
+  ],
+  "raised": [
+    {
+      "id": "mill-wall-storybook-top-v02",
+      "tile": "wall",
+      "maps": [
+        "fenwater",
+        "forest-edge",
+        "home",
+        "kilnhollow",
+        "reedmarsh",
+        "weir-road"
+      ],
+      "face": "candidates/masonry-v0.1/mill-wall-face.png",
+      "top": "candidates/masonry-v0.2/mill-wall-top.png",
+      "tiles": 4,
+      "side": "#504636",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-cliff-storybook-face-v02",
+      "tile": "cliff",
+      "maps": [
+        "forest-edge",
+        "kilnhollow"
+      ],
+      "face": "candidates/masonry-v0.2/forest-cliff-face-large-warm.png",
+      "top": "candidates/masonry-v0.1/forest-cliff-top.png",
+      "faceTiles": 4,
+      "topTiles": 8,
+      "side": "#473e32",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-thicket-storybook-v01",
+      "tile": "thicket",
+      "maps": [
+        "forest-edge",
+        "reedmarsh",
+        "weir-road",
+        "fenwater",
+        "kilnhollow"
+      ],
+      "face": "candidates/misc-v0.1/forest-thicket-face.png",
+      "top": "candidates/misc-v0.1/forest-thicket-top.png",
+      "faceTiles": 3,
+      "topTiles": 6,
+      "side": "#1f2a1e",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "salt-cliff",
+      "tile": "cliff",
+      "maps": [
+        "salt-flats"
+      ],
+      "face": "candidates/salt-v0.1/salt-cliff-face.png",
+      "top": "candidates/salt-v0.1/salt-ground-clifftop.png",
+      "faceTiles": 4,
+      "topTiles": 8,
+      "side": "#5c5851",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "cave-rock",
+      "tile": "wall",
+      "maps": [
+        "tidecave"
+      ],
+      "face": "candidates/cave-v0.1/cave-wallface.png",
+      "top": "candidates/cave-v0.1/cave-walltop2.png",
+      "faceTiles": 4,
+      "topTiles": 8,
+      "side": "#181e1e",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "fen-stall",
+      "tile": "counter",
+      "maps": [
+        "emberholt",
+        "fenwater",
+        "kilnhollow",
+        "loomfoot",
+        "rimehold"
+      ],
+      "face": "candidates/fen-objects-v0.1/stall-face.png",
+      "top": "candidates/misc-v0.1/forest-bridge-deck.png",
+      "faceTiles": 4,
+      "topTiles": 4,
+      "side": "#3a2c20",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "cinder-cliff",
+      "tile": "cliff",
+      "maps": [
+        "cinder-road",
+        "cinder-slopes",
+        "crag-stair",
+        "emberholt"
+      ],
+      "face": "candidates/cinder-v0.1/cinder-cliff-face.png",
+      "top": "candidates/cinder-v0.1/cinder-ground-clifftop2.png",
+      "faceTiles": 4,
+      "topTiles": 8,
+      "side": "#33302e",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "kiln-wall",
+      "tile": "wall",
+      "maps": [
+        "kiln-deep"
+      ],
+      "face": "candidates/cinder-v0.3/kiln-wallface.png",
+      "top": "candidates/cinder-v0.3/kiln-walltop2.png",
+      "faceTiles": 4,
+      "topTiles": 8,
+      "side": "#2c1e19",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "rime-cliff",
+      "tile": "cliff",
+      "maps": [
+        "pinewold",
+        "fall-road",
+        "rimemere",
+        "rimehold"
+      ],
+      "face": "candidates/rime-v0.3/rime-cliff-face.png",
+      "top": "candidates/rime-v0.3/rime-cliff-top2.png",
+      "faceTiles": 4,
+      "topTiles": 8,
+      "side": "#353e4b",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "rime-cave-wall",
+      "tile": "wall",
+      "maps": [
+        "icehollow"
+      ],
+      "face": "candidates/rime-v0.3/rime-cave-wallface2.png",
+      "top": "candidates/rime-v0.3/rime-cave-walltop2.png",
+      "faceTiles": 4,
+      "topTiles": 8,
+      "side": "#3c5163",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "loom-cliff",
+      "tile": "cliff",
+      "maps": [
+        "spiral-stair",
+        "loom-causeway",
+        "loomfoot"
+      ],
+      "face": "candidates/loom-v0.1/loom-cliff-face.png",
+      "top": "candidates/loom-v0.1/loom-cliff-top2.png",
+      "faceTiles": 4,
+      "topTiles": 8,
+      "side": "#4c5353",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "loom-wall",
+      "tile": "wall",
+      "maps": [
+        "loom-causeway",
+        "spire-root",
+        "loom-hall"
+      ],
+      "face": "candidates/loom-v0.3/loom-masonry-face2.png",
+      "top": "candidates/loom-v0.3/loom-masonry-top2.png",
+      "faceTiles": 4,
+      "topTiles": 2,
+      "side": "#616766",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "obs-wall",
+      "tile": "wall",
+      "maps": [
+        "observatory"
+      ],
+      "face": "candidates/rest-v0.1/obs-wall-face.png",
+      "top": "candidates/rest-v0.1/obs-wall-top.png",
+      "tiles": 4,
+      "side": "#52554d",
+      "status": "candidate, not approved"
+    }
+  ],
+  "standing": [
+    {
+      "id": "forest-tree-storybook-v02",
+      "tile": "tree",
+      "maps": [
+        "forest-edge",
+        "kilnhollow"
+      ],
+      "variants": [
+        {
+          "file": "candidates/trees-v0.2/forest-tree-c.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.95
+          },
+          "anchor": {
+            "ax": 0.496,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/trees-v0.2/forest-tree-d.png",
+          "sizeTiles": {
+            "w": 1.92,
+            "h": 2.4
+          },
+          "anchor": {
+            "ax": 0.478,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/trees-v0.2/forest-tree-e.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.78
+          },
+          "anchor": {
+            "ax": 0.449,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/trees-v0.2/forest-tree-f.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.95
+          },
+          "anchor": {
+            "ax": 0.498,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/trees-v0.2/forest-tree-g.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.62
+          },
+          "anchor": {
+            "ax": 0.496,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/trees-v0.2/forest-tree-h.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 2.07
+          },
+          "anchor": {
+            "ax": 0.504,
+            "ay": 0.94
+          }
+        }
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-tall-grass-blades-v03",
+      "tile": "tall",
+      "maps": [
+        "forest-edge",
+        "kilnhollow"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/blades-v0.3/forest-tall-grass-blades-01.png",
+          "sizeTiles": {
+            "w": 1,
+            "h": 0.75
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.958
+          }
+        },
+        {
+          "file": "candidates/blades-v0.3/forest-tall-grass-blades-02.png",
+          "sizeTiles": {
+            "w": 1,
+            "h": 0.75
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.958
+          }
+        },
+        {
+          "file": "candidates/blades-v0.3/forest-tall-grass-blades-03.png",
+          "sizeTiles": {
+            "w": 1,
+            "h": 0.75
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.958
+          }
+        },
+        {
+          "file": "candidates/blades-v0.3/forest-tall-grass-blades-04.png",
+          "sizeTiles": {
+            "w": 1,
+            "h": 0.75
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.958
+          }
+        },
+        {
+          "file": "candidates/blades-v0.3/forest-tall-grass-blades-05.png",
+          "sizeTiles": {
+            "w": 1,
+            "h": 0.75
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.958
+          }
+        }
+      ],
+      "stagger": 0.25
+    },
+    {
+      "id": "forest-rock-storybook-v01",
+      "tile": "rock",
+      "maps": [
+        "fenwater",
+        "forest-edge",
+        "kilnhollow",
+        "observatory",
+        "reedmarsh",
+        "weir-road"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/misc-v0.1/forest-rock.png",
+          "sizeTiles": {
+            "w": 1.0,
+            "h": 0.8
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.93
+          }
+        }
+      ]
+    },
+    {
+      "id": "fen-tree",
+      "tile": "tree",
+      "maps": [
+        "reedmarsh",
+        "weir-road",
+        "fenwater"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/fen-v0.1/fen-tree-a.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.83
+          },
+          "anchor": {
+            "ax": 0.516,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-tree-b.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.43
+          },
+          "anchor": {
+            "ax": 0.508,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-tree-c.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.75
+          },
+          "anchor": {
+            "ax": 0.504,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-tree-d.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.55
+          },
+          "anchor": {
+            "ax": 0.547,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-tree-e.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.54
+          },
+          "anchor": {
+            "ax": 0.504,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-tree-a.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.83
+          },
+          "anchor": {
+            "ax": 0.516,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-tree-c.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.75
+          },
+          "anchor": {
+            "ax": 0.504,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-tree-b.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.43
+          },
+          "anchor": {
+            "ax": 0.508,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-tree-d.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.55
+          },
+          "anchor": {
+            "ax": 0.547,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-tree-f.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.66
+          },
+          "anchor": {
+            "ax": 0.484,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-tree-b.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.43
+          },
+          "anchor": {
+            "ax": 0.508,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-tree-a.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.83
+          },
+          "anchor": {
+            "ax": 0.516,
+            "ay": 0.94
+          }
+        }
+      ]
+    },
+    {
+      "id": "fen-sedge",
+      "tile": "tall",
+      "maps": [
+        "reedmarsh",
+        "weir-road",
+        "fenwater"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/fen-v0.1/fen-sedge-11.png",
+          "sizeTiles": {
+            "w": 1.44,
+            "h": 0.45
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-sedge-12.png",
+          "sizeTiles": {
+            "w": 1.44,
+            "h": 0.62
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-sedge-13.png",
+          "sizeTiles": {
+            "w": 1.44,
+            "h": 0.56
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-sedge-14.png",
+          "sizeTiles": {
+            "w": 1.44,
+            "h": 0.55
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-sedge-15.png",
+          "sizeTiles": {
+            "w": 1.44,
+            "h": 0.59
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        }
+      ],
+      "stagger": 0.25
+    },
+    {
+      "id": "salt-marsh",
+      "tile": "tall",
+      "maps": [
+        "salt-flats"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/salt-v0.1/salt-marsh2-01.png",
+          "sizeTiles": {
+            "w": 1.77,
+            "h": 0.81
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/salt-v0.1/salt-marsh2-02.png",
+          "sizeTiles": {
+            "w": 1.84,
+            "h": 0.77
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/salt-v0.1/salt-marsh2-03.png",
+          "sizeTiles": {
+            "w": 1.84,
+            "h": 0.62
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/salt-v0.1/salt-marsh2-04.png",
+          "sizeTiles": {
+            "w": 1.78,
+            "h": 0.81
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        }
+      ],
+      "stagger": 0.25
+    },
+    {
+      "id": "cave-boulder",
+      "tile": "rock",
+      "maps": [
+        "tidecave"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/cave-v0.1/cave-rock.png",
+          "sizeTiles": {
+            "w": 1.0,
+            "h": 0.8
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.93
+          }
+        }
+      ]
+    },
+    {
+      "id": "cinder-grass",
+      "tile": "tall",
+      "maps": [
+        "cinder-road",
+        "cinder-slopes",
+        "crag-stair",
+        "emberholt"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/cinder-v0.1/cinder-grass2-01.png",
+          "sizeTiles": {
+            "w": 1.44,
+            "h": 0.51
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/cinder-v0.1/cinder-grass2-02.png",
+          "sizeTiles": {
+            "w": 1.44,
+            "h": 0.52
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/cinder-v0.1/cinder-grass2-03.png",
+          "sizeTiles": {
+            "w": 1.44,
+            "h": 0.55
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/cinder-v0.1/cinder-grass2-04.png",
+          "sizeTiles": {
+            "w": 1.44,
+            "h": 0.52
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        }
+      ],
+      "stagger": 0.25
+    },
+    {
+      "id": "cinder-rock",
+      "tile": "rock",
+      "maps": [
+        "cinder-road",
+        "cinder-slopes",
+        "crag-stair",
+        "emberholt",
+        "kiln-deep"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/cinder-v0.1/cinder-rock2-a.png",
+          "sizeTiles": {
+            "w": 1.0,
+            "h": 0.86
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.93
+          }
+        },
+        {
+          "file": "candidates/cinder-v0.1/cinder-rock2-b.png",
+          "sizeTiles": {
+            "w": 0.8,
+            "h": 0.95
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.93
+          }
+        }
+      ]
+    },
+    {
+      "id": "rime-tree",
+      "tile": "tree",
+      "maps": [
+        "pinewold",
+        "fall-road",
+        "rimemere",
+        "rimehold"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/rime-v0.1/rime-tree-a.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 2.04
+          },
+          "anchor": {
+            "ax": 0.498,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/rime-v0.1/rime-tree-b.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 2.3
+          },
+          "anchor": {
+            "ax": 0.498,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/rime-v0.1/rime-tree-c.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.92
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/rime-v0.1/rime-tree-d.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 2.08
+          },
+          "anchor": {
+            "ax": 0.498,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/rime-v0.1/rime-tree-e.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 2.09
+          },
+          "anchor": {
+            "ax": 0.498,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/rime-v0.1/rime-tree-f.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 2.4
+          },
+          "anchor": {
+            "ax": 0.498,
+            "ay": 0.95
+          }
+        }
+      ]
+    },
+    {
+      "id": "rime-grass",
+      "tile": "tall",
+      "maps": [
+        "pinewold",
+        "fall-road",
+        "rimemere",
+        "rimehold"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/rime-v0.1/rime-grass-11.png",
+          "sizeTiles": {
+            "w": 1.5,
+            "h": 0.74
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.93
+          }
+        },
+        {
+          "file": "candidates/rime-v0.1/rime-grass-12.png",
+          "sizeTiles": {
+            "w": 1.5,
+            "h": 0.62
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.93
+          }
+        },
+        {
+          "file": "candidates/rime-v0.1/rime-grass-13.png",
+          "sizeTiles": {
+            "w": 1.5,
+            "h": 0.64
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.93
+          }
+        },
+        {
+          "file": "candidates/rime-v0.1/rime-grass-14.png",
+          "sizeTiles": {
+            "w": 1.5,
+            "h": 0.62
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.93
+          }
+        },
+        {
+          "file": "candidates/rime-v0.1/rime-grass-15.png",
+          "sizeTiles": {
+            "w": 1.5,
+            "h": 0.62
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.93
+          }
+        }
+      ],
+      "stagger": 0.25
+    },
+    {
+      "id": "rime-rock",
+      "tile": "rock",
+      "maps": [
+        "pinewold",
+        "fall-road",
+        "rimemere",
+        "rimehold",
+        "icehollow"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/rime-v0.1/rime-rock-a.png",
+          "sizeTiles": {
+            "w": 0.97,
+            "h": 0.68
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.93
+          }
+        },
+        {
+          "file": "candidates/rime-v0.1/rime-rock-b.png",
+          "sizeTiles": {
+            "w": 0.97,
+            "h": 0.91
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.93
+          }
+        }
+      ]
+    },
+    {
+      "id": "loom-grass",
+      "tile": "tall",
+      "maps": [
+        "spiral-stair",
+        "loom-causeway",
+        "loomfoot"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/loom-v0.1/loom-grass2-01.png",
+          "sizeTiles": {
+            "w": 1.44,
+            "h": 0.45
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.93
+          }
+        },
+        {
+          "file": "candidates/loom-v0.1/loom-grass2-02.png",
+          "sizeTiles": {
+            "w": 1.44,
+            "h": 0.47
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.93
+          }
+        },
+        {
+          "file": "candidates/loom-v0.1/loom-grass2-03.png",
+          "sizeTiles": {
+            "w": 1.44,
+            "h": 0.48
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.93
+          }
+        },
+        {
+          "file": "candidates/loom-v0.1/loom-grass2-04.png",
+          "sizeTiles": {
+            "w": 1.44,
+            "h": 0.58
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.93
+          }
+        },
+        {
+          "file": "candidates/loom-v0.1/loom-grass2-05.png",
+          "sizeTiles": {
+            "w": 1.44,
+            "h": 0.52
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.93
+          }
+        }
+      ],
+      "stagger": 0.25
+    },
+    {
+      "id": "loom-rock",
+      "tile": "rock",
+      "maps": [
+        "spiral-stair",
+        "loom-causeway",
+        "loomfoot",
+        "spire-root",
+        "loom-hall"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/loom-v0.1/loom-rock-a.png",
+          "sizeTiles": {
+            "w": 0.97,
+            "h": 0.73
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.93
+          }
+        },
+        {
+          "file": "candidates/loom-v0.1/loom-rock-b.png",
+          "sizeTiles": {
+            "w": 0.97,
+            "h": 0.62
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.93
+          }
+        }
+      ]
+    },
+    {
+      "id": "loom-tree",
+      "tile": "tree",
+      "maps": [
+        "spiral-stair",
+        "loom-causeway",
+        "loomfoot"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/loom-v0.3/loom-tree-a.png",
+          "sizeTiles": {
+            "w": 1.84,
+            "h": 1.62
+          },
+          "anchor": {
+            "ax": 0.212,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/loom-v0.3/loom-tree-b.png",
+          "sizeTiles": {
+            "w": 1.84,
+            "h": 1.44
+          },
+          "anchor": {
+            "ax": 0.233,
+            "ay": 0.95
+          }
+        }
+      ]
+    }
+  ],
+  "props": [
+    {
+      "id": "millwheel-idle",
+      "file": "candidates/wheel-v0.2/millwheel-idle.png",
+      "mapId": "forest-edge",
+      "objectId": "wheel",
+      "state": "idle",
+      "sizeTiles": {
+        "w": 2,
+        "h": 1.98
+      },
+      "anchor": {
+        "ax": 0.127,
+        "ay": 0.972
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "millwheel-turning",
+      "file": "candidates/wheel-v0.2/millwheel-idle.png",
+      "mapId": "forest-edge",
+      "objectId": "wheel-turning",
+      "state": "turning",
+      "sizeTiles": {
+        "w": 2,
+        "h": 1.98
+      },
+      "anchor": {
+        "ax": 0.127,
+        "ay": 0.972
+      },
+      "status": "candidate, not approved",
+      "frames": [
+        "candidates/wheel-v0.2/millwheel-turn-01.png",
+        "candidates/wheel-v0.2/millwheel-turn-02.png",
+        "candidates/wheel-v0.2/millwheel-turn-03.png",
+        "candidates/wheel-v0.2/millwheel-turn-04.png",
+        "candidates/wheel-v0.2/millwheel-turn-05.png",
+        "candidates/wheel-v0.2/millwheel-turn-06.png",
+        "candidates/wheel-v0.2/millwheel-turn-07.png",
+        "candidates/wheel-v0.2/millwheel-turn-08.png",
+        "candidates/wheel-v0.2/millwheel-turn-09.png",
+        "candidates/wheel-v0.2/millwheel-turn-10.png",
+        "candidates/wheel-v0.2/millwheel-turn-11.png",
+        "candidates/wheel-v0.2/millwheel-turn-12.png",
+        "candidates/wheel-v0.2/millwheel-turn-13.png",
+        "candidates/wheel-v0.2/millwheel-turn-14.png",
+        "candidates/wheel-v0.2/millwheel-turn-15.png",
+        "candidates/wheel-v0.2/millwheel-turn-16.png",
+        "candidates/wheel-v0.2/millwheel-turn-17.png",
+        "candidates/wheel-v0.2/millwheel-turn-18.png",
+        "candidates/wheel-v0.2/millwheel-turn-19.png",
+        "candidates/wheel-v0.2/millwheel-turn-20.png",
+        "candidates/wheel-v0.2/millwheel-turn-21.png",
+        "candidates/wheel-v0.2/millwheel-turn-22.png",
+        "candidates/wheel-v0.2/millwheel-turn-23.png",
+        "candidates/wheel-v0.2/millwheel-turn-24.png"
+      ],
+      "frameMs": 110
+    },
+    {
+      "file": "candidates/rest-v0.1/regulator3.png",
+      "sizeTiles": {
+        "w": 2.59,
+        "h": 3.0
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "id": "regulator",
+      "mapId": "loom-heart",
+      "objectId": "regulator",
+      "status": "candidate, not approved"
+    },
+    {
+      "file": "candidates/rest-v0.1/blank.png",
+      "sizeTiles": {
+        "w": 0.1,
+        "h": 0.1
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 1.0
+      },
+      "id": "regulator-l",
+      "mapId": "loom-heart",
+      "objectId": "regulator-l",
+      "status": "candidate, not approved"
+    },
+    {
+      "file": "candidates/rest-v0.1/blank.png",
+      "sizeTiles": {
+        "w": 0.1,
+        "h": 0.1
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 1.0
+      },
+      "id": "regulator-r",
+      "mapId": "loom-heart",
+      "objectId": "regulator-r",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "prop-fall-road-drift",
+      "mapId": "fall-road",
+      "objectId": "drift",
+      "file": "candidates/rest-v0.1/drift-plug.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.64
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 1.0
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "prop-icehollow-snow-passage",
+      "mapId": "icehollow",
+      "objectId": "snow-passage",
+      "file": "candidates/rest-v0.1/drift-plug.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.64
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 1.0
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "prop-pinewold-snow-choked-hollow",
+      "mapId": "pinewold",
+      "objectId": "snow-choked-hollow",
+      "file": "candidates/rest-v0.1/drift-plug.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.64
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 1.0
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "prop-home-bed",
+      "mapId": "home",
+      "objectId": "bed",
+      "file": "candidates/rest-v0.1/bed-up.png",
+      "sizeTiles": {
+        "w": 0.56,
+        "h": 1.09
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 1.0
+      },
+      "status": "candidate, not approved"
+    }
+  ],
+  "flats": [
+    {
+      "id": "sluice-storybook-v03a",
+      "mapId": "forest-edge",
+      "objectId": "sluice",
+      "file": "candidates/sluice-v0.2/sluice-jammed-logjam-a.png",
+      "open": "candidates/sluice-v0.2/sluice-open.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path",
+      "sprite": "exit-path",
+      "mapId": "forest-edge",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-platform",
+      "mapId": "forest-edge",
+      "objectId": "platform",
+      "file": "candidates/objects-v0.3/platform.png",
+      "open": "candidates/objects-v0.3/platform-open.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-reedmarsh",
+      "sprite": "exit-path",
+      "mapId": "reedmarsh",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-weir-road",
+      "sprite": "exit-path",
+      "mapId": "weir-road",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-fenwater",
+      "sprite": "exit-path",
+      "mapId": "fenwater",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-salt-flats",
+      "sprite": "exit-path",
+      "mapId": "salt-flats",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-sluice-reedmarsh",
+      "mapId": "reedmarsh",
+      "sprite": "sluice",
+      "file": "candidates/sluice-v0.2/sluice-jammed-logjam-a.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-sluice-open-reedmarsh",
+      "mapId": "reedmarsh",
+      "sprite": "sluice-open",
+      "file": "candidates/sluice-v0.2/sluice-open.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-sluice-weir-road",
+      "mapId": "weir-road",
+      "sprite": "sluice",
+      "file": "candidates/sluice-v0.2/sluice-jammed-logjam-a.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-sluice-open-weir-road",
+      "mapId": "weir-road",
+      "sprite": "sluice-open",
+      "file": "candidates/sluice-v0.2/sluice-open.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-ford-weir-road",
+      "mapId": "weir-road",
+      "objectId": "ford",
+      "file": "candidates/fen-objects-v0.1/ford.png",
+      "open": "candidates/fen-objects-v0.1/ford-open.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-ford-reedmarsh",
+      "mapId": "reedmarsh",
+      "objectId": "reed-island",
+      "file": "candidates/fen-objects-v0.1/ford.png",
+      "open": "candidates/fen-objects-v0.1/ford-open.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-slab-ledge-slab",
+      "mapId": "salt-flats",
+      "objectId": "ledge-slab",
+      "file": "candidates/objects-v0.3/platform.png",
+      "open": "candidates/objects-v0.3/platform-open.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-slab-scree-chute",
+      "mapId": "salt-flats",
+      "objectId": "scree-chute",
+      "file": "candidates/objects-v0.3/platform.png",
+      "open": "candidates/objects-v0.3/platform-open.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-rubble",
+      "mapId": "tidecave",
+      "sprite": "brittle-wall-open",
+      "file": "candidates/fen-objects-v0.1/brittle-wall-open.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-bed",
+      "mapId": "fenwater",
+      "sprite": "bed",
+      "file": "candidates/fen-objects-v0.1/bed.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-kilnhollow",
+      "sprite": "exit-path",
+      "mapId": "kilnhollow",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-cinder-road",
+      "sprite": "exit-path",
+      "mapId": "cinder-road",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-cinder-slopes",
+      "sprite": "exit-path",
+      "mapId": "cinder-slopes",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-crag-stair",
+      "sprite": "exit-path",
+      "mapId": "crag-stair",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-emberholt",
+      "sprite": "exit-path",
+      "mapId": "emberholt",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-kiln-deep",
+      "sprite": "exit-path",
+      "mapId": "kiln-deep",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-pinewold",
+      "sprite": "exit-path",
+      "mapId": "pinewold",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-fall-road",
+      "sprite": "exit-path",
+      "mapId": "fall-road",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-rimemere",
+      "sprite": "exit-path",
+      "mapId": "rimemere",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-rimehold",
+      "sprite": "exit-path",
+      "mapId": "rimehold",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-icehollow",
+      "sprite": "exit-path",
+      "mapId": "icehollow",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-spiral-stair",
+      "sprite": "exit-path",
+      "mapId": "spiral-stair",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-loom-causeway",
+      "sprite": "exit-path",
+      "mapId": "loom-causeway",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-loomfoot",
+      "sprite": "exit-path",
+      "mapId": "loomfoot",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-cinder-road-brittle-wall-open",
+      "mapId": "cinder-road",
+      "sprite": "brittle-wall-open",
+      "file": "candidates/rest-v0.1/rubble-basalt.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-kiln-deep-brittle-wall-open",
+      "mapId": "kiln-deep",
+      "sprite": "brittle-wall-open",
+      "file": "candidates/rest-v0.1/rubble-basalt.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-loom-causeway-brittle-wall-open",
+      "mapId": "loom-causeway",
+      "sprite": "brittle-wall-open",
+      "file": "candidates/rest-v0.1/rubble-masonry.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-spire-root-brittle-wall-open",
+      "mapId": "spire-root",
+      "sprite": "brittle-wall-open",
+      "file": "candidates/rest-v0.1/rubble-masonry.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-observatory-brittle-wall-open",
+      "mapId": "observatory",
+      "sprite": "brittle-wall-open",
+      "file": "candidates/rest-v0.1/rubble-masonry.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-cinder-road-shelf",
+      "mapId": "cinder-road",
+      "objectId": "shelf",
+      "file": "candidates/rest-v0.1/ledge2.png",
+      "open": "candidates/rest-v0.1/ledge2.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-cinder-slopes-narrow-ledge",
+      "mapId": "cinder-slopes",
+      "objectId": "narrow-ledge",
+      "file": "candidates/rest-v0.1/ledge2.png",
+      "open": "candidates/rest-v0.1/ledge2.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-fall-road-drift",
+      "mapId": "fall-road",
+      "objectId": "drift",
+      "file": "candidates/rest-v0.1/blank.png",
+      "open": "candidates/rest-v0.1/drift-open2.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-icehollow-snow-passage",
+      "mapId": "icehollow",
+      "objectId": "snow-passage",
+      "file": "candidates/rest-v0.1/blank.png",
+      "open": "candidates/rest-v0.1/drift-open2.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-pinewold-snow-choked-hollow",
+      "mapId": "pinewold",
+      "objectId": "snow-choked-hollow",
+      "file": "candidates/rest-v0.1/blank.png",
+      "open": "candidates/rest-v0.1/drift-open2.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-rimemere-thin-ice",
+      "mapId": "rimemere",
+      "objectId": "thin-ice",
+      "file": "candidates/rest-v0.1/thin-ice2.png",
+      "open": "candidates/rest-v0.1/thin-ice-open2.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-icehollow-frozen-floor",
+      "mapId": "icehollow",
+      "objectId": "frozen-floor",
+      "file": "candidates/rest-v0.1/thin-ice2.png",
+      "open": "candidates/rest-v0.1/thin-ice-open2.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-rimemere-chasm",
+      "mapId": "rimemere",
+      "objectId": "chasm",
+      "file": "candidates/rest-v0.1/crevasse2.png",
+      "open": "candidates/rest-v0.1/crevasse2.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-loom-causeway-islet-gap",
+      "mapId": "loom-causeway",
+      "objectId": "islet-gap",
+      "file": "candidates/rest-v0.1/gust.png",
+      "open": "candidates/rest-v0.1/blank.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-kiln-deep-dark-gallery",
+      "mapId": "kiln-deep",
+      "objectId": "dark-gallery",
+      "file": "candidates/rest-v0.1/dark2.png",
+      "open": "candidates/rest-v0.1/dark-open.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-tidecave-dark-passage",
+      "mapId": "tidecave",
+      "objectId": "dark-passage",
+      "file": "candidates/rest-v0.1/dark2.png",
+      "open": "candidates/rest-v0.1/dark-open.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-tidecave-moat-swim",
+      "mapId": "tidecave",
+      "objectId": "moat-swim",
+      "file": "candidates/rest-v0.1/channel2.png",
+      "open": "candidates/rest-v0.1/channel2.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-spire-root-drowned-channel",
+      "mapId": "spire-root",
+      "objectId": "drowned-channel",
+      "file": "candidates/rest-v0.1/channel2.png",
+      "open": "candidates/rest-v0.1/channel2.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-spire-root-woven-door",
+      "mapId": "spire-root",
+      "objectId": "woven-door",
+      "file": "candidates/rest-v0.1/woven2.png",
+      "open": "candidates/rest-v0.1/woven-open.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-forest-edge-nestling-path",
+      "mapId": "forest-edge",
+      "objectId": "nestling-path",
+      "file": "candidates/rest-v0.1/blank.png",
+      "open": "candidates/rest-v0.1/goat-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-forest-edge-teo-path",
+      "mapId": "forest-edge",
+      "objectId": "teo-path",
+      "file": "candidates/rest-v0.1/blank.png",
+      "open": "candidates/rest-v0.1/goat-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-forest-edge-tracks",
+      "mapId": "forest-edge",
+      "sprite": "tracks",
+      "file": "candidates/rest-v0.1/tracks2.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-observatory-vines-open",
+      "mapId": "observatory",
+      "sprite": "vines-open",
+      "file": "candidates/rest-v0.1/vines-open.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-home-bed",
+      "mapId": "home",
+      "sprite": "bed",
+      "file": "candidates/rest-v0.1/bed.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-observatory-sluice",
+      "mapId": "observatory",
+      "sprite": "sluice",
+      "file": "candidates/sluice-v0.2/sluice-jammed-logjam-a.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-observatory-sluice-open",
+      "mapId": "observatory",
+      "sprite": "sluice-open",
+      "file": "candidates/sluice-v0.2/sluice-open.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-forest-edge-teo-tracks-a",
+      "mapId": "forest-edge",
+      "objectId": "teo-tracks-a",
+      "file": "candidates/rest-v0.1/bootprints.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-forest-edge-teo-tracks-b",
+      "mapId": "forest-edge",
+      "objectId": "teo-tracks-b",
+      "file": "candidates/rest-v0.1/bootprints.png",
+      "status": "candidate, not approved"
+    }
+  ],
+  "objects": [
+    {
+      "id": "object-sign",
+      "sprite": "sign",
+      "maps": [
+        "cinder-road",
+        "cinder-slopes",
+        "crag-stair",
+        "emberholt",
+        "fall-road",
+        "fenwater",
+        "forest-edge",
+        "home",
+        "icehollow",
+        "kiln-deep",
+        "kilnhollow",
+        "loom-causeway",
+        "loom-hall",
+        "loom-heart",
+        "loomfoot",
+        "observatory",
+        "pinewold",
+        "reedmarsh",
+        "rimehold",
+        "rimemere",
+        "salt-flats",
+        "spiral-stair",
+        "spire-root",
+        "tidecave",
+        "weir-road"
+      ],
+      "file": "candidates/objects-v0.1/sign.png",
+      "sizeTiles": {
+        "w": 0.95,
+        "h": 1.51
+      },
+      "anchor": {
+        "ax": 0.496,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-chest",
+      "sprite": "chest",
+      "maps": [
+        "cinder-road",
+        "cinder-slopes",
+        "crag-stair",
+        "emberholt",
+        "fall-road",
+        "fenwater",
+        "forest-edge",
+        "icehollow",
+        "kiln-deep",
+        "kilnhollow",
+        "loom-causeway",
+        "loom-hall",
+        "loom-heart",
+        "loomfoot",
+        "observatory",
+        "pinewold",
+        "reedmarsh",
+        "rimehold",
+        "rimemere",
+        "salt-flats",
+        "spiral-stair",
+        "spire-root",
+        "tidecave",
+        "weir-road"
+      ],
+      "file": "candidates/objects-v0.1/chest.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 0.73
+      },
+      "anchor": {
+        "ax": 0.492,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-chest-open",
+      "sprite": "chest-open",
+      "maps": [
+        "cinder-road",
+        "cinder-slopes",
+        "crag-stair",
+        "emberholt",
+        "fall-road",
+        "fenwater",
+        "forest-edge",
+        "icehollow",
+        "kiln-deep",
+        "kilnhollow",
+        "loom-causeway",
+        "loom-hall",
+        "loom-heart",
+        "loomfoot",
+        "observatory",
+        "pinewold",
+        "reedmarsh",
+        "rimehold",
+        "rimemere",
+        "salt-flats",
+        "spiral-stair",
+        "spire-root",
+        "tidecave",
+        "weir-road"
+      ],
+      "file": "candidates/objects-v0.1/chest-open.png",
+      "sizeTiles": {
+        "w": 1.06,
+        "h": 1.06
+      },
+      "anchor": {
+        "ax": 0.621,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-campfire",
+      "sprite": "campfire",
+      "maps": [
+        "cinder-road",
+        "cinder-slopes",
+        "crag-stair",
+        "emberholt",
+        "fall-road",
+        "fenwater",
+        "forest-edge",
+        "icehollow",
+        "kiln-deep",
+        "kilnhollow",
+        "loom-causeway",
+        "loom-hall",
+        "loom-heart",
+        "loomfoot",
+        "observatory",
+        "pinewold",
+        "reedmarsh",
+        "rimehold",
+        "rimemere",
+        "salt-flats",
+        "spiral-stair",
+        "spire-root",
+        "weir-road"
+      ],
+      "file": "candidates/objects-v0.1/campfire.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.09
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved",
+      "frames": [
+        "candidates/objects-v0.1/campfire-f1.png",
+        "candidates/objects-v0.1/campfire-f2.png",
+        "candidates/objects-v0.1/campfire-f3.png",
+        "candidates/objects-v0.1/campfire-f4.png"
+      ],
+      "frameMs": 170
+    },
+    {
+      "id": "object-brazier",
+      "sprite": "brazier",
+      "maps": [
+        "forest-edge",
+        "icehollow",
+        "kiln-deep",
+        "kilnhollow"
+      ],
+      "file": "candidates/objects-v0.1/brazier.png",
+      "sizeTiles": {
+        "w": 0.9,
+        "h": 0.82
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-brazier-lit",
+      "sprite": "brazier-lit",
+      "maps": [
+        "forest-edge",
+        "icehollow",
+        "kiln-deep",
+        "kilnhollow"
+      ],
+      "file": "candidates/objects-v0.1/brazier-lit.png",
+      "sizeTiles": {
+        "w": 0.9,
+        "h": 1.29
+      },
+      "anchor": {
+        "ax": 0.495,
+        "ay": 0.981
+      },
+      "status": "candidate, not approved",
+      "frames": [
+        "candidates/objects-v0.1/brazier-lit-f1.png",
+        "candidates/objects-v0.1/brazier-lit-f2.png",
+        "candidates/objects-v0.1/brazier-lit-f3.png",
+        "candidates/objects-v0.1/brazier-lit-f4.png"
+      ],
+      "frameMs": 170
+    },
+    {
+      "id": "object-exit-stair",
+      "sprite": "exit-stair",
+      "maps": [
+        "forest-edge",
+        "kilnhollow",
+        "loom-hall",
+        "loomfoot",
+        "observatory"
+      ],
+      "file": "candidates/objects-v0.3/exit-stair-a.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.0
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.985
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-page",
+      "sprite": "page",
+      "maps": [
+        "cinder-road",
+        "cinder-slopes",
+        "crag-stair",
+        "emberholt",
+        "fall-road",
+        "fenwater",
+        "forest-edge",
+        "home",
+        "icehollow",
+        "kiln-deep",
+        "kilnhollow",
+        "loom-causeway",
+        "loom-hall",
+        "loom-heart",
+        "loomfoot",
+        "pinewold",
+        "reedmarsh",
+        "rimehold",
+        "rimemere",
+        "salt-flats",
+        "spiral-stair",
+        "spire-root",
+        "tidecave",
+        "weir-road"
+      ],
+      "file": "candidates/objects-v0.3/page.png",
+      "sizeTiles": {
+        "w": 0.7,
+        "h": 0.46
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-vine-wall",
+      "sprite": "vine-wall",
+      "maps": [
+        "fall-road",
+        "forest-edge",
+        "kilnhollow"
+      ],
+      "file": "candidates/objects-v0.3/vine-wall-b.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.0
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 1.0
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-vine-wall-open",
+      "sprite": "vine-wall-open",
+      "maps": [
+        "fall-road",
+        "forest-edge",
+        "kilnhollow"
+      ],
+      "file": "candidates/objects-v0.3/vine-wall-open-a.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.0
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 1.0
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-orrery",
+      "sprite": "orrery",
+      "maps": [
+        "crag-stair",
+        "forest-edge",
+        "kilnhollow",
+        "observatory"
+      ],
+      "file": "candidates/objects-v0.3/orrery.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.19
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-orrery-lit",
+      "sprite": "orrery-lit",
+      "maps": [
+        "crag-stair",
+        "forest-edge",
+        "kilnhollow",
+        "observatory"
+      ],
+      "file": "candidates/objects-v0.3/orrery-lit.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.19
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "fen-object-lever",
+      "sprite": "lever",
+      "maps": [
+        "cinder-road",
+        "cinder-slopes",
+        "crag-stair",
+        "emberholt",
+        "fall-road",
+        "fenwater",
+        "icehollow",
+        "kiln-deep",
+        "kilnhollow",
+        "loom-causeway",
+        "loom-hall",
+        "loom-heart",
+        "loomfoot",
+        "pinewold",
+        "reedmarsh",
+        "rimehold",
+        "rimemere",
+        "salt-flats",
+        "spiral-stair",
+        "spire-root",
+        "tidecave",
+        "weir-road"
+      ],
+      "file": "candidates/fen-objects-v0.1/lever.png",
+      "sizeTiles": {
+        "w": 0.98,
+        "h": 1.01
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "fen-object-lever-on",
+      "sprite": "lever-on",
+      "maps": [
+        "cinder-road",
+        "cinder-slopes",
+        "crag-stair",
+        "emberholt",
+        "fall-road",
+        "fenwater",
+        "icehollow",
+        "kiln-deep",
+        "kilnhollow",
+        "loom-causeway",
+        "loom-hall",
+        "loom-heart",
+        "loomfoot",
+        "pinewold",
+        "reedmarsh",
+        "rimehold",
+        "rimemere",
+        "salt-flats",
+        "spiral-stair",
+        "spire-root",
+        "tidecave",
+        "weir-road"
+      ],
+      "file": "candidates/fen-objects-v0.1/lever-on.png",
+      "sizeTiles": {
+        "w": 0.98,
+        "h": 1.01
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "fen-object-waystone",
+      "sprite": "waystone",
+      "maps": [
+        "cinder-road",
+        "cinder-slopes",
+        "crag-stair",
+        "emberholt",
+        "fall-road",
+        "fenwater",
+        "icehollow",
+        "kiln-deep",
+        "kilnhollow",
+        "loom-causeway",
+        "loom-hall",
+        "loom-heart",
+        "loomfoot",
+        "pinewold",
+        "reedmarsh",
+        "rimehold",
+        "rimemere",
+        "salt-flats",
+        "spiral-stair",
+        "spire-root",
+        "tidecave",
+        "weir-road"
+      ],
+      "file": "candidates/fen-objects-v0.1/waystone.png",
+      "sizeTiles": {
+        "w": 0.62,
+        "h": 1.55
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "fen-object-waystone-woken",
+      "sprite": "waystone-woken",
+      "maps": [
+        "cinder-road",
+        "cinder-slopes",
+        "crag-stair",
+        "emberholt",
+        "fall-road",
+        "fenwater",
+        "icehollow",
+        "kiln-deep",
+        "kilnhollow",
+        "loom-causeway",
+        "loom-hall",
+        "loom-heart",
+        "loomfoot",
+        "pinewold",
+        "reedmarsh",
+        "rimehold",
+        "rimemere",
+        "salt-flats",
+        "spiral-stair",
+        "spire-root",
+        "tidecave",
+        "weir-road"
+      ],
+      "file": "candidates/fen-objects-v0.1/waystone-woken.png",
+      "sizeTiles": {
+        "w": 0.62,
+        "h": 1.55
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "fen-object-chest-reader",
+      "sprite": "chest-reader",
+      "maps": [
+        "fenwater",
+        "loom-causeway",
+        "observatory",
+        "reedmarsh",
+        "salt-flats",
+        "tidecave",
+        "weir-road"
+      ],
+      "file": "candidates/fen-objects-v0.1/chest-reader.png",
+      "sizeTiles": {
+        "w": 0.95,
+        "h": 0.63
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "fen-object-brittle-wall",
+      "sprite": "brittle-wall",
+      "maps": [
+        "tidecave"
+      ],
+      "file": "candidates/fen-objects-v0.1/brittle-wall.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.25
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 1.0
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "file": "candidates/rest-v0.1/door-wood.png",
+      "sizeTiles": {
+        "w": 0.88,
+        "h": 1.25
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 1.0
+      },
+      "id": "door-wood",
+      "sprite": "exit-door",
+      "maps": [
+        "home",
+        "kilnhollow",
+        "fenwater",
+        "emberholt",
+        "rimehold"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "file": "candidates/rest-v0.1/door-cave.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.16
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 1.0
+      },
+      "id": "door-cave",
+      "sprite": "exit-door",
+      "maps": [
+        "tidecave",
+        "icehollow",
+        "kiln-deep"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "file": "candidates/rest-v0.1/door-reader.png",
+      "sizeTiles": {
+        "w": 0.87,
+        "h": 1.25
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 1.0
+      },
+      "id": "door-reader",
+      "sprite": "exit-door",
+      "maps": [
+        "spire-root",
+        "spiral-stair",
+        "loomfoot"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "file": "candidates/rest-v0.1/door-glass2.png",
+      "sizeTiles": {
+        "w": 0.62,
+        "h": 1.25
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 1.0
+      },
+      "id": "door-glass",
+      "sprite": "exit-glass",
+      "maps": [
+        "loom-hall",
+        "loom-heart"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "file": "candidates/rest-v0.1/lamp.png",
+      "sizeTiles": {
+        "w": 0.43,
+        "h": 1.45
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "id": "lamp",
+      "sprite": "lamp",
+      "maps": [
+        "loomfoot",
+        "observatory"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "file": "candidates/rest-v0.1/lamp-lit.png",
+      "sizeTiles": {
+        "w": 0.41,
+        "h": 1.45
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "id": "lamp-lit",
+      "sprite": "lamp-lit",
+      "maps": [
+        "loomfoot",
+        "observatory"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "file": "candidates/rest-v0.1/coil.png",
+      "sizeTiles": {
+        "w": 0.7,
+        "h": 1.05
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "id": "coil",
+      "sprite": "coil",
+      "maps": [
+        "kiln-deep",
+        "loomfoot"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "file": "candidates/rest-v0.1/coil-lit.png",
+      "sizeTiles": {
+        "w": 0.62,
+        "h": 1.05
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "id": "coil-lit",
+      "sprite": "coil-lit",
+      "maps": [
+        "loom-heart"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "file": "candidates/rest-v0.1/brittle-basalt.png",
+      "sizeTiles": {
+        "w": 0.78,
+        "h": 1.25
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 1.0
+      },
+      "id": "brittle-basalt",
+      "sprite": "brittle-wall",
+      "maps": [
+        "cinder-road",
+        "kiln-deep"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "file": "candidates/rest-v0.1/brittle-masonry.png",
+      "sizeTiles": {
+        "w": 0.91,
+        "h": 1.25
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 1.0
+      },
+      "id": "brittle-masonry",
+      "sprite": "brittle-wall",
+      "maps": [
+        "loom-causeway",
+        "spire-root",
+        "observatory"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "file": "candidates/rest-v0.1/vines2.png",
+      "sizeTiles": {
+        "w": 1.6,
+        "h": 0.81
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "id": "vines",
+      "sprite": "vines",
+      "maps": [
+        "observatory"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "warmth",
+      "sprite": "warmth",
+      "file": "candidates/rest-v0.1/warmth.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.0
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.8
+      },
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved"
+    }
+  ],
+  "houses": [
+    {
+      "id": "fen-house",
+      "maps": [
+        "fenwater",
+        "weir-road"
+      ],
+      "wall": "candidates/fen-houses-v0.1/fen-house-wall.png",
+      "roof": "candidates/fen-houses-v0.1/fen-house-roof.png",
+      "window": "candidates/fen-houses-v0.1/fen-house-window.png",
+      "door": "candidates/fen-houses-v0.1/fen-house-door.png",
+      "tiles": 2,
+      "roofTiles": 4,
+      "side": "#453f3a",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "kiln-house",
+      "maps": [
+        "kilnhollow"
+      ],
+      "wall": "candidates/kiln-houses-v0.1/kiln-house-wall.png",
+      "roof": "candidates/kiln-houses-v0.1/kiln-house-roof.png",
+      "window": "candidates/kiln-houses-v0.1/kiln-house-window.png",
+      "door": "candidates/kiln-houses-v0.1/kiln-house-door.png",
+      "tiles": 2,
+      "roofTiles": 2,
+      "side": "#827158",
+      "status": "candidate, not approved",
+      "eave": "straight"
+    },
+    {
+      "id": "ember-house",
+      "maps": [
+        "emberholt"
+      ],
+      "wall": "candidates/cinder-v0.3/ember-house-wall.png",
+      "roof": "candidates/cinder-v0.3/ember-house-roof.png",
+      "window": "candidates/cinder-v0.3/ember-house-window.png",
+      "door": "candidates/cinder-v0.3/ember-house-door.png",
+      "tiles": 2,
+      "roofTiles": 2,
+      "side": "#45403b",
+      "eave": "straight",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "rime-house",
+      "maps": [
+        "rimehold",
+        "fall-road"
+      ],
+      "wall": "candidates/rime-v0.3/rime-house-wall.png",
+      "roof": "candidates/rime-v0.3/rime-house-roof2.png",
+      "window": "candidates/rime-v0.3/rime-house-window.png",
+      "door": "candidates/rime-v0.3/rime-house-door.png",
+      "tiles": 2,
+      "roofTiles": 3,
+      "side": "#55443c",
+      "eave": "straight",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "loom-house",
+      "maps": [
+        "loomfoot"
+      ],
+      "wall": "candidates/loom-v0.3/loom-house-wall.png",
+      "roof": "candidates/loom-v0.3/loom-house-roof.png",
+      "window": "candidates/loom-v0.3/loom-house-window.png",
+      "door": "candidates/loom-v0.3/loom-house-door.png",
+      "tiles": 2,
+      "roofTiles": 2,
+      "side": "#888474",
+      "eave": "straight",
+      "status": "candidate, not approved"
+    }
+  ],
+  "creatures": {
+    "fieldTiles": 1.15,
+    "species": {
+      "archivault": {
+        "back": "creatures/v0.1/archivault-back.png",
+        "front": "creatures/v0.1/archivault-front.png"
+      },
+      "archivine": {
+        "back": "creatures/v0.1/archivine-back.png",
+        "front": "creatures/v0.1/archivine-front.png"
+      },
+      "ashmaw": {
+        "back": "creatures/v0.1/ashmaw-back.png",
+        "front": "creatures/v0.1/ashmaw-front.png"
+      },
+      "aurorex": {
+        "back": "creatures/v0.1/aurorex-back.png",
+        "front": "creatures/v0.1/aurorex-front.png"
+      },
+      "aurorill": {
+        "back": "creatures/v0.1/aurorill-back.png",
+        "front": "creatures/v0.1/aurorill-front.png"
+      },
+      "bogthane": {
+        "back": "creatures/v0.1/bogthane-back.png",
+        "front": "creatures/v0.1/bogthane-front.png"
+      },
+      "bogtusk": {
+        "back": "creatures/v0.1/bogtusk-back.png",
+        "front": "creatures/v0.1/bogtusk-front.png"
+      },
+      "boulderon": {
+        "back": "creatures/v0.1/boulderon-back.png",
+        "front": "creatures/v0.1/boulderon-front.png"
+      },
+      "bramblekin": {
+        "back": "creatures/v0.1/bramblekin-back.png",
+        "front": "creatures/v0.1/bramblekin-front.png"
+      },
+      "briarimp": {
+        "back": "creatures/v0.1/briarimp-back.png",
+        "front": "creatures/v0.1/briarimp-front.png"
+      },
+      "brinecrag": {
+        "back": "creatures/v0.1/brinecrag-back.png",
+        "front": "creatures/v0.1/brinecrag-front.png"
+      },
+      "brinefang": {
+        "back": "creatures/v0.1/brinefang-back.png",
+        "front": "creatures/v0.1/brinefang-front.png"
+      },
+      "brinereaver": {
+        "back": "creatures/v0.1/brinereaver-back.png",
+        "front": "creatures/v0.1/brinereaver-front.png"
+      },
+      "brooklet": {
+        "back": "creatures/v0.1/brooklet-back.png",
+        "front": "creatures/v0.1/brooklet-front.png"
+      },
+      "cindervole": {
+        "back": "creatures/v0.1/cindervole-back.png",
+        "front": "creatures/v0.1/cindervole-front.png"
+      },
+      "cragram": {
+        "back": "creatures/v0.1/cragram-back.png",
+        "front": "creatures/v0.1/cragram-front.png"
+      },
+      "cragull": {
+        "back": "creatures/v0.1/cragull-back.png",
+        "front": "creatures/v0.1/cragull-front.png"
+      },
+      "drifthare": {
+        "back": "creatures/v0.1/drifthare-back.png",
+        "front": "creatures/v0.1/drifthare-front.png"
+      },
+      "eelwisp": {
+        "back": "creatures/v0.1/eelwisp-back.png",
+        "front": "creatures/v0.1/eelwisp-front.png"
+      },
+      "emberling": {
+        "back": "creatures/v0.1/emberling-back.png",
+        "front": "creatures/v0.1/emberling-front.png"
+      },
+      "emberwyrm": {
+        "back": "creatures/v0.1/emberwyrm-back.png",
+        "front": "creatures/v0.1/emberwyrm-front.png"
+      },
+      "fellcairn": {
+        "back": "creatures/v0.1/fellcairn-back.png",
+        "front": "creatures/v0.1/fellcairn-front.png"
+      },
+      "fenmaw": {
+        "back": "creatures/v0.1/fenmaw-back.png",
+        "front": "creatures/v0.1/fenmaw-front.png"
+      },
+      "flintail": {
+        "back": "creatures/v0.1/flintail-back.png",
+        "front": "creatures/v0.1/flintail-front.png"
+      },
+      "flintlash": {
+        "back": "creatures/v0.1/flintlash-back.png",
+        "front": "creatures/v0.1/flintlash-front.png"
+      },
+      "frostkit": {
+        "back": "creatures/v0.1/frostkit-back.png",
+        "front": "creatures/v0.1/frostkit-front.png"
+      },
+      "frostlynx": {
+        "back": "creatures/v0.1/frostlynx-back.png",
+        "front": "creatures/v0.1/frostlynx-front.png"
+      },
+      "furnhound": {
+        "back": "creatures/v0.1/furnhound-back.png",
+        "front": "creatures/v0.1/furnhound-front.png"
+      },
+      "galegull": {
+        "back": "creatures/v0.1/galegull-back.png",
+        "front": "creatures/v0.1/galegull-front.png"
+      },
+      "galeowl": {
+        "back": "creatures/v0.1/galeowl-back.png",
+        "front": "creatures/v0.1/galeowl-front.png"
+      },
+      "galeshell": {
+        "back": "creatures/v0.1/galeshell-back.png",
+        "front": "creatures/v0.1/galeshell-front.png"
+      },
+      "galesprite": {
+        "back": "creatures/v0.1/galesprite-back.png",
+        "front": "creatures/v0.1/galesprite-front.png"
+      },
+      "geodon": {
+        "back": "creatures/v0.1/geodon-back.png",
+        "front": "creatures/v0.1/geodon-front.png"
+      },
+      "glaciermaw": {
+        "back": "creatures/v0.1/glaciermaw-back.png",
+        "front": "creatures/v0.1/glaciermaw-front.png"
+      },
+      "glimmerfox": {
+        "back": "creatures/v0.1/glimmerfox-back.png",
+        "front": "creatures/v0.1/glimmerfox-front.png"
+      },
+      "glowreed": {
+        "back": "creatures/v0.1/glowreed-back.png",
+        "front": "creatures/v0.1/glowreed-front.png"
+      },
+      "groveheart": {
+        "back": "creatures/v0.1/groveheart-back.png",
+        "front": "creatures/v0.1/groveheart-front.png"
+      },
+      "heronix": {
+        "back": "creatures/v0.1/heronix-back.png",
+        "front": "creatures/v0.1/heronix-front.png"
+      },
+      "hoarbear": {
+        "back": "creatures/v0.1/hoarbear-back.png",
+        "front": "creatures/v0.1/hoarbear-front.png"
+      },
+      "icemaw": {
+        "back": "creatures/v0.1/icemaw-back.png",
+        "front": "creatures/v0.1/icemaw-front.png"
+      },
+      "keystone": {
+        "back": "creatures/v0.1/keystone-back.png",
+        "front": "creatures/v0.1/keystone-front.png"
+      },
+      "kilnhound": {
+        "back": "creatures/v0.1/kilnhound-back.png",
+        "front": "creatures/v0.1/kilnhound-front.png"
+      },
+      "lanternreed": {
+        "back": "creatures/v0.1/lanternreed-back.png",
+        "front": "creatures/v0.1/lanternreed-front.png"
+      },
+      "lavalisk": {
+        "back": "creatures/v0.1/lavalisk-back.png",
+        "front": "creatures/v0.1/lavalisk-front.png"
+      },
+      "loomvine": {
+        "back": "creatures/v0.1/loomvine-back.png",
+        "front": "creatures/v0.1/loomvine-front.png"
+      },
+      "maelstrix": {
+        "back": "creatures/v0.1/maelstrix-back.png",
+        "front": "creatures/v0.1/maelstrix-front.png"
+      },
+      "magmalisk": {
+        "back": "creatures/v0.1/magmalisk-back.png",
+        "front": "creatures/v0.1/magmalisk-front.png"
+      },
+      "mirefin": {
+        "back": "creatures/v0.1/mirefin-back.png",
+        "front": "creatures/v0.1/mirefin-front.png"
+      },
+      "mirewake": {
+        "back": "creatures/v0.1/mirewake-back.png",
+        "front": "creatures/v0.1/mirewake-front.png"
+      },
+      "mosslet": {
+        "back": "creatures/v0.1/mosslet-back.png",
+        "front": "creatures/v0.1/mosslet-front.png"
+      },
+      "mudmaw": {
+        "back": "creatures/v0.1/mudmaw-back.png",
+        "front": "creatures/v0.1/mudmaw-front.png"
+      },
+      "nimbusprite": {
+        "back": "creatures/v0.1/nimbusprite-back.png",
+        "front": "creatures/v0.1/nimbusprite-front.png"
+      },
+      "peakhawk": {
+        "back": "creatures/v0.1/peakhawk-back.png",
+        "front": "creatures/v0.1/peakhawk-front.png"
+      },
+      "pebblit": {
+        "back": "creatures/v0.1/pebblit-back.png",
+        "front": "creatures/v0.1/pebblit-front.png"
+      },
+      "pinemarten": {
+        "back": "creatures/v0.1/pinemarten-back.png",
+        "front": "creatures/v0.1/pinemarten-front.png"
+      },
+      "pinereaver": {
+        "back": "creatures/v0.1/pinereaver-back.png",
+        "front": "creatures/v0.1/pinereaver-front.png"
+      },
+      "prismfox": {
+        "back": "creatures/v0.1/prismfox-back.png",
+        "front": "creatures/v0.1/prismfox-front.png"
+      },
+      "puddlehop": {
+        "back": "creatures/v0.1/puddlehop-back.png",
+        "front": "creatures/v0.1/puddlehop-front.png"
+      },
+      "pyrecrest": {
+        "back": "creatures/v0.1/pyrecrest-back.png",
+        "front": "creatures/v0.1/pyrecrest-front.png"
+      },
+      "pyrelark": {
+        "back": "creatures/v0.1/pyrelark-back.png",
+        "front": "creatures/v0.1/pyrelark-front.png"
+      },
+      "quartzling": {
+        "back": "creatures/v0.1/quartzling-back.png",
+        "front": "creatures/v0.1/quartzling-front.png"
+      },
+      "ramhorn": {
+        "back": "creatures/v0.1/ramhorn-back.png",
+        "front": "creatures/v0.1/ramhorn-front.png"
+      },
+      "reedling": {
+        "back": "creatures/v0.1/reedling-back.png",
+        "front": "creatures/v0.1/reedling-front.png"
+      },
+      "rillcrest": {
+        "back": "creatures/v0.1/rillcrest-back.png",
+        "front": "creatures/v0.1/rillcrest-front.png"
+      },
+      "rimebear": {
+        "back": "creatures/v0.1/rimebear-back.png",
+        "front": "creatures/v0.1/rimebear-front.png"
+      },
+      "rimecairn": {
+        "back": "creatures/v0.1/rimecairn-back.png",
+        "front": "creatures/v0.1/rimecairn-front.png"
+      },
+      "rimehare": {
+        "back": "creatures/v0.1/rimehare-back.png",
+        "front": "creatures/v0.1/rimehare-front.png"
+      },
+      "rushcrown": {
+        "back": "creatures/v0.1/rushcrown-back.png",
+        "front": "creatures/v0.1/rushcrown-front.png"
+      },
+      "saltling": {
+        "back": "creatures/v0.1/saltling-back.png",
+        "front": "creatures/v0.1/saltling-front.png"
+      },
+      "shardhorn": {
+        "back": "creatures/v0.1/shardhorn-back.png",
+        "front": "creatures/v0.1/shardhorn-front.png"
+      },
+      "shardling": {
+        "back": "creatures/v0.1/shardling-back.png",
+        "front": "creatures/v0.1/shardling-front.png"
+      },
+      "skyloom": {
+        "back": "creatures/v0.1/skyloom-back.png",
+        "front": "creatures/v0.1/skyloom-front.png"
+      },
+      "sleetling": {
+        "back": "creatures/v0.1/sleetling-back.png",
+        "front": "creatures/v0.1/sleetling-front.png"
+      },
+      "sleetwing": {
+        "back": "creatures/v0.1/sleetwing-back.png",
+        "front": "creatures/v0.1/sleetwing-front.png"
+      },
+      "solflare": {
+        "back": "creatures/v0.1/solflare-back.png",
+        "front": "creatures/v0.1/solflare-front.png"
+      },
+      "sootling": {
+        "back": "creatures/v0.1/sootling-back.png",
+        "front": "creatures/v0.1/sootling-front.png"
+      },
+      "sootwraith": {
+        "back": "creatures/v0.1/sootwraith-back.png",
+        "front": "creatures/v0.1/sootwraith-front.png"
+      },
+      "sparkmoth": {
+        "back": "creatures/v0.1/sparkmoth-back.png",
+        "front": "creatures/v0.1/sparkmoth-front.png"
+      },
+      "stormeel": {
+        "back": "creatures/v0.1/stormeel-back.png",
+        "front": "creatures/v0.1/stormeel-front.png"
+      },
+      "stormowl": {
+        "back": "creatures/v0.1/stormowl-back.png",
+        "front": "creatures/v0.1/stormowl-front.png"
+      },
+      "stormroc": {
+        "back": "creatures/v0.1/stormroc-back.png",
+        "front": "creatures/v0.1/stormroc-front.png"
+      },
+      "tempestrix": {
+        "back": "creatures/v0.1/tempestrix-back.png",
+        "front": "creatures/v0.1/tempestrix-front.png"
+      },
+      "thornback": {
+        "back": "creatures/v0.1/thornback-back.png",
+        "front": "creatures/v0.1/thornback-front.png"
+      },
+      "thornbastion": {
+        "back": "creatures/v0.1/thornbastion-back.png",
+        "front": "creatures/v0.1/thornbastion-front.png"
+      },
+      "thundermoth": {
+        "back": "creatures/v0.1/thundermoth-back.png",
+        "front": "creatures/v0.1/thundermoth-front.png"
+      },
+      "thundershell": {
+        "back": "creatures/v0.1/thundershell-back.png",
+        "front": "creatures/v0.1/thundershell-front.png"
+      },
+      "thundertalon": {
+        "back": "creatures/v0.1/thundertalon-back.png",
+        "front": "creatures/v0.1/thundertalon-front.png"
+      },
+      "toadmarsh": {
+        "back": "creatures/v0.1/toadmarsh-back.png",
+        "front": "creatures/v0.1/toadmarsh-front.png"
+      },
+      "voltwing": {
+        "back": "creatures/v0.1/voltwing-back.png",
+        "front": "creatures/v0.1/voltwing-front.png"
+      },
+      "weaveling": {
+        "back": "creatures/v0.1/weaveling-back.png",
+        "front": "creatures/v0.1/weaveling-front.png"
+      }
+    }
+  }
+}
