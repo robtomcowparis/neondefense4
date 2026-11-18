@@ -1,0 +1,1036 @@
+{
+  "version": 1,
+  "note": "The Forest Edge working set plus Fenwater v0.3 candidates: the fen set on the Reedmarsh, the Weir Road and Fenwater Landing, and a salt set on the Salt Flats. Houses stay pixel art. EVALUATION CANDIDATE, not approved art.",
+  "renderScale": 2,
+  "ground": [
+    {
+      "id": "forest-ground-short-grass",
+      "file": "candidates/ground-v0.2-8x8/forest-ground-short-grass.png",
+      "tile": "grass",
+      "tiles": 8,
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-ground-tall-grass",
+      "file": "candidates/ground-v0.2-8x8/forest-ground-tall-grass.png",
+      "tile": "tall",
+      "tiles": 8,
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-ground-ash",
+      "file": "candidates/ground-v0.2-8x8/forest-ground-ash.png",
+      "tile": "ash",
+      "tiles": 8,
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-ground-path",
+      "file": "candidates/ground-v0.3/forest-ground-path.png",
+      "tile": "path",
+      "tiles": 8,
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-ground-sand",
+      "file": "candidates/ground-v0.3/forest-ground-sand.png",
+      "tile": "sand",
+      "tiles": 8,
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-ground-scree",
+      "file": "candidates/ground-v0.3/forest-ground-scree.png",
+      "tile": "scree",
+      "tiles": 8,
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-ground-floor",
+      "file": "candidates/ground-v0.3/forest-ground-floor.png",
+      "tile": "floor",
+      "tiles": 3,
+      "maps": [
+        "forest-edge",
+        "reedmarsh",
+        "weir-road",
+        "fenwater"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-bridge-deck",
+      "file": "candidates/misc-v0.1/forest-bridge-deck.png",
+      "tile": "bridge",
+      "tiles": 4,
+      "maps": [
+        "forest-edge",
+        "reedmarsh",
+        "weir-road",
+        "fenwater"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-water",
+      "file": "candidates/water-v0.1/forest-water-a.png",
+      "file2": "candidates/water-v0.1/forest-water-b.png",
+      "tile": "water",
+      "tiles": 6,
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "fen-ground-grass",
+      "file": "candidates/fen-v0.1/fen-ground-grass.png",
+      "tile": "grass",
+      "tiles": 8,
+      "maps": [
+        "reedmarsh",
+        "weir-road",
+        "fenwater"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "fen-ground-tall",
+      "file": "candidates/fen-v0.1/fen-ground-tall.png",
+      "tile": "tall",
+      "tiles": 8,
+      "maps": [
+        "reedmarsh",
+        "weir-road",
+        "fenwater"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "fen-ground-path",
+      "file": "candidates/fen-v0.1/fen-ground-path.png",
+      "tile": "path",
+      "tiles": 8,
+      "maps": [
+        "reedmarsh",
+        "weir-road",
+        "fenwater",
+        "salt-flats"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "fen-water",
+      "file": "candidates/fen-v0.1/fen-water.png",
+      "file2": "candidates/fen-v0.1/fen-water-b.png",
+      "tile": "water",
+      "tiles": 6,
+      "maps": [
+        "reedmarsh",
+        "weir-road",
+        "fenwater"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "salt-ground-sand",
+      "file": "candidates/salt-v0.1/salt-ground-sand.png",
+      "tile": "sand",
+      "tiles": 8,
+      "maps": [
+        "salt-flats",
+        "fenwater"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "salt-ground-tall",
+      "file": "candidates/salt-v0.1/salt-ground-tall.png",
+      "tile": "tall",
+      "tiles": 8,
+      "maps": [
+        "salt-flats"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "salt-ground-scree",
+      "file": "candidates/salt-v0.1/salt-ground-scree.png",
+      "tile": "scree",
+      "tiles": 8,
+      "maps": [
+        "salt-flats"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "salt-water",
+      "file": "candidates/salt-v0.1/salt-water.png",
+      "file2": "candidates/salt-v0.1/salt-water-b.png",
+      "tile": "water",
+      "tiles": 6,
+      "maps": [
+        "salt-flats"
+      ],
+      "status": "candidate, not approved"
+    }
+  ],
+  "shore": [
+    {
+      "id": "forest-shore-storybook-v01c",
+      "maps": [
+        "forest-edge"
+      ],
+      "edges": {
+        "n": "candidates/shore-v0.1b/forest-shore-n.png",
+        "e": "candidates/shore-v0.1b/forest-shore-e.png",
+        "s": "candidates/shore-v0.1b/forest-shore-s-full.png",
+        "w": "candidates/shore-v0.1b/forest-shore-w.png"
+      },
+      "tiles": 2,
+      "landShare": 0.2917,
+      "noBank": [
+        "bridge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "fen-shore",
+      "maps": [
+        "reedmarsh",
+        "weir-road",
+        "fenwater"
+      ],
+      "edges": {
+        "n": "candidates/fen-v0.1/fen-shore2-n.png",
+        "e": "candidates/fen-v0.1/fen-shore2-e.png",
+        "s": "candidates/fen-v0.1/fen-shore2-s.png",
+        "w": "candidates/fen-v0.1/fen-shore2-w.png"
+      },
+      "tiles": 2,
+      "landShare": 0.3333,
+      "noBank": [
+        "bridge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "salt-shore",
+      "maps": [
+        "salt-flats"
+      ],
+      "edges": {
+        "n": "candidates/salt-v0.1/salt-shore-n.png",
+        "e": "candidates/salt-v0.1/salt-shore-e.png",
+        "s": "candidates/salt-v0.1/salt-shore-s.png",
+        "w": "candidates/salt-v0.1/salt-shore-w.png"
+      },
+      "tiles": 2,
+      "landShare": 0.2917,
+      "noBank": [
+        "bridge"
+      ],
+      "status": "candidate, not approved"
+    }
+  ],
+  "raised": [
+    {
+      "id": "mill-wall-storybook-top-v02",
+      "tile": "wall",
+      "maps": [
+        "forest-edge",
+        "reedmarsh",
+        "weir-road",
+        "fenwater"
+      ],
+      "face": "candidates/masonry-v0.1/mill-wall-face.png",
+      "top": "candidates/masonry-v0.2/mill-wall-top.png",
+      "tiles": 4,
+      "side": "#504636",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-cliff-storybook-face-v02",
+      "tile": "cliff",
+      "maps": [
+        "forest-edge"
+      ],
+      "face": "candidates/masonry-v0.2/forest-cliff-face-large-warm.png",
+      "top": "candidates/masonry-v0.1/forest-cliff-top.png",
+      "faceTiles": 4,
+      "topTiles": 8,
+      "side": "#473e32",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-thicket-storybook-v01",
+      "tile": "thicket",
+      "maps": [
+        "forest-edge",
+        "reedmarsh",
+        "weir-road",
+        "fenwater"
+      ],
+      "face": "candidates/misc-v0.1/forest-thicket-face.png",
+      "top": "candidates/misc-v0.1/forest-thicket-top.png",
+      "faceTiles": 3,
+      "topTiles": 6,
+      "side": "#1f2a1e",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "salt-cliff",
+      "tile": "cliff",
+      "maps": [
+        "salt-flats"
+      ],
+      "face": "candidates/salt-v0.1/salt-cliff-face.png",
+      "top": "candidates/salt-v0.1/salt-ground-clifftop.png",
+      "faceTiles": 4,
+      "topTiles": 8,
+      "side": "#5c5851",
+      "status": "candidate, not approved"
+    }
+  ],
+  "standing": [
+    {
+      "id": "forest-tree-storybook-v02",
+      "tile": "tree",
+      "maps": [
+        "forest-edge"
+      ],
+      "variants": [
+        {
+          "file": "candidates/trees-v0.2/forest-tree-c.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.95
+          },
+          "anchor": {
+            "ax": 0.496,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/trees-v0.2/forest-tree-d.png",
+          "sizeTiles": {
+            "w": 1.92,
+            "h": 2.4
+          },
+          "anchor": {
+            "ax": 0.478,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/trees-v0.2/forest-tree-e.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.78
+          },
+          "anchor": {
+            "ax": 0.449,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/trees-v0.2/forest-tree-f.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.95
+          },
+          "anchor": {
+            "ax": 0.498,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/trees-v0.2/forest-tree-g.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.62
+          },
+          "anchor": {
+            "ax": 0.496,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/trees-v0.2/forest-tree-h.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 2.07
+          },
+          "anchor": {
+            "ax": 0.504,
+            "ay": 0.94
+          }
+        }
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-tall-grass-blades-v03",
+      "tile": "tall",
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/blades-v0.3/forest-tall-grass-blades-01.png",
+          "sizeTiles": {
+            "w": 1,
+            "h": 0.75
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.958
+          }
+        },
+        {
+          "file": "candidates/blades-v0.3/forest-tall-grass-blades-02.png",
+          "sizeTiles": {
+            "w": 1,
+            "h": 0.75
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.958
+          }
+        },
+        {
+          "file": "candidates/blades-v0.3/forest-tall-grass-blades-03.png",
+          "sizeTiles": {
+            "w": 1,
+            "h": 0.75
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.958
+          }
+        },
+        {
+          "file": "candidates/blades-v0.3/forest-tall-grass-blades-04.png",
+          "sizeTiles": {
+            "w": 1,
+            "h": 0.75
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.958
+          }
+        },
+        {
+          "file": "candidates/blades-v0.3/forest-tall-grass-blades-05.png",
+          "sizeTiles": {
+            "w": 1,
+            "h": 0.75
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.958
+          }
+        }
+      ],
+      "stagger": 0.25
+    },
+    {
+      "id": "forest-rock-storybook-v01",
+      "tile": "rock",
+      "maps": [
+        "forest-edge",
+        "reedmarsh",
+        "weir-road",
+        "fenwater"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/misc-v0.1/forest-rock.png",
+          "sizeTiles": {
+            "w": 1.0,
+            "h": 0.8
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.93
+          }
+        }
+      ]
+    },
+    {
+      "id": "fen-tree",
+      "tile": "tree",
+      "maps": [
+        "reedmarsh",
+        "weir-road",
+        "fenwater"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/fen-v0.1/fen-tree-a.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.83
+          },
+          "anchor": {
+            "ax": 0.516,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-tree-b.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.43
+          },
+          "anchor": {
+            "ax": 0.508,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-tree-c.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.75
+          },
+          "anchor": {
+            "ax": 0.504,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-tree-d.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.55
+          },
+          "anchor": {
+            "ax": 0.547,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-tree-e.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.54
+          },
+          "anchor": {
+            "ax": 0.504,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-tree-f.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.66
+          },
+          "anchor": {
+            "ax": 0.484,
+            "ay": 0.94
+          }
+        }
+      ]
+    },
+    {
+      "id": "fen-sedge",
+      "tile": "tall",
+      "maps": [
+        "reedmarsh",
+        "weir-road",
+        "fenwater"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/fen-v0.1/fen-sedge-11.png",
+          "sizeTiles": {
+            "w": 1.44,
+            "h": 0.45
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-sedge-12.png",
+          "sizeTiles": {
+            "w": 1.44,
+            "h": 0.62
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-sedge-13.png",
+          "sizeTiles": {
+            "w": 1.44,
+            "h": 0.56
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-sedge-14.png",
+          "sizeTiles": {
+            "w": 1.44,
+            "h": 0.55
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/fen-v0.1/fen-sedge-15.png",
+          "sizeTiles": {
+            "w": 1.44,
+            "h": 0.59
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        }
+      ],
+      "stagger": 0.25
+    },
+    {
+      "id": "salt-marsh",
+      "tile": "tall",
+      "maps": [
+        "salt-flats"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/salt-v0.1/salt-marsh-01.png",
+          "sizeTiles": {
+            "w": 1.38,
+            "h": 0.63
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/salt-v0.1/salt-marsh-02.png",
+          "sizeTiles": {
+            "w": 1.38,
+            "h": 0.58
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/salt-v0.1/salt-marsh-03.png",
+          "sizeTiles": {
+            "w": 1.38,
+            "h": 0.46
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        },
+        {
+          "file": "candidates/salt-v0.1/salt-marsh-04.png",
+          "sizeTiles": {
+            "w": 1.38,
+            "h": 0.62
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.95
+          }
+        }
+      ],
+      "stagger": 0.25
+    }
+  ],
+  "props": [
+    {
+      "id": "millwheel-idle",
+      "file": "candidates/wheel-v0.2/millwheel-idle.png",
+      "mapId": "forest-edge",
+      "objectId": "wheel",
+      "state": "idle",
+      "sizeTiles": {
+        "w": 2,
+        "h": 1.98
+      },
+      "anchor": {
+        "ax": 0.127,
+        "ay": 0.972
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "millwheel-turning",
+      "file": "candidates/wheel-v0.2/millwheel-idle.png",
+      "mapId": "forest-edge",
+      "objectId": "wheel-turning",
+      "state": "turning",
+      "sizeTiles": {
+        "w": 2,
+        "h": 1.98
+      },
+      "anchor": {
+        "ax": 0.127,
+        "ay": 0.972
+      },
+      "status": "candidate, not approved",
+      "frames": [
+        "candidates/wheel-v0.2/millwheel-turn-01.png",
+        "candidates/wheel-v0.2/millwheel-turn-02.png",
+        "candidates/wheel-v0.2/millwheel-turn-03.png",
+        "candidates/wheel-v0.2/millwheel-turn-04.png",
+        "candidates/wheel-v0.2/millwheel-turn-05.png",
+        "candidates/wheel-v0.2/millwheel-turn-06.png",
+        "candidates/wheel-v0.2/millwheel-turn-07.png",
+        "candidates/wheel-v0.2/millwheel-turn-08.png",
+        "candidates/wheel-v0.2/millwheel-turn-09.png",
+        "candidates/wheel-v0.2/millwheel-turn-10.png",
+        "candidates/wheel-v0.2/millwheel-turn-11.png",
+        "candidates/wheel-v0.2/millwheel-turn-12.png",
+        "candidates/wheel-v0.2/millwheel-turn-13.png",
+        "candidates/wheel-v0.2/millwheel-turn-14.png",
+        "candidates/wheel-v0.2/millwheel-turn-15.png",
+        "candidates/wheel-v0.2/millwheel-turn-16.png",
+        "candidates/wheel-v0.2/millwheel-turn-17.png",
+        "candidates/wheel-v0.2/millwheel-turn-18.png",
+        "candidates/wheel-v0.2/millwheel-turn-19.png",
+        "candidates/wheel-v0.2/millwheel-turn-20.png",
+        "candidates/wheel-v0.2/millwheel-turn-21.png",
+        "candidates/wheel-v0.2/millwheel-turn-22.png",
+        "candidates/wheel-v0.2/millwheel-turn-23.png",
+        "candidates/wheel-v0.2/millwheel-turn-24.png"
+      ],
+      "frameMs": 110
+    }
+  ],
+  "flats": [
+    {
+      "id": "sluice-storybook-v03a",
+      "mapId": "forest-edge",
+      "objectId": "sluice",
+      "file": "candidates/sluice-v0.2/sluice-jammed-logjam-a.png",
+      "open": "candidates/sluice-v0.2/sluice-open.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path",
+      "sprite": "exit-path",
+      "mapId": "forest-edge",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-platform",
+      "mapId": "forest-edge",
+      "objectId": "platform",
+      "file": "candidates/objects-v0.3/platform.png",
+      "open": "candidates/objects-v0.3/platform-open.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-reedmarsh",
+      "sprite": "exit-path",
+      "mapId": "reedmarsh",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-weir-road",
+      "sprite": "exit-path",
+      "mapId": "weir-road",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-fenwater",
+      "sprite": "exit-path",
+      "mapId": "fenwater",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path-salt-flats",
+      "sprite": "exit-path",
+      "mapId": "salt-flats",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    }
+  ],
+  "objects": [
+    {
+      "id": "object-sign",
+      "sprite": "sign",
+      "maps": [
+        "fenwater",
+        "forest-edge",
+        "reedmarsh",
+        "salt-flats",
+        "weir-road"
+      ],
+      "file": "candidates/objects-v0.1/sign.png",
+      "sizeTiles": {
+        "w": 0.95,
+        "h": 1.51
+      },
+      "anchor": {
+        "ax": 0.496,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-chest",
+      "sprite": "chest",
+      "maps": [
+        "fenwater",
+        "forest-edge",
+        "reedmarsh",
+        "salt-flats",
+        "weir-road"
+      ],
+      "file": "candidates/objects-v0.1/chest.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 0.73
+      },
+      "anchor": {
+        "ax": 0.492,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-chest-open",
+      "sprite": "chest-open",
+      "maps": [
+        "fenwater",
+        "forest-edge",
+        "reedmarsh",
+        "salt-flats",
+        "weir-road"
+      ],
+      "file": "candidates/objects-v0.1/chest-open.png",
+      "sizeTiles": {
+        "w": 1.06,
+        "h": 1.06
+      },
+      "anchor": {
+        "ax": 0.621,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-campfire",
+      "sprite": "campfire",
+      "maps": [
+        "fenwater",
+        "forest-edge",
+        "reedmarsh",
+        "salt-flats",
+        "weir-road"
+      ],
+      "file": "candidates/objects-v0.1/campfire.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.09
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved",
+      "frames": [
+        "candidates/objects-v0.1/campfire-f1.png",
+        "candidates/objects-v0.1/campfire-f2.png",
+        "candidates/objects-v0.1/campfire-f3.png",
+        "candidates/objects-v0.1/campfire-f4.png"
+      ],
+      "frameMs": 170
+    },
+    {
+      "id": "object-brazier",
+      "sprite": "brazier",
+      "maps": [
+        "forest-edge"
+      ],
+      "file": "candidates/objects-v0.1/brazier.png",
+      "sizeTiles": {
+        "w": 0.9,
+        "h": 0.82
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-brazier-lit",
+      "sprite": "brazier-lit",
+      "maps": [
+        "forest-edge"
+      ],
+      "file": "candidates/objects-v0.1/brazier-lit.png",
+      "sizeTiles": {
+        "w": 0.9,
+        "h": 1.29
+      },
+      "anchor": {
+        "ax": 0.495,
+        "ay": 0.981
+      },
+      "status": "candidate, not approved",
+      "frames": [
+        "candidates/objects-v0.1/brazier-lit-f1.png",
+        "candidates/objects-v0.1/brazier-lit-f2.png",
+        "candidates/objects-v0.1/brazier-lit-f3.png",
+        "candidates/objects-v0.1/brazier-lit-f4.png"
+      ],
+      "frameMs": 170
+    },
+    {
+      "id": "object-exit-stair",
+      "sprite": "exit-stair",
+      "maps": [
+        "forest-edge"
+      ],
+      "file": "candidates/objects-v0.3/exit-stair-a.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.0
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.985
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-page",
+      "sprite": "page",
+      "maps": [
+        "fenwater",
+        "forest-edge",
+        "reedmarsh",
+        "salt-flats",
+        "weir-road"
+      ],
+      "file": "candidates/objects-v0.3/page.png",
+      "sizeTiles": {
+        "w": 0.7,
+        "h": 0.46
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-vine-wall",
+      "sprite": "vine-wall",
+      "maps": [
+        "forest-edge"
+      ],
+      "file": "candidates/objects-v0.3/vine-wall-b.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.0
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 1.0
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-vine-wall-open",
+      "sprite": "vine-wall-open",
+      "maps": [
+        "forest-edge"
+      ],
+      "file": "candidates/objects-v0.3/vine-wall-open-a.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.0
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 1.0
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-orrery",
+      "sprite": "orrery",
+      "maps": [
+        "forest-edge"
+      ],
+      "file": "candidates/objects-v0.3/orrery.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.19
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-orrery-lit",
+      "sprite": "orrery-lit",
+      "maps": [
+        "forest-edge"
+      ],
+      "file": "candidates/objects-v0.3/orrery-lit.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.19
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    }
+  ]
+}
