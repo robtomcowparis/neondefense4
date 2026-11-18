@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "note": "The Living Storybook working set: kept candidates for every region, the two Forest Edge interiors, every object, and all 90 creatures front and back (creatures v0.3, kept 2026-11-18). On by default; ?art=off shows the pixel art. Working candidates, not approved production art.",
+  "note": "The Living Storybook working set: kept candidates for every region, the interiors, every object, all 90 creatures, battle backdrops for every region and all people (kept 2026-11-18). On by default; ?art=off shows the pixel art. Working candidates, not approved production art.",
   "renderScale": 2,
   "ground": [
     {
@@ -3623,6 +3623,1493 @@
         "back": "creatures/v0.1/weaveling-back.png",
         "front": "creatures/v0.1/weaveling-front.png"
       }
+    }
+  },
+  "battle": [
+    {
+      "kind": "outdoor",
+      "ground": "grass",
+      "water": false,
+      "file": "battle/v0.1/forest-grass-dry.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "tall",
+      "water": false,
+      "file": "battle/v0.1/forest-grass-dry.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "path",
+      "water": false,
+      "file": "battle/v0.1/forest-grass-dry.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "grass",
+      "water": true,
+      "file": "battle/v0.1/forest-grass-water.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "tall",
+      "water": true,
+      "file": "battle/v0.1/forest-grass-water.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "path",
+      "water": true,
+      "file": "battle/v0.1/forest-grass-water.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "bridge",
+      "water": true,
+      "file": "battle/v0.1/forest-grass-water.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "sand",
+      "water": true,
+      "file": "battle/v0.1/forest-sand-water.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "ash",
+      "water": false,
+      "file": "battle/v0.1/forest-ash-dry2.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "floor",
+      "water": false,
+      "file": "battle/v0.1/forest-floor-dry.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "rug",
+      "water": false,
+      "file": "battle/v0.1/forest-floor-dry.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "counter",
+      "water": false,
+      "file": "battle/v0.1/forest-floor-dry.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "scree",
+      "water": false,
+      "file": "battle/v0.1/forest-scree-dry.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "grass",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "tall",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "path",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "sand",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "floor",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "rug",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "bridge",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "scree",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "ash",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "snow",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "counter",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg",
+      "regions": [
+        "forest-edge"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "grass",
+      "water": false,
+      "file": "battle/v0.1/forest-grass-dry.jpg"
+    },
+    {
+      "kind": "outdoor",
+      "ground": "tall",
+      "water": false,
+      "file": "battle/v0.1/forest-grass-dry.jpg"
+    },
+    {
+      "kind": "outdoor",
+      "ground": "path",
+      "water": false,
+      "file": "battle/v0.1/forest-grass-dry.jpg"
+    },
+    {
+      "kind": "outdoor",
+      "ground": "grass",
+      "water": true,
+      "file": "battle/v0.1/forest-grass-water.jpg"
+    },
+    {
+      "kind": "outdoor",
+      "ground": "tall",
+      "water": true,
+      "file": "battle/v0.1/forest-grass-water.jpg"
+    },
+    {
+      "kind": "outdoor",
+      "ground": "path",
+      "water": true,
+      "file": "battle/v0.1/forest-grass-water.jpg"
+    },
+    {
+      "kind": "outdoor",
+      "ground": "bridge",
+      "water": true,
+      "file": "battle/v0.1/forest-grass-water.jpg"
+    },
+    {
+      "kind": "outdoor",
+      "ground": "sand",
+      "water": true,
+      "file": "battle/v0.1/forest-sand-water.jpg"
+    },
+    {
+      "kind": "outdoor",
+      "ground": "ash",
+      "water": false,
+      "file": "battle/v0.1/forest-ash-dry2.jpg"
+    },
+    {
+      "kind": "outdoor",
+      "ground": "floor",
+      "water": false,
+      "file": "battle/v0.1/forest-floor-dry.jpg"
+    },
+    {
+      "kind": "outdoor",
+      "ground": "rug",
+      "water": false,
+      "file": "battle/v0.1/forest-floor-dry.jpg"
+    },
+    {
+      "kind": "outdoor",
+      "ground": "counter",
+      "water": false,
+      "file": "battle/v0.1/forest-floor-dry.jpg"
+    },
+    {
+      "kind": "outdoor",
+      "ground": "scree",
+      "water": false,
+      "file": "battle/v0.1/forest-scree-dry.jpg"
+    },
+    {
+      "kind": "indoor",
+      "ground": "grass",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg"
+    },
+    {
+      "kind": "indoor",
+      "ground": "tall",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg"
+    },
+    {
+      "kind": "indoor",
+      "ground": "path",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg"
+    },
+    {
+      "kind": "indoor",
+      "ground": "sand",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg"
+    },
+    {
+      "kind": "indoor",
+      "ground": "floor",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg"
+    },
+    {
+      "kind": "indoor",
+      "ground": "rug",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg"
+    },
+    {
+      "kind": "indoor",
+      "ground": "bridge",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg"
+    },
+    {
+      "kind": "indoor",
+      "ground": "scree",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg"
+    },
+    {
+      "kind": "indoor",
+      "ground": "ash",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg"
+    },
+    {
+      "kind": "indoor",
+      "ground": "snow",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg"
+    },
+    {
+      "kind": "indoor",
+      "ground": "counter",
+      "water": false,
+      "file": "battle/v0.1/forest-indoor.jpg"
+    },
+    {
+      "kind": "outdoor",
+      "ground": "snow",
+      "water": false,
+      "file": "battle/v0.1/rime-snow.jpg"
+    },
+    {
+      "kind": "outdoor",
+      "ground": "grass",
+      "water": false,
+      "file": "battle/v0.1/fen-grass-dry.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "tall",
+      "water": false,
+      "file": "battle/v0.1/fen-grass-dry.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "path",
+      "water": false,
+      "file": "battle/v0.1/fen-grass-dry.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "grass",
+      "water": true,
+      "file": "battle/v0.1/fen-grass-water.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "tall",
+      "water": true,
+      "file": "battle/v0.1/fen-grass-water.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "path",
+      "water": true,
+      "file": "battle/v0.1/fen-grass-water.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "bridge",
+      "water": true,
+      "file": "battle/v0.1/fen-grass-water.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "sand",
+      "water": true,
+      "file": "battle/v0.1/fen-shore.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "scree",
+      "water": true,
+      "file": "battle/v0.1/fen-shore.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "floor",
+      "water": true,
+      "file": "battle/v0.1/fen-shore.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "counter",
+      "water": true,
+      "file": "battle/v0.1/fen-shore.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "ash",
+      "water": true,
+      "file": "battle/v0.1/fen-shore.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "rug",
+      "water": true,
+      "file": "battle/v0.1/fen-shore.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "snow",
+      "water": true,
+      "file": "battle/v0.1/fen-shore.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "grass",
+      "water": false,
+      "file": "battle/v0.1/fen-indoor.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "tall",
+      "water": false,
+      "file": "battle/v0.1/fen-indoor.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "path",
+      "water": false,
+      "file": "battle/v0.1/fen-indoor.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "sand",
+      "water": false,
+      "file": "battle/v0.1/fen-indoor.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "floor",
+      "water": false,
+      "file": "battle/v0.1/fen-indoor.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "rug",
+      "water": false,
+      "file": "battle/v0.1/fen-indoor.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "bridge",
+      "water": false,
+      "file": "battle/v0.1/fen-indoor.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "scree",
+      "water": false,
+      "file": "battle/v0.1/fen-indoor.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "ash",
+      "water": false,
+      "file": "battle/v0.1/fen-indoor.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "snow",
+      "water": false,
+      "file": "battle/v0.1/fen-indoor.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "counter",
+      "water": false,
+      "file": "battle/v0.1/fen-indoor.jpg",
+      "regions": [
+        "fenwater"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "ash",
+      "water": false,
+      "file": "battle/v0.1/cinder-ash.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "sand",
+      "water": false,
+      "file": "battle/v0.1/cinder-ash.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "bridge",
+      "water": false,
+      "file": "battle/v0.1/cinder-ash.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "snow",
+      "water": false,
+      "file": "battle/v0.1/cinder-ash.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "scree",
+      "water": false,
+      "file": "battle/v0.1/cinder-scree.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "floor",
+      "water": false,
+      "file": "battle/v0.1/cinder-scree.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "counter",
+      "water": false,
+      "file": "battle/v0.1/cinder-scree.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "rug",
+      "water": false,
+      "file": "battle/v0.1/cinder-scree.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "grass",
+      "water": false,
+      "file": "battle/v0.1/cinder-grass2.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "tall",
+      "water": false,
+      "file": "battle/v0.1/cinder-grass2.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "path",
+      "water": false,
+      "file": "battle/v0.1/cinder-grass2.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "grass",
+      "water": false,
+      "file": "battle/v0.1/cinder-indoor.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "tall",
+      "water": false,
+      "file": "battle/v0.1/cinder-indoor.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "path",
+      "water": false,
+      "file": "battle/v0.1/cinder-indoor.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "sand",
+      "water": false,
+      "file": "battle/v0.1/cinder-indoor.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "floor",
+      "water": false,
+      "file": "battle/v0.1/cinder-indoor.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "rug",
+      "water": false,
+      "file": "battle/v0.1/cinder-indoor.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "bridge",
+      "water": false,
+      "file": "battle/v0.1/cinder-indoor.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "scree",
+      "water": false,
+      "file": "battle/v0.1/cinder-indoor.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "ash",
+      "water": false,
+      "file": "battle/v0.1/cinder-indoor.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "snow",
+      "water": false,
+      "file": "battle/v0.1/cinder-indoor.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "counter",
+      "water": false,
+      "file": "battle/v0.1/cinder-indoor.jpg",
+      "regions": [
+        "cinder-heights"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "grass",
+      "water": false,
+      "file": "battle/v0.1/rime-snow.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "tall",
+      "water": false,
+      "file": "battle/v0.1/rime-snow.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "path",
+      "water": false,
+      "file": "battle/v0.1/rime-snow.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "sand",
+      "water": false,
+      "file": "battle/v0.1/rime-snow.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "floor",
+      "water": false,
+      "file": "battle/v0.1/rime-snow.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "rug",
+      "water": false,
+      "file": "battle/v0.1/rime-snow.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "bridge",
+      "water": false,
+      "file": "battle/v0.1/rime-snow.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "scree",
+      "water": false,
+      "file": "battle/v0.1/rime-snow.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "ash",
+      "water": false,
+      "file": "battle/v0.1/rime-snow.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "snow",
+      "water": false,
+      "file": "battle/v0.1/rime-snow.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "counter",
+      "water": false,
+      "file": "battle/v0.1/rime-snow.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "snow",
+      "water": true,
+      "file": "battle/v0.1/rime-snow-water.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "tall",
+      "water": true,
+      "file": "battle/v0.1/rime-snow-water.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "path",
+      "water": true,
+      "file": "battle/v0.1/rime-snow-water.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "grass",
+      "water": true,
+      "file": "battle/v0.1/rime-snow-water.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "sand",
+      "water": true,
+      "file": "battle/v0.1/rime-snow-water.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "bridge",
+      "water": true,
+      "file": "battle/v0.1/rime-snow-water.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "grass",
+      "water": false,
+      "file": "battle/v0.1/rime-indoor.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "tall",
+      "water": false,
+      "file": "battle/v0.1/rime-indoor.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "path",
+      "water": false,
+      "file": "battle/v0.1/rime-indoor.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "sand",
+      "water": false,
+      "file": "battle/v0.1/rime-indoor.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "floor",
+      "water": false,
+      "file": "battle/v0.1/rime-indoor.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "rug",
+      "water": false,
+      "file": "battle/v0.1/rime-indoor.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "bridge",
+      "water": false,
+      "file": "battle/v0.1/rime-indoor.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "scree",
+      "water": false,
+      "file": "battle/v0.1/rime-indoor.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "ash",
+      "water": false,
+      "file": "battle/v0.1/rime-indoor.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "snow",
+      "water": false,
+      "file": "battle/v0.1/rime-indoor.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "counter",
+      "water": false,
+      "file": "battle/v0.1/rime-indoor.jpg",
+      "regions": [
+        "rimefells"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "grass",
+      "water": false,
+      "file": "battle/v0.1/loom-turf.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "tall",
+      "water": false,
+      "file": "battle/v0.1/loom-turf.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "path",
+      "water": false,
+      "file": "battle/v0.1/loom-turf.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "sand",
+      "water": false,
+      "file": "battle/v0.1/loom-turf.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "floor",
+      "water": false,
+      "file": "battle/v0.1/loom-turf.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "rug",
+      "water": false,
+      "file": "battle/v0.1/loom-turf.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "bridge",
+      "water": false,
+      "file": "battle/v0.1/loom-turf.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "scree",
+      "water": false,
+      "file": "battle/v0.1/loom-turf.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "ash",
+      "water": false,
+      "file": "battle/v0.1/loom-turf.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "snow",
+      "water": false,
+      "file": "battle/v0.1/loom-turf.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "counter",
+      "water": false,
+      "file": "battle/v0.1/loom-turf.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "grass",
+      "water": true,
+      "file": "battle/v0.1/loom-turf-water.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "tall",
+      "water": true,
+      "file": "battle/v0.1/loom-turf-water.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "path",
+      "water": true,
+      "file": "battle/v0.1/loom-turf-water.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "sand",
+      "water": true,
+      "file": "battle/v0.1/loom-turf-water.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "scree",
+      "water": true,
+      "file": "battle/v0.1/loom-turf-water.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "outdoor",
+      "ground": "bridge",
+      "water": true,
+      "file": "battle/v0.1/loom-turf-water.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "grass",
+      "water": false,
+      "file": "battle/v0.1/loom-indoor.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "tall",
+      "water": false,
+      "file": "battle/v0.1/loom-indoor.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "path",
+      "water": false,
+      "file": "battle/v0.1/loom-indoor.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "sand",
+      "water": false,
+      "file": "battle/v0.1/loom-indoor.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "floor",
+      "water": false,
+      "file": "battle/v0.1/loom-indoor.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "rug",
+      "water": false,
+      "file": "battle/v0.1/loom-indoor.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "bridge",
+      "water": false,
+      "file": "battle/v0.1/loom-indoor.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "scree",
+      "water": false,
+      "file": "battle/v0.1/loom-indoor.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "ash",
+      "water": false,
+      "file": "battle/v0.1/loom-indoor.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "snow",
+      "water": false,
+      "file": "battle/v0.1/loom-indoor.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    },
+    {
+      "kind": "indoor",
+      "ground": "counter",
+      "water": false,
+      "file": "battle/v0.1/loom-indoor.jpg",
+      "regions": [
+        "loomspire"
+      ]
+    }
+  ],
+  "people": {
+    "sizeTiles": {
+      "w": 1,
+      "h": 1.5
+    },
+    "pictures": {
+      "duelist-fire-c0-e-0": "people/v0.1/duelist-fire-c0-e-0.webp",
+      "duelist-fire-c0-e-1": "people/v0.1/duelist-fire-c0-e-1.webp",
+      "duelist-fire-c0-n-0": "people/v0.1/duelist-fire-c0-n-0.webp",
+      "duelist-fire-c0-n-1": "people/v0.1/duelist-fire-c0-n-1.webp",
+      "duelist-fire-c0-s-0": "people/v0.1/duelist-fire-c0-s-0.webp",
+      "duelist-fire-c0-s-1": "people/v0.1/duelist-fire-c0-s-1.webp",
+      "duelist-fire-c1-e-0": "people/v0.1/duelist-fire-c1-e-0.webp",
+      "duelist-fire-c1-e-1": "people/v0.1/duelist-fire-c1-e-1.webp",
+      "duelist-fire-c1-n-0": "people/v0.1/duelist-fire-c1-n-0.webp",
+      "duelist-fire-c1-n-1": "people/v0.1/duelist-fire-c1-n-1.webp",
+      "duelist-fire-c1-s-0": "people/v0.1/duelist-fire-c1-s-0.webp",
+      "duelist-fire-c1-s-1": "people/v0.1/duelist-fire-c1-s-1.webp",
+      "duelist-fire-c3-e-0": "people/v0.1/duelist-fire-c3-e-0.webp",
+      "duelist-fire-c3-e-1": "people/v0.1/duelist-fire-c3-e-1.webp",
+      "duelist-fire-c3-n-0": "people/v0.1/duelist-fire-c3-n-0.webp",
+      "duelist-fire-c3-n-1": "people/v0.1/duelist-fire-c3-n-1.webp",
+      "duelist-fire-c3-s-0": "people/v0.1/duelist-fire-c3-s-0.webp",
+      "duelist-fire-c3-s-1": "people/v0.1/duelist-fire-c3-s-1.webp",
+      "duelist-fire-c4-e-0": "people/v0.1/duelist-fire-c4-e-0.webp",
+      "duelist-fire-c4-e-1": "people/v0.1/duelist-fire-c4-e-1.webp",
+      "duelist-fire-c4-n-0": "people/v0.1/duelist-fire-c4-n-0.webp",
+      "duelist-fire-c4-n-1": "people/v0.1/duelist-fire-c4-n-1.webp",
+      "duelist-fire-c4-s-0": "people/v0.1/duelist-fire-c4-s-0.webp",
+      "duelist-fire-c4-s-1": "people/v0.1/duelist-fire-c4-s-1.webp",
+      "duelist-fire-c6-e-0": "people/v0.1/duelist-fire-c6-e-0.webp",
+      "duelist-fire-c6-e-1": "people/v0.1/duelist-fire-c6-e-1.webp",
+      "duelist-fire-c6-n-0": "people/v0.1/duelist-fire-c6-n-0.webp",
+      "duelist-fire-c6-n-1": "people/v0.1/duelist-fire-c6-n-1.webp",
+      "duelist-fire-c6-s-0": "people/v0.1/duelist-fire-c6-s-0.webp",
+      "duelist-fire-c6-s-1": "people/v0.1/duelist-fire-c6-s-1.webp",
+      "duelist-fire-e-0": "people/v0.1/duelist-fire-e-0.webp",
+      "duelist-fire-e-1": "people/v0.1/duelist-fire-e-1.webp",
+      "duelist-fire-n-0": "people/v0.1/duelist-fire-n-0.webp",
+      "duelist-fire-n-1": "people/v0.1/duelist-fire-n-1.webp",
+      "duelist-fire-s-0": "people/v0.1/duelist-fire-s-0.webp",
+      "duelist-fire-s-1": "people/v0.1/duelist-fire-s-1.webp",
+      "duelist-nature-c0-e-0": "people/v0.1/duelist-nature-c0-e-0.webp",
+      "duelist-nature-c0-e-1": "people/v0.1/duelist-nature-c0-e-1.webp",
+      "duelist-nature-c0-n-0": "people/v0.1/duelist-nature-c0-n-0.webp",
+      "duelist-nature-c0-n-1": "people/v0.1/duelist-nature-c0-n-1.webp",
+      "duelist-nature-c0-s-0": "people/v0.1/duelist-nature-c0-s-0.webp",
+      "duelist-nature-c0-s-1": "people/v0.1/duelist-nature-c0-s-1.webp",
+      "duelist-nature-c1-e-0": "people/v0.1/duelist-nature-c1-e-0.webp",
+      "duelist-nature-c1-e-1": "people/v0.1/duelist-nature-c1-e-1.webp",
+      "duelist-nature-c1-n-0": "people/v0.1/duelist-nature-c1-n-0.webp",
+      "duelist-nature-c1-n-1": "people/v0.1/duelist-nature-c1-n-1.webp",
+      "duelist-nature-c1-s-0": "people/v0.1/duelist-nature-c1-s-0.webp",
+      "duelist-nature-c1-s-1": "people/v0.1/duelist-nature-c1-s-1.webp",
+      "duelist-nature-c2-e-0": "people/v0.1/duelist-nature-c2-e-0.webp",
+      "duelist-nature-c2-e-1": "people/v0.1/duelist-nature-c2-e-1.webp",
+      "duelist-nature-c2-n-0": "people/v0.1/duelist-nature-c2-n-0.webp",
+      "duelist-nature-c2-n-1": "people/v0.1/duelist-nature-c2-n-1.webp",
+      "duelist-nature-c2-s-0": "people/v0.1/duelist-nature-c2-s-0.webp",
+      "duelist-nature-c2-s-1": "people/v0.1/duelist-nature-c2-s-1.webp",
+      "duelist-nature-c4-e-0": "people/v0.1/duelist-nature-c4-e-0.webp",
+      "duelist-nature-c4-e-1": "people/v0.1/duelist-nature-c4-e-1.webp",
+      "duelist-nature-c4-n-0": "people/v0.1/duelist-nature-c4-n-0.webp",
+      "duelist-nature-c4-n-1": "people/v0.1/duelist-nature-c4-n-1.webp",
+      "duelist-nature-c4-s-0": "people/v0.1/duelist-nature-c4-s-0.webp",
+      "duelist-nature-c4-s-1": "people/v0.1/duelist-nature-c4-s-1.webp",
+      "duelist-nature-c6-e-0": "people/v0.1/duelist-nature-c6-e-0.webp",
+      "duelist-nature-c6-e-1": "people/v0.1/duelist-nature-c6-e-1.webp",
+      "duelist-nature-c6-n-0": "people/v0.1/duelist-nature-c6-n-0.webp",
+      "duelist-nature-c6-n-1": "people/v0.1/duelist-nature-c6-n-1.webp",
+      "duelist-nature-c6-s-0": "people/v0.1/duelist-nature-c6-s-0.webp",
+      "duelist-nature-c6-s-1": "people/v0.1/duelist-nature-c6-s-1.webp",
+      "duelist-nature-e-0": "people/v0.1/duelist-nature-e-0.webp",
+      "duelist-nature-e-1": "people/v0.1/duelist-nature-e-1.webp",
+      "duelist-nature-n-0": "people/v0.1/duelist-nature-n-0.webp",
+      "duelist-nature-n-1": "people/v0.1/duelist-nature-n-1.webp",
+      "duelist-nature-s-0": "people/v0.1/duelist-nature-s-0.webp",
+      "duelist-nature-s-1": "people/v0.1/duelist-nature-s-1.webp",
+      "duelist-neutral-e-0": "people/v0.1/duelist-neutral-e-0.webp",
+      "duelist-neutral-e-1": "people/v0.1/duelist-neutral-e-1.webp",
+      "duelist-neutral-n-0": "people/v0.1/duelist-neutral-n-0.webp",
+      "duelist-neutral-n-1": "people/v0.1/duelist-neutral-n-1.webp",
+      "duelist-neutral-s-0": "people/v0.1/duelist-neutral-s-0.webp",
+      "duelist-neutral-s-1": "people/v0.1/duelist-neutral-s-1.webp",
+      "duelist-stone-c0-e-0": "people/v0.1/duelist-stone-c0-e-0.webp",
+      "duelist-stone-c0-e-1": "people/v0.1/duelist-stone-c0-e-1.webp",
+      "duelist-stone-c0-n-0": "people/v0.1/duelist-stone-c0-n-0.webp",
+      "duelist-stone-c0-n-1": "people/v0.1/duelist-stone-c0-n-1.webp",
+      "duelist-stone-c0-s-0": "people/v0.1/duelist-stone-c0-s-0.webp",
+      "duelist-stone-c0-s-1": "people/v0.1/duelist-stone-c0-s-1.webp",
+      "duelist-stone-c1-e-0": "people/v0.1/duelist-stone-c1-e-0.webp",
+      "duelist-stone-c1-e-1": "people/v0.1/duelist-stone-c1-e-1.webp",
+      "duelist-stone-c1-n-0": "people/v0.1/duelist-stone-c1-n-0.webp",
+      "duelist-stone-c1-n-1": "people/v0.1/duelist-stone-c1-n-1.webp",
+      "duelist-stone-c1-s-0": "people/v0.1/duelist-stone-c1-s-0.webp",
+      "duelist-stone-c1-s-1": "people/v0.1/duelist-stone-c1-s-1.webp",
+      "duelist-stone-c3-e-0": "people/v0.1/duelist-stone-c3-e-0.webp",
+      "duelist-stone-c3-e-1": "people/v0.1/duelist-stone-c3-e-1.webp",
+      "duelist-stone-c3-n-0": "people/v0.1/duelist-stone-c3-n-0.webp",
+      "duelist-stone-c3-n-1": "people/v0.1/duelist-stone-c3-n-1.webp",
+      "duelist-stone-c3-s-0": "people/v0.1/duelist-stone-c3-s-0.webp",
+      "duelist-stone-c3-s-1": "people/v0.1/duelist-stone-c3-s-1.webp",
+      "duelist-stone-c4-e-0": "people/v0.1/duelist-stone-c4-e-0.webp",
+      "duelist-stone-c4-e-1": "people/v0.1/duelist-stone-c4-e-1.webp",
+      "duelist-stone-c4-n-0": "people/v0.1/duelist-stone-c4-n-0.webp",
+      "duelist-stone-c4-n-1": "people/v0.1/duelist-stone-c4-n-1.webp",
+      "duelist-stone-c4-s-0": "people/v0.1/duelist-stone-c4-s-0.webp",
+      "duelist-stone-c4-s-1": "people/v0.1/duelist-stone-c4-s-1.webp",
+      "duelist-stone-c6-e-0": "people/v0.1/duelist-stone-c6-e-0.webp",
+      "duelist-stone-c6-e-1": "people/v0.1/duelist-stone-c6-e-1.webp",
+      "duelist-stone-c6-n-0": "people/v0.1/duelist-stone-c6-n-0.webp",
+      "duelist-stone-c6-n-1": "people/v0.1/duelist-stone-c6-n-1.webp",
+      "duelist-stone-c6-s-0": "people/v0.1/duelist-stone-c6-s-0.webp",
+      "duelist-stone-c6-s-1": "people/v0.1/duelist-stone-c6-s-1.webp",
+      "duelist-stone-e-0": "people/v0.1/duelist-stone-e-0.webp",
+      "duelist-stone-e-1": "people/v0.1/duelist-stone-e-1.webp",
+      "duelist-stone-n-0": "people/v0.1/duelist-stone-n-0.webp",
+      "duelist-stone-n-1": "people/v0.1/duelist-stone-n-1.webp",
+      "duelist-stone-s-0": "people/v0.1/duelist-stone-s-0.webp",
+      "duelist-stone-s-1": "people/v0.1/duelist-stone-s-1.webp",
+      "duelist-storm-c1-e-0": "people/v0.1/duelist-storm-c1-e-0.webp",
+      "duelist-storm-c1-e-1": "people/v0.1/duelist-storm-c1-e-1.webp",
+      "duelist-storm-c1-n-0": "people/v0.1/duelist-storm-c1-n-0.webp",
+      "duelist-storm-c1-n-1": "people/v0.1/duelist-storm-c1-n-1.webp",
+      "duelist-storm-c1-s-0": "people/v0.1/duelist-storm-c1-s-0.webp",
+      "duelist-storm-c1-s-1": "people/v0.1/duelist-storm-c1-s-1.webp",
+      "duelist-storm-c2-e-0": "people/v0.1/duelist-storm-c2-e-0.webp",
+      "duelist-storm-c2-e-1": "people/v0.1/duelist-storm-c2-e-1.webp",
+      "duelist-storm-c2-n-0": "people/v0.1/duelist-storm-c2-n-0.webp",
+      "duelist-storm-c2-n-1": "people/v0.1/duelist-storm-c2-n-1.webp",
+      "duelist-storm-c2-s-0": "people/v0.1/duelist-storm-c2-s-0.webp",
+      "duelist-storm-c2-s-1": "people/v0.1/duelist-storm-c2-s-1.webp",
+      "duelist-storm-c6-e-0": "people/v0.1/duelist-storm-c6-e-0.webp",
+      "duelist-storm-c6-e-1": "people/v0.1/duelist-storm-c6-e-1.webp",
+      "duelist-storm-c6-n-0": "people/v0.1/duelist-storm-c6-n-0.webp",
+      "duelist-storm-c6-n-1": "people/v0.1/duelist-storm-c6-n-1.webp",
+      "duelist-storm-c6-s-0": "people/v0.1/duelist-storm-c6-s-0.webp",
+      "duelist-storm-c6-s-1": "people/v0.1/duelist-storm-c6-s-1.webp",
+      "duelist-storm-e-0": "people/v0.1/duelist-storm-e-0.webp",
+      "duelist-storm-e-1": "people/v0.1/duelist-storm-e-1.webp",
+      "duelist-storm-n-0": "people/v0.1/duelist-storm-n-0.webp",
+      "duelist-storm-n-1": "people/v0.1/duelist-storm-n-1.webp",
+      "duelist-storm-s-0": "people/v0.1/duelist-storm-s-0.webp",
+      "duelist-storm-s-1": "people/v0.1/duelist-storm-s-1.webp",
+      "duelist-water-c0-e-0": "people/v0.1/duelist-water-c0-e-0.webp",
+      "duelist-water-c0-e-1": "people/v0.1/duelist-water-c0-e-1.webp",
+      "duelist-water-c0-n-0": "people/v0.1/duelist-water-c0-n-0.webp",
+      "duelist-water-c0-n-1": "people/v0.1/duelist-water-c0-n-1.webp",
+      "duelist-water-c0-s-0": "people/v0.1/duelist-water-c0-s-0.webp",
+      "duelist-water-c0-s-1": "people/v0.1/duelist-water-c0-s-1.webp",
+      "duelist-water-c2-e-0": "people/v0.1/duelist-water-c2-e-0.webp",
+      "duelist-water-c2-e-1": "people/v0.1/duelist-water-c2-e-1.webp",
+      "duelist-water-c2-n-0": "people/v0.1/duelist-water-c2-n-0.webp",
+      "duelist-water-c2-n-1": "people/v0.1/duelist-water-c2-n-1.webp",
+      "duelist-water-c2-s-0": "people/v0.1/duelist-water-c2-s-0.webp",
+      "duelist-water-c2-s-1": "people/v0.1/duelist-water-c2-s-1.webp",
+      "duelist-water-e-0": "people/v0.1/duelist-water-e-0.webp",
+      "duelist-water-e-1": "people/v0.1/duelist-water-e-1.webp",
+      "duelist-water-n-0": "people/v0.1/duelist-water-n-0.webp",
+      "duelist-water-n-1": "people/v0.1/duelist-water-n-1.webp",
+      "duelist-water-s-0": "people/v0.1/duelist-water-s-0.webp",
+      "duelist-water-s-1": "people/v0.1/duelist-water-s-1.webp",
+      "player-e-0": "people/v0.1/player-e-0.webp",
+      "player-e-1": "people/v0.1/player-e-1.webp",
+      "player-n-0": "people/v0.1/player-n-0.webp",
+      "player-n-1": "people/v0.1/player-n-1.webp",
+      "player-s-0": "people/v0.1/player-s-0.webp",
+      "player-s-1": "people/v0.1/player-s-1.webp",
+      "villager-h0-c3": "people/v0.1/villager-h0-c3.webp",
+      "villager-h0-c4": "people/v0.1/villager-h0-c4.webp",
+      "villager-h1-c6": "people/v0.1/villager-h1-c6.webp",
+      "villager-h2-c2": "people/v0.1/villager-h2-c2.webp",
+      "villager-h2-c3": "people/v0.1/villager-h2-c3.webp",
+      "villager-h2-c5": "people/v0.1/villager-h2-c5.webp",
+      "villager-h3-c1": "people/v0.1/villager-h3-c1.webp",
+      "villager-h3-c3": "people/v0.1/villager-h3-c3.webp",
+      "villager-h3-c5": "people/v0.1/villager-h3-c5.webp",
+      "villager-h3-c6": "people/v0.1/villager-h3-c6.webp",
+      "villager-h4-c1": "people/v0.1/villager-h4-c1.webp",
+      "villager-h4-c5": "people/v0.1/villager-h4-c5.webp",
+      "villager-h4-c6": "people/v0.1/villager-h4-c6.webp",
+      "villager-h5-c1": "people/v0.1/villager-h5-c1.webp",
+      "villager-h5-c3": "people/v0.1/villager-h5-c3.webp",
+      "villager-h5-c4": "people/v0.1/villager-h5-c4.webp",
+      "warden-cinder": "people/v0.1/warden-cinder.webp",
+      "warden-drowned": "people/v0.1/warden-drowned.webp",
+      "warden-fen": "people/v0.1/warden-fen.webp",
+      "warden-loom": "people/v0.1/warden-loom.webp",
+      "warden-rime": "people/v0.1/warden-rime.webp",
+      "warden-trial": "people/v0.1/warden-trial.webp"
     }
   }
 }
