@@ -1,0 +1,269 @@
+{
+  "version": 1,
+  "note": "The working vegetation and masonry with the Trees v0.2 candidates: six painted trees with low crowns and undergrowth, generated through the bridge. EVALUATION CANDIDATE, not approved art.",
+  "renderScale": 2,
+  "ground": [
+    {
+      "id": "forest-ground-short-grass",
+      "file": "candidates/ground-v0.2-8x8/forest-ground-short-grass.png",
+      "tile": "grass",
+      "tiles": 8,
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-ground-tall-grass",
+      "file": "candidates/ground-v0.2-8x8/forest-ground-tall-grass.png",
+      "tile": "tall",
+      "tiles": 8,
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-ground-ash",
+      "file": "candidates/ground-v0.2-8x8/forest-ground-ash.png",
+      "tile": "ash",
+      "tiles": 8,
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved"
+    }
+  ],
+  "shore": [
+    {
+      "id": "forest-shore",
+      "maps": [
+        "forest-edge"
+      ],
+      "edges": {
+        "n": "forest-shore-n.png",
+        "e": "forest-shore-e.png",
+        "s": "forest-shore-s.png",
+        "w": "forest-shore-w.png"
+      },
+      "tiles": 4,
+      "landShare": 0.3,
+      "corners": {
+        "outer-nw": "forest-shore-corner-outer-nw.png",
+        "outer-ne": "forest-shore-corner-outer-ne.png",
+        "outer-se": "forest-shore-corner-outer-se.png",
+        "outer-sw": "forest-shore-corner-outer-sw.png",
+        "inner-nw": "forest-shore-corner-inner-nw.png",
+        "inner-ne": "forest-shore-corner-inner-ne.png",
+        "inner-se": "forest-shore-corner-inner-se.png",
+        "inner-sw": "forest-shore-corner-inner-sw.png"
+      },
+      "noBank": [
+        "bridge"
+      ]
+    }
+  ],
+  "raised": [
+    {
+      "id": "mill-wall-storybook-top-v02",
+      "tile": "wall",
+      "maps": [
+        "forest-edge"
+      ],
+      "face": "candidates/masonry-v0.1/mill-wall-face.png",
+      "top": "candidates/masonry-v0.2/mill-wall-top.png",
+      "tiles": 4,
+      "side": "#504636",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-cliff-storybook-face-v02",
+      "tile": "cliff",
+      "maps": [
+        "forest-edge"
+      ],
+      "face": "candidates/masonry-v0.2/forest-cliff-face-large-warm.png",
+      "top": "candidates/masonry-v0.1/forest-cliff-top.png",
+      "faceTiles": 4,
+      "topTiles": 8,
+      "side": "#473e32",
+      "status": "candidate, not approved"
+    }
+  ],
+  "standing": [
+    {
+      "id": "forest-tree-storybook-v02",
+      "tile": "tree",
+      "maps": [
+        "forest-edge"
+      ],
+      "variants": [
+        {
+          "file": "candidates/trees-v0.2/forest-tree-c.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.95
+          },
+          "anchor": {
+            "ax": 0.496,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/trees-v0.2/forest-tree-d.png",
+          "sizeTiles": {
+            "w": 1.92,
+            "h": 2.4
+          },
+          "anchor": {
+            "ax": 0.478,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/trees-v0.2/forest-tree-e.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.78
+          },
+          "anchor": {
+            "ax": 0.449,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/trees-v0.2/forest-tree-f.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.95
+          },
+          "anchor": {
+            "ax": 0.498,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/trees-v0.2/forest-tree-g.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.62
+          },
+          "anchor": {
+            "ax": 0.496,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/trees-v0.2/forest-tree-h.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 2.07
+          },
+          "anchor": {
+            "ax": 0.504,
+            "ay": 0.94
+          }
+        }
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-tall-grass-blades-v03",
+      "tile": "tall",
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/blades-v0.3/forest-tall-grass-blades-01.png",
+          "sizeTiles": {
+            "w": 1,
+            "h": 0.75
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.958
+          }
+        },
+        {
+          "file": "candidates/blades-v0.3/forest-tall-grass-blades-02.png",
+          "sizeTiles": {
+            "w": 1,
+            "h": 0.75
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.958
+          }
+        },
+        {
+          "file": "candidates/blades-v0.3/forest-tall-grass-blades-03.png",
+          "sizeTiles": {
+            "w": 1,
+            "h": 0.75
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.958
+          }
+        },
+        {
+          "file": "candidates/blades-v0.3/forest-tall-grass-blades-04.png",
+          "sizeTiles": {
+            "w": 1,
+            "h": 0.75
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.958
+          }
+        },
+        {
+          "file": "candidates/blades-v0.3/forest-tall-grass-blades-05.png",
+          "sizeTiles": {
+            "w": 1,
+            "h": 0.75
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.958
+          }
+        }
+      ],
+      "stagger": 0.25
+    }
+  ],
+  "props": [
+    {
+      "id": "millwheel-idle",
+      "file": "millwheel-idle.png",
+      "mapId": "forest-edge",
+      "objectId": "wheel",
+      "state": "idle",
+      "sizeTiles": {
+        "w": 2,
+        "h": 2.25
+      },
+      "anchor": {
+        "ax": 0.25,
+        "ay": 0.93
+      }
+    },
+    {
+      "id": "millwheel-turning",
+      "file": "millwheel-idle.png",
+      "mapId": "forest-edge",
+      "objectId": "wheel-turning",
+      "state": "turning",
+      "sizeTiles": {
+        "w": 2,
+        "h": 2.25
+      },
+      "anchor": {
+        "ax": 0.25,
+        "ay": 0.93
+      }
+    }
+  ]
+}

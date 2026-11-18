@@ -1,0 +1,602 @@
+{
+  "version": 1,
+  "note": "The working set with the second batch of objects; the exit stair is the rock-cut passage (take a) and the hanging vines are the rooted curtain (take b). EVALUATION CANDIDATE, not approved art.",
+  "renderScale": 2,
+  "ground": [
+    {
+      "id": "forest-ground-short-grass",
+      "file": "candidates/ground-v0.2-8x8/forest-ground-short-grass.png",
+      "tile": "grass",
+      "tiles": 8,
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-ground-tall-grass",
+      "file": "candidates/ground-v0.2-8x8/forest-ground-tall-grass.png",
+      "tile": "tall",
+      "tiles": 8,
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-ground-ash",
+      "file": "candidates/ground-v0.2-8x8/forest-ground-ash.png",
+      "tile": "ash",
+      "tiles": 8,
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-ground-path",
+      "file": "candidates/ground-v0.3/forest-ground-path.png",
+      "tile": "path",
+      "tiles": 8,
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-ground-sand",
+      "file": "candidates/ground-v0.3/forest-ground-sand.png",
+      "tile": "sand",
+      "tiles": 8,
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-ground-scree",
+      "file": "candidates/ground-v0.3/forest-ground-scree.png",
+      "tile": "scree",
+      "tiles": 8,
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-ground-floor",
+      "file": "candidates/ground-v0.3/forest-ground-floor.png",
+      "tile": "floor",
+      "tiles": 3,
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-bridge-deck",
+      "file": "candidates/misc-v0.1/forest-bridge-deck.png",
+      "tile": "bridge",
+      "tiles": 4,
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-water",
+      "file": "candidates/water-v0.1/forest-water-a.png",
+      "file2": "candidates/water-v0.1/forest-water-b.png",
+      "tile": "water",
+      "tiles": 6,
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved"
+    }
+  ],
+  "shore": [
+    {
+      "id": "forest-shore-storybook-v01c",
+      "maps": [
+        "forest-edge"
+      ],
+      "edges": {
+        "n": "candidates/shore-v0.1b/forest-shore-n.png",
+        "e": "candidates/shore-v0.1b/forest-shore-e.png",
+        "s": "candidates/shore-v0.1b/forest-shore-s-full.png",
+        "w": "candidates/shore-v0.1b/forest-shore-w.png"
+      },
+      "tiles": 2,
+      "landShare": 0.2917,
+      "noBank": [
+        "bridge"
+      ],
+      "status": "candidate, not approved"
+    }
+  ],
+  "raised": [
+    {
+      "id": "mill-wall-storybook-top-v02",
+      "tile": "wall",
+      "maps": [
+        "forest-edge"
+      ],
+      "face": "candidates/masonry-v0.1/mill-wall-face.png",
+      "top": "candidates/masonry-v0.2/mill-wall-top.png",
+      "tiles": 4,
+      "side": "#504636",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-cliff-storybook-face-v02",
+      "tile": "cliff",
+      "maps": [
+        "forest-edge"
+      ],
+      "face": "candidates/masonry-v0.2/forest-cliff-face-large-warm.png",
+      "top": "candidates/masonry-v0.1/forest-cliff-top.png",
+      "faceTiles": 4,
+      "topTiles": 8,
+      "side": "#473e32",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-thicket-storybook-v01",
+      "tile": "thicket",
+      "maps": [
+        "forest-edge"
+      ],
+      "face": "candidates/misc-v0.1/forest-thicket-face.png",
+      "top": "candidates/misc-v0.1/forest-thicket-top.png",
+      "faceTiles": 3,
+      "topTiles": 6,
+      "side": "#1f2a1e",
+      "status": "candidate, not approved"
+    }
+  ],
+  "standing": [
+    {
+      "id": "forest-tree-storybook-v02",
+      "tile": "tree",
+      "maps": [
+        "forest-edge"
+      ],
+      "variants": [
+        {
+          "file": "candidates/trees-v0.2/forest-tree-c.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.95
+          },
+          "anchor": {
+            "ax": 0.496,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/trees-v0.2/forest-tree-d.png",
+          "sizeTiles": {
+            "w": 1.92,
+            "h": 2.4
+          },
+          "anchor": {
+            "ax": 0.478,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/trees-v0.2/forest-tree-e.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.78
+          },
+          "anchor": {
+            "ax": 0.449,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/trees-v0.2/forest-tree-f.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.95
+          },
+          "anchor": {
+            "ax": 0.498,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/trees-v0.2/forest-tree-g.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 1.62
+          },
+          "anchor": {
+            "ax": 0.496,
+            "ay": 0.94
+          }
+        },
+        {
+          "file": "candidates/trees-v0.2/forest-tree-h.png",
+          "sizeTiles": {
+            "w": 2.0,
+            "h": 2.07
+          },
+          "anchor": {
+            "ax": 0.504,
+            "ay": 0.94
+          }
+        }
+      ],
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "forest-tall-grass-blades-v03",
+      "tile": "tall",
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/blades-v0.3/forest-tall-grass-blades-01.png",
+          "sizeTiles": {
+            "w": 1,
+            "h": 0.75
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.958
+          }
+        },
+        {
+          "file": "candidates/blades-v0.3/forest-tall-grass-blades-02.png",
+          "sizeTiles": {
+            "w": 1,
+            "h": 0.75
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.958
+          }
+        },
+        {
+          "file": "candidates/blades-v0.3/forest-tall-grass-blades-03.png",
+          "sizeTiles": {
+            "w": 1,
+            "h": 0.75
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.958
+          }
+        },
+        {
+          "file": "candidates/blades-v0.3/forest-tall-grass-blades-04.png",
+          "sizeTiles": {
+            "w": 1,
+            "h": 0.75
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.958
+          }
+        },
+        {
+          "file": "candidates/blades-v0.3/forest-tall-grass-blades-05.png",
+          "sizeTiles": {
+            "w": 1,
+            "h": 0.75
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.958
+          }
+        }
+      ],
+      "stagger": 0.25
+    },
+    {
+      "id": "forest-rock-storybook-v01",
+      "tile": "rock",
+      "maps": [
+        "forest-edge"
+      ],
+      "status": "candidate, not approved",
+      "variants": [
+        {
+          "file": "candidates/misc-v0.1/forest-rock.png",
+          "sizeTiles": {
+            "w": 1.0,
+            "h": 0.8
+          },
+          "anchor": {
+            "ax": 0.5,
+            "ay": 0.93
+          }
+        }
+      ]
+    }
+  ],
+  "props": [
+    {
+      "id": "millwheel-idle",
+      "file": "candidates/wheel-v0.2/millwheel-idle.png",
+      "mapId": "forest-edge",
+      "objectId": "wheel",
+      "state": "idle",
+      "sizeTiles": {
+        "w": 2,
+        "h": 1.98
+      },
+      "anchor": {
+        "ax": 0.127,
+        "ay": 0.972
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "millwheel-turning",
+      "file": "candidates/wheel-v0.2/millwheel-idle.png",
+      "mapId": "forest-edge",
+      "objectId": "wheel-turning",
+      "state": "turning",
+      "sizeTiles": {
+        "w": 2,
+        "h": 1.98
+      },
+      "anchor": {
+        "ax": 0.127,
+        "ay": 0.972
+      },
+      "status": "candidate, not approved"
+    }
+  ],
+  "flats": [
+    {
+      "id": "sluice-storybook-v03a",
+      "mapId": "forest-edge",
+      "objectId": "sluice",
+      "file": "candidates/sluice-v0.2/sluice-jammed-logjam-a.png",
+      "open": "candidates/sluice-v0.2/sluice-open.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-exit-path",
+      "sprite": "exit-path",
+      "mapId": "forest-edge",
+      "file": "candidates/objects-v0.3/exit-path.png",
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "flat-platform",
+      "mapId": "forest-edge",
+      "objectId": "platform",
+      "file": "candidates/objects-v0.3/platform.png",
+      "open": "candidates/objects-v0.3/platform-open.png",
+      "status": "candidate, not approved"
+    }
+  ],
+  "objects": [
+    {
+      "id": "object-sign",
+      "sprite": "sign",
+      "maps": [
+        "forest-edge"
+      ],
+      "file": "candidates/objects-v0.1/sign.png",
+      "sizeTiles": {
+        "w": 0.95,
+        "h": 1.51
+      },
+      "anchor": {
+        "ax": 0.496,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-chest",
+      "sprite": "chest",
+      "maps": [
+        "forest-edge"
+      ],
+      "file": "candidates/objects-v0.1/chest.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 0.73
+      },
+      "anchor": {
+        "ax": 0.492,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-chest-open",
+      "sprite": "chest-open",
+      "maps": [
+        "forest-edge"
+      ],
+      "file": "candidates/objects-v0.1/chest-open.png",
+      "sizeTiles": {
+        "w": 1.06,
+        "h": 1.06
+      },
+      "anchor": {
+        "ax": 0.621,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-campfire",
+      "sprite": "campfire",
+      "maps": [
+        "forest-edge"
+      ],
+      "file": "candidates/objects-v0.1/campfire.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.09
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved",
+      "frames": [
+        "candidates/objects-v0.1/campfire-f1.png",
+        "candidates/objects-v0.1/campfire-f2.png",
+        "candidates/objects-v0.1/campfire-f3.png",
+        "candidates/objects-v0.1/campfire-f4.png"
+      ],
+      "frameMs": 170
+    },
+    {
+      "id": "object-brazier",
+      "sprite": "brazier",
+      "maps": [
+        "forest-edge"
+      ],
+      "file": "candidates/objects-v0.1/brazier.png",
+      "sizeTiles": {
+        "w": 0.9,
+        "h": 0.82
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-brazier-lit",
+      "sprite": "brazier-lit",
+      "maps": [
+        "forest-edge"
+      ],
+      "file": "candidates/objects-v0.1/brazier-lit.png",
+      "sizeTiles": {
+        "w": 0.9,
+        "h": 1.29
+      },
+      "anchor": {
+        "ax": 0.495,
+        "ay": 0.981
+      },
+      "status": "candidate, not approved",
+      "frames": [
+        "candidates/objects-v0.1/brazier-lit-f1.png",
+        "candidates/objects-v0.1/brazier-lit-f2.png",
+        "candidates/objects-v0.1/brazier-lit-f3.png",
+        "candidates/objects-v0.1/brazier-lit-f4.png"
+      ],
+      "frameMs": 170
+    },
+    {
+      "id": "object-exit-stair",
+      "sprite": "exit-stair",
+      "maps": [
+        "forest-edge"
+      ],
+      "file": "candidates/objects-v0.3/exit-stair-a.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.0
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.985
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-page",
+      "sprite": "page",
+      "maps": [
+        "forest-edge"
+      ],
+      "file": "candidates/objects-v0.3/page.png",
+      "sizeTiles": {
+        "w": 0.7,
+        "h": 0.46
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-vine-wall",
+      "sprite": "vine-wall",
+      "maps": [
+        "forest-edge"
+      ],
+      "file": "candidates/objects-v0.3/vine-wall-b.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.0
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 1.0
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-vine-wall-open",
+      "sprite": "vine-wall-open",
+      "maps": [
+        "forest-edge"
+      ],
+      "file": "candidates/objects-v0.3/vine-wall-open.png",
+      "sizeTiles": {
+        "w": 0.72,
+        "h": 1.0
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 1.0
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-orrery",
+      "sprite": "orrery",
+      "maps": [
+        "forest-edge"
+      ],
+      "file": "candidates/objects-v0.3/orrery.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.19
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    },
+    {
+      "id": "object-orrery-lit",
+      "sprite": "orrery-lit",
+      "maps": [
+        "forest-edge"
+      ],
+      "file": "candidates/objects-v0.3/orrery-lit.png",
+      "sizeTiles": {
+        "w": 1.0,
+        "h": 1.19
+      },
+      "anchor": {
+        "ax": 0.5,
+        "ay": 0.97
+      },
+      "status": "candidate, not approved"
+    }
+  ]
+}
